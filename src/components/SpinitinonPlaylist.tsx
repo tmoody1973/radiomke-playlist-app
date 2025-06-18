@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -217,6 +216,18 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
   // Check if we have active search/filters
   const hasActiveFilters = debouncedSearchTerm.trim() || startDate || endDate;
 
+  // Filter spins to count actual matches when searching
+  const getSearchMatchCount = () => {
+    if (!debouncedSearchTerm.trim()) return spins.length;
+    
+    const searchTerm = debouncedSearchTerm.toLowerCase();
+    return spins.filter(spin => 
+      spin.song.toLowerCase().includes(searchTerm) ||
+      spin.artist.toLowerCase().includes(searchTerm) ||
+      (spin.release && spin.release.toLowerCase().includes(searchTerm))
+    ).length;
+  };
+
   if (loading && spins.length === 0) {
     return (
       <Card className="w-full max-w-4xl mx-auto">
@@ -421,7 +432,16 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
               </h3>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              Found {spins.length} tracks
+              {debouncedSearchTerm.trim() ? (
+                <>
+                  Found {getSearchMatchCount()} matching tracks
+                  {getSearchMatchCount() !== spins.length && (
+                    <span className="text-gray-500"> (showing {spins.length} total results)</span>
+                  )}
+                </>
+              ) : (
+                <>Found {spins.length} tracks</>
+              )}
               {startDate && <span> from {formatDate(startDate.toISOString())}</span>}
               {endDate && <span> to {formatDate(endDate.toISOString())}</span>}
             </p>
