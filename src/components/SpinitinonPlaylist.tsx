@@ -49,6 +49,18 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
+  // Debounced search term for actual API calls
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const fetchSpins = useCallback(async (showLoader = true, append = false, page = 1) => {
     try {
       if (showLoader && !append) setLoading(true);
@@ -61,7 +73,7 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
       queryParams.append('count', maxItems.toString());
       
       if (stationId) queryParams.append('station', stationId);
-      if (searchTerm.trim()) queryParams.append('search', searchTerm.trim());
+      if (debouncedSearchTerm.trim()) queryParams.append('search', debouncedSearchTerm.trim());
       if (startDate) queryParams.append('start', startDate.toISOString());
       if (endDate) queryParams.append('end', endDate.toISOString());
       
@@ -117,7 +129,7 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
       setLoadingMore(false);
       setIsRefreshing(false);
     }
-  }, [stationId, searchTerm, startDate, endDate, maxItems, toast]);
+  }, [stationId, debouncedSearchTerm, startDate, endDate, maxItems, toast]);
 
   // Auto-update effect
   useEffect(() => {
@@ -127,7 +139,7 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
     
     const scheduleNextUpdate = () => {
       timeoutId = setTimeout(() => {
-        if (currentPage === 1 && !searchTerm.trim() && !startDate && !endDate) {
+        if (currentPage === 1 && !debouncedSearchTerm.trim() && !startDate && !endDate) {
           fetchSpins(false, false, 1);
         }
         scheduleNextUpdate();
@@ -139,13 +151,13 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [fetchSpins, autoUpdate, currentPage, searchTerm, startDate, endDate]);
+  }, [fetchSpins, autoUpdate, currentPage, debouncedSearchTerm, startDate, endDate]);
 
-  // Initial load effect
+  // Trigger search when debounced search term or filters change
   useEffect(() => {
     setCurrentPage(1);
     fetchSpins(true, false, 1);
-  }, [searchTerm, startDate, endDate]);
+  }, [debouncedSearchTerm, startDate, endDate, fetchSpins]);
 
   const handleLoadMore = () => {
     const nextPage = currentPage + 1;
@@ -153,14 +165,15 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
     fetchSpins(false, true, nextPage);
   };
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentPage(1);
-    fetchSpins(true, false, 1);
+    // Immediately update debounced search term to trigger search
+    setDebouncedSearchTerm(searchTerm);
   };
 
   const clearFilters = () => {
     setSearchTerm('');
+    setDebouncedSearchTerm('');
     setStartDate(undefined);
     setEndDate(undefined);
     setCurrentPage(1);
@@ -244,7 +257,7 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
           
           {showSearch && (
             <div className="space-y-4">
-              <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
+              <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
@@ -295,7 +308,7 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
                   </PopoverContent>
                 </Popover>
                 
-                {(searchTerm || startDate || endDate) && (
+                {(searchTerm || debouncedSearchTerm || startDate || endDate) && (
                   <Button variant="ghost" onClick={clearFilters}>
                     Clear Filters
                   </Button>
@@ -311,6 +324,9 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
           <div className="text-center py-8 text-gray-500">
             <Music className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>No tracks found</p>
+            {(debouncedSearchTerm || startDate || endDate) && (
+              <p className="text-sm mt-2">Try adjusting your search or filters</p>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
@@ -401,7 +417,7 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
         )}
         
         <div className="mt-4 text-center text-sm text-muted-foreground">
-          {autoUpdate && currentPage === 1 && !searchTerm && !startDate && !endDate && (
+          {autoUpdate && currentPage === 1 && !debouncedSearchTerm && !startDate && !endDate && (
             <p>Updates automatically every 30 seconds</p>
           )}
           {spins.length > 0 && (
