@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +9,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
 
 interface SpinItem {
   id: number;
@@ -65,7 +65,6 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
       if (startDate) queryParams.append('start', startDate.toISOString());
       if (endDate) queryParams.append('end', endDate.toISOString());
       
-      // For pagination, we'll use a simple offset approach
       if (page > 1) {
         const offset = (page - 1) * maxItems;
         queryParams.append('offset', offset.toString());
@@ -97,7 +96,6 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
           setSpins(data.items);
         }
         
-        // Check if we have more items to load
         setHasMore(data.items.length === maxItems);
       } else {
         console.warn('No items in response:', data);
@@ -121,7 +119,7 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
     }
   }, [stationId, searchTerm, startDate, endDate, maxItems, toast]);
 
-  // Auto-update with setTimeout for better network handling
+  // Auto-update effect
   useEffect(() => {
     if (!autoUpdate) return;
 
@@ -129,7 +127,6 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
     
     const scheduleNextUpdate = () => {
       timeoutId = setTimeout(() => {
-        // Only auto-update if we're on the first page and no search/filters are active
         if (currentPage === 1 && !searchTerm.trim() && !startDate && !endDate) {
           fetchSpins(false, false, 1);
         }
@@ -144,7 +141,7 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
     };
   }, [fetchSpins, autoUpdate, currentPage, searchTerm, startDate, endDate]);
 
-  // Initial load
+  // Initial load effect
   useEffect(() => {
     setCurrentPage(1);
     fetchSpins(true, false, 1);
@@ -277,7 +274,6 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
                       selected={startDate}
                       onSelect={setStartDate}
                       initialFocus
-                      className="pointer-events-auto"
                     />
                   </PopoverContent>
                 </Popover>
@@ -295,7 +291,6 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
                       selected={endDate}
                       onSelect={setEndDate}
                       initialFocus
-                      className="pointer-events-auto"
                     />
                   </PopoverContent>
                 </Popover>
