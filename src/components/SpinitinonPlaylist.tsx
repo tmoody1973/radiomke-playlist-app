@@ -3,11 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Music, Clock, User, Disc, RefreshCw, Calendar } from 'lucide-react';
+import { Search, Music, Clock, User, Disc, RefreshCw, Calendar, Database } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface SpinItem {
   id: number;
@@ -46,6 +48,7 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [useCache, setUseCache] = useState(true);
   const { toast } = useToast();
 
   // Debounced search term for actual API calls
@@ -70,6 +73,7 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
       const queryParams = new URLSearchParams();
       queryParams.append('endpoint', 'spins');
       queryParams.append('count', maxItems.toString());
+      queryParams.append('use_cache', useCache.toString());
       
       if (stationId) queryParams.append('station', stationId);
       if (debouncedSearchTerm.trim()) queryParams.append('search', debouncedSearchTerm.trim());
@@ -130,7 +134,7 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
       setLoadingMore(false);
       setIsRefreshing(false);
     }
-  }, [stationId, debouncedSearchTerm, startDate, endDate, maxItems, toast]);
+  }, [stationId, debouncedSearchTerm, startDate, endDate, maxItems, useCache, toast]);
 
   // Auto-update effect
   useEffect(() => {
@@ -154,11 +158,11 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
     };
   }, [fetchSpins, autoUpdate, currentPage, debouncedSearchTerm, startDate, endDate]);
 
-  // Trigger search when debounced search term or filters change
+  // Trigger search when debounced search term, filters, or cache setting change
   useEffect(() => {
     setCurrentPage(1);
     fetchSpins(true, false, 1);
-  }, [debouncedSearchTerm, startDate, endDate, fetchSpins]);
+  }, [debouncedSearchTerm, startDate, endDate, useCache, fetchSpins]);
 
   const handleLoadMore = () => {
     const nextPage = currentPage + 1;
@@ -253,11 +257,23 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
               <Music className="h-5 w-5" />
               Live Playlist
               {isRefreshing && <RefreshCw className="h-4 w-4 animate-spin" />}
+              {useCache && <Database className="h-4 w-4 text-green-600" />}
             </CardTitle>
           </div>
           
           {showSearch && (
             <div className="space-y-4">
+              <div className="flex items-center space-x-2 mb-4">
+                <Switch
+                  id="use-cache"
+                  checked={useCache}
+                  onCheckedChange={setUseCache}
+                />
+                <Label htmlFor="use-cache" className="text-sm">
+                  Use cached data for faster search
+                </Label>
+              </div>
+              
               <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -423,7 +439,10 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
             <p>Updates automatically every 30 seconds</p>
           )}
           {spins.length > 0 && (
-            <p className="mt-1">Showing {spins.length} tracks</p>
+            <p className="mt-1">
+              Showing {spins.length} tracks
+              {useCache && <span className="text-green-600 ml-1">(cached search enabled)</span>}
+            </p>
           )}
         </div>
       </CardContent>

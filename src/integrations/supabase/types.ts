@@ -9,7 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      songs: {
+        Row: {
+          artist: string
+          created_at: string
+          duration: number | null
+          episode_title: string | null
+          id: string
+          image: string | null
+          label: string | null
+          release: string | null
+          song: string
+          spinitron_id: number
+          start_time: string
+          station_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          artist: string
+          created_at?: string
+          duration?: number | null
+          episode_title?: string | null
+          id?: string
+          image?: string | null
+          label?: string | null
+          release?: string | null
+          song: string
+          spinitron_id: number
+          start_time: string
+          station_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          artist?: string
+          created_at?: string
+          duration?: number | null
+          episode_title?: string | null
+          id?: string
+          image?: string | null
+          label?: string | null
+          release?: string | null
+          song?: string
+          spinitron_id?: number
+          start_time?: string
+          station_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
