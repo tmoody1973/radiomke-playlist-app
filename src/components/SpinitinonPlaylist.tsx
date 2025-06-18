@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -75,7 +74,8 @@ const SpinitinonPlaylist = ({
       search: debouncedSearchTerm,
       start: effectiveStartDate,
       end: effectiveEndDate,
-      use_cache: 'true'
+      use_cache: hasActiveFilters ? 'false' : 'true', // Don't use cache for live updates when no filters
+      timestamp: Date.now() // Add timestamp for cache busting
     });
 
     const { data, error } = await supabase.functions.invoke('spinitron-proxy', {
@@ -85,7 +85,8 @@ const SpinitinonPlaylist = ({
         search: debouncedSearchTerm,
         start: effectiveStartDate,
         end: effectiveEndDate,
-        use_cache: 'true'
+        use_cache: hasActiveFilters ? 'false' : 'true',
+        _cache_bust: Date.now().toString()
       }
     });
 
@@ -105,22 +106,36 @@ const SpinitinonPlaylist = ({
   const hasActiveFilters = debouncedSearchTerm || effectiveStartDate || effectiveEndDate;
 
   const { data: spins = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['spins', stationId, page, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate],
+    queryKey: ['spins', stationId, page, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate, Date.now()],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate && !hasActiveFilters ? 30000 : false,
-    staleTime: 25000,
+    refetchInterval: autoUpdate && !hasActiveFilters ? 15000 : false, // Reduced interval for more frequent updates
+    staleTime: hasActiveFilters ? 300000 : 10000, // Shorter stale time for live content
+    gcTime: hasActiveFilters ? 300000 : 30000,
   });
 
   useEffect(() => {
     if (autoUpdate && !hasActiveFilters) {
       const interval = setInterval(() => {
+        console.log('Auto-refreshing playlist data...');
         refetch();
-      }, 30000);
+      }, 15000); // More frequent updates for live content
       return () => clearInterval(interval);
     }
   }, [autoUpdate, refetch, hasActiveFilters]);
 
   const displayedSpins = spins;
+
+  // Determine if a song is currently playing (within the last 5 minutes of its start time + duration)
+  const isCurrentlyPlaying = (spin: Spin, index: number) => {
+    if (hasActiveFilters) return false; // Don't show "now playing" when filtering
+    if (index !== 0) return false; // Only the first song can be "now playing"
+    
+    const now = new Date();
+    const startTime = new Date(spin.start);
+    const endTime = new Date(startTime.getTime() + (spin.duration || 180) * 1000);
+    
+    return now >= startTime && now <= endTime;
+  };
 
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString([], { 
@@ -258,7 +273,7 @@ const SpinitinonPlaylist = ({
                 <div 
                   key={`${spin.id}-${index}`}
                   className={`p-3 border rounded-lg transition-colors hover:bg-accent/50 ${
-                    index === 0 && !hasActiveFilters ? 'bg-primary/5 border-primary/20' : 'bg-card'
+                    isCurrentlyPlaying(spin, index) ? 'bg-primary/5 border-primary/20' : 'bg-card'
                   }`}
                 >
                   <div className="flex gap-3">
@@ -316,7 +331,7 @@ const SpinitinonPlaylist = ({
                           )}
                         </div>
                         <div className="flex flex-col items-end ml-2">
-                          {index === 0 && !hasActiveFilters && (
+                          {isCurrentlyPlaying(spin, index) && (
                             <Badge variant="secondary" className={compact ? "text-xs px-2 py-0" : ""}>
                               Now Playing
                             </Badge>
