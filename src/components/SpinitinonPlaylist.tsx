@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -355,54 +354,59 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
       </CardHeader>
       
       <CardContent>
-        {/* Now Playing Section */}
+        {/* Now Playing Section - Enhanced */}
         {currentlyPlayingSong && !hasActiveFilters && (
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Radio className="h-5 w-5 text-red-500" />
-              <h3 className="text-lg font-semibold text-red-500">Now Playing</h3>
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Radio className="h-6 w-6 text-red-500 animate-pulse" />
+              <h2 className="text-2xl font-bold text-red-600">NOW PLAYING</h2>
             </div>
-            <div className="p-4 rounded-lg border-2 border-red-200 bg-red-50/50 shadow-md">
-              <div className="flex gap-4">
+            <div className="p-6 rounded-xl border-4 border-red-300 bg-gradient-to-r from-red-50 to-red-100 shadow-lg">
+              <div className="flex gap-6">
                 <div className="flex-shrink-0">
                   {currentlyPlayingSong.image ? (
                     <img
                       src={currentlyPlayingSong.image}
                       alt={`${currentlyPlayingSong.release || 'Album'} cover`}
-                      className="w-16 h-16 rounded object-cover shadow-sm"
+                      className="w-24 h-24 md:w-32 md:h-32 rounded-lg object-cover shadow-lg ring-2 ring-red-300"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
                       }}
                     />
                   ) : (
-                    <div className="w-16 h-16 bg-red-100 rounded flex items-center justify-center">
-                      <Disc className="h-8 w-8 text-red-400" />
+                    <div className="w-24 h-24 md:w-32 md:h-32 bg-red-200 rounded-lg flex items-center justify-center shadow-lg ring-2 ring-red-300">
+                      <Disc className="h-12 w-12 md:h-16 md:w-16 text-red-500" />
                     </div>
                   )}
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-lg text-red-700 truncate mb-1">
+                  <h3 className="font-bold text-2xl md:text-3xl text-red-800 truncate mb-2">
                     {currentlyPlayingSong.song}
-                  </h4>
-                  <div className="flex items-center gap-1 text-red-600 mb-1">
-                    <User className="h-4 w-4" />
-                    <span className="font-medium truncate">{currentlyPlayingSong.artist}</span>
+                  </h3>
+                  <div className="flex items-center gap-2 text-red-700 mb-2">
+                    <User className="h-5 w-5" />
+                    <span className="font-semibold text-lg md:text-xl truncate">{currentlyPlayingSong.artist}</span>
                   </div>
                   {currentlyPlayingSong.release && (
-                    <div className="flex items-center gap-1 text-red-500 text-sm">
-                      <Disc className="h-3 w-3" />
+                    <div className="flex items-center gap-2 text-red-600 text-base md:text-lg mb-3">
+                      <Disc className="h-4 w-4" />
                       <span className="truncate">{currentlyPlayingSong.release}</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-1 text-red-500 text-sm mt-2">
-                    <Clock className="h-3 w-3" />
+                  <div className="flex items-center gap-2 text-red-600 text-sm md:text-base">
+                    <Clock className="h-4 w-4" />
                     <span>Started at {formatTime(currentlyPlayingSong.start)}</span>
+                  </div>
+                  <div className="mt-3">
+                    <span className="inline-flex items-center px-3 py-1 bg-red-500 text-white rounded-full text-sm font-medium animate-pulse">
+                      ● LIVE
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
-            <Separator className="my-6" />
+            <Separator className="my-8" />
           </div>
         )}
 
