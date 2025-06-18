@@ -160,33 +160,75 @@ serve(async (req) => {
       if (!dbError && cachedSongs && cachedSongs.length > 0) {
         console.log('Found cached songs:', cachedSongs.length);
         
-        // Transform database format to API format
-        const transformedSongs = cachedSongs.map(song => ({
-          id: song.spinitron_id,
-          start: song.start_time,
-          duration: song.duration || 180,
-          song: song.song,
-          artist: song.artist,
-          release: song.release,
-          label: song.label,
-          image: song.image,
-          episode: song.episode_title ? { title: song.episode_title } : undefined
-        }));
+        // Check if we should also fetch fresh data from API for live updates
+        const shouldFetchFresh = !hasActiveFilters && cachedSongs.length > 0;
+        
+        if (shouldFetchFresh) {
+          // Check the timestamp of the most recent cached song
+          const mostRecentSong = cachedSongs[0];
+          const songAge = Date.now() - new Date(mostRecentSong.start_time).getTime();
+          
+          // If the most recent song is older than 10 minutes, fetch fresh data
+          if (songAge > 600000) { // 10 minutes
+            console.log('Most recent cached song is old, fetching fresh data from API...');
+            // Continue to API fetch below
+          } else {
+            // Transform database format to API format
+            const transformedSongs = cachedSongs.map(song => ({
+              id: song.spinitron_id,
+              start: song.start_time,
+              duration: song.duration || 180,
+              song: song.song,
+              artist: song.artist,
+              release: song.release,
+              label: song.label,
+              image: song.image,
+              episode: song.episode_title ? { title: song.episode_title } : undefined
+            }));
 
-        return new Response(
-          JSON.stringify({ items: transformedSongs }),
-          { 
-            headers: { 
-              ...corsHeaders, 
-              'Content-Type': 'application/json',
-              'Cache-Control': 'no-cache, no-store, must-revalidate'
-            }
+            // Still fetch fresh data in background but return cached data immediately
+            fetchFreshDataInBackground();
+
+            return new Response(
+              JSON.stringify({ items: transformedSongs }),
+              { 
+                headers: { 
+                  ...corsHeaders, 
+                  'Content-Type': 'application/json',
+                  'Cache-Control': 'no-cache, no-store, must-revalidate'
+                }
+              }
+            );
           }
-        );
+        } else {
+          // Transform database format to API format
+          const transformedSongs = cachedSongs.map(song => ({
+            id: song.spinitron_id,
+            start: song.start_time,
+            duration: song.duration || 180,
+            song: song.song,
+            artist: song.artist,
+            release: song.release,
+            label: song.label,
+            image: song.image,
+            episode: song.episode_title ? { title: song.episode_title } : undefined
+          }));
+
+          return new Response(
+            JSON.stringify({ items: transformedSongs }),
+            { 
+              headers: { 
+                ...corsHeaders, 
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache, no-store, must-revalidate'
+              }
+            }
+          );
+        }
       }
     }
 
-    // Fetch from Spinitron API if not found in cache or has search
+    // Fetch from Spinitron API
     let spinitronUrl = `https://spinitron.com/api/${endpoint}`;
     const apiParams = new URLSearchParams();
     
@@ -201,7 +243,7 @@ serve(async (req) => {
     
     spinitronUrl += `?${apiParams.toString()}`;
 
-    console.log('Fetching from Spinitron:', spinitronUrl);
+    console.log('Fetching from Spinitron API:', spinitronUrl);
 
     const response = await fetch(spinitronUrl, {
       headers: {
@@ -227,32 +269,87 @@ serve(async (req) => {
     const data = await response.json();
     console.log('Successfully fetched data from API:', data.items?.length || 0, 'items');
 
-    // Store new songs in database (upsert to avoid duplicates)
+    // Always store new songs in database (upsert to avoid duplicates)
     if (data.items && data.items.length > 0) {
+      console.log('Storing songs in database...');
+      
       const songsToStore = data.items.map((item: any) => ({
         spinitron_id: item.id,
-        song: item.song,
-        artist: item.artist,
-        release: item.release,
-        label: item.label,
-        image: item.image,
+        song: item.song || 'Unknown Song',
+        artist: item.artist || 'Unknown Artist',
+        release: item.release || null,
+        label: item.label || null,
+        image: item.image || null,
         start_time: item.start,
         duration: item.duration || 180,
-        episode_title: item.episode?.title,
+        episode_title: item.episode?.title || null,
         station_id: stationId || null
       }));
 
-      const { error: insertError } = await supabase
+      console.log('Songs to store:', songsToStore.length, 'songs');
+
+      const { data: insertedData, error: insertError } = await supabase
         .from('songs')
         .upsert(songsToStore, { 
           onConflict: 'spinitron_id',
           ignoreDuplicates: false 
-        });
+        })
+        .select();
 
       if (insertError) {
         console.error('Error storing songs in database:', insertError);
       } else {
-        console.log('Stored', songsToStore.length, 'songs in database');
+        console.log('Successfully stored', insertedData?.length || songsToStore.length, 'songs in database');
+      }
+    } else {
+      console.log('No songs received from API to store');
+    }
+
+    // Background function to fetch fresh data
+    async function fetchFreshDataInBackground() {
+      try {
+        console.log('Background: Fetching fresh data from Spinitron API...');
+        
+        const bgResponse = await fetch(spinitronUrl, {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Accept': 'application/json',
+          },
+        });
+
+        if (bgResponse.ok) {
+          const bgData = await bgResponse.json();
+          
+          if (bgData.items && bgData.items.length > 0) {
+            const bgSongsToStore = bgData.items.map((item: any) => ({
+              spinitron_id: item.id,
+              song: item.song || 'Unknown Song',
+              artist: item.artist || 'Unknown Artist',
+              release: item.release || null,
+              label: item.label || null,
+              image: item.image || null,
+              start_time: item.start,
+              duration: item.duration || 180,
+              episode_title: item.episode?.title || null,
+              station_id: stationId || null
+            }));
+
+            const { error: bgInsertError } = await supabase
+              .from('songs')
+              .upsert(bgSongsToStore, { 
+                onConflict: 'spinitron_id',
+                ignoreDuplicates: false 
+              });
+
+            if (bgInsertError) {
+              console.error('Background: Error storing songs:', bgInsertError);
+            } else {
+              console.log('Background: Stored', bgSongsToStore.length, 'fresh songs');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Background fetch error:', error);
       }
     }
 

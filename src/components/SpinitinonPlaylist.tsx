@@ -68,14 +68,17 @@ const SpinitinonPlaylist = ({
     const effectiveStartDate = dateSearchEnabled ? startDate : '';
     const effectiveEndDate = dateSearchEnabled ? endDate : '';
     
+    // For live updates (no filters), always fetch fresh data from API
+    const shouldUseFreshData = !hasActiveFilters && autoUpdate;
+    
     console.log('Fetching spins with params:', {
       endpoint: 'spins',
       count: maxItems.toString(),
       search: debouncedSearchTerm,
       start: effectiveStartDate,
       end: effectiveEndDate,
-      use_cache: hasActiveFilters ? 'false' : 'true', // Don't use cache for live updates when no filters
-      timestamp: Date.now() // Add timestamp for cache busting
+      use_cache: shouldUseFreshData ? 'false' : 'true', // Force fresh data for live updates
+      timestamp: Date.now()
     });
 
     const { data, error } = await supabase.functions.invoke('spinitron-proxy', {
@@ -85,7 +88,7 @@ const SpinitinonPlaylist = ({
         search: debouncedSearchTerm,
         start: effectiveStartDate,
         end: effectiveEndDate,
-        use_cache: hasActiveFilters ? 'false' : 'true',
+        use_cache: shouldUseFreshData ? 'false' : 'true',
         _cache_bust: Date.now().toString()
       }
     });
@@ -109,7 +112,7 @@ const SpinitinonPlaylist = ({
     queryKey: ['spins', stationId, page, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate],
     queryFn: fetchSpins,
     refetchInterval: autoUpdate && !hasActiveFilters ? 5000 : false, // Check every 5 seconds for changes
-    staleTime: hasActiveFilters ? 300000 : 2000, // Very short stale time for live content
+    staleTime: hasActiveFilters ? 300000 : 1000, // Very short stale time for live content
     gcTime: hasActiveFilters ? 300000 : 10000,
   });
 
