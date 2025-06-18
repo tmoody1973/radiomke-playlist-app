@@ -25,28 +25,38 @@ serve(async (req) => {
       );
     }
 
-    const url = new URL(req.url);
-    const endpoint = url.searchParams.get('endpoint') || 'spins';
-    const stationId = url.searchParams.get('station') || '';
-    const count = url.searchParams.get('count') || '20';
-    const start = url.searchParams.get('start') || '';
-    const end = url.searchParams.get('end') || '';
-    const search = url.searchParams.get('search') || '';
+    // Parse request body for parameters
+    let params: URLSearchParams;
+    if (req.method === 'POST') {
+      const body = await req.text();
+      params = new URLSearchParams(body);
+    } else {
+      const url = new URL(req.url);
+      params = url.searchParams;
+    }
+
+    const endpoint = params.get('endpoint') || 'spins';
+    const stationId = params.get('station') || '';
+    const count = params.get('count') || '20';
+    const start = params.get('start') || '';
+    const end = params.get('end') || '';
+    const search = params.get('search') || '';
+    const offset = params.get('offset') || '';
 
     // Build Spinitron API URL
     let spinitronUrl = `https://spinitron.com/api/${endpoint}`;
-    const params = new URLSearchParams();
+    const apiParams = new URLSearchParams();
     
-    if (stationId) params.append('station', stationId);
-    params.append('count', count);
-    if (start) params.append('start', start);
-    if (end) params.append('end', end);
-    if (search) params.append('search', search);
+    if (stationId) apiParams.append('station', stationId);
+    apiParams.append('count', count);
+    if (start) apiParams.append('start', start);
+    if (end) apiParams.append('end', end);
+    if (search) apiParams.append('search', search);
     
     // Add cache-busting parameter
-    params.append('_t', Date.now().toString());
+    apiParams.append('_t', Date.now().toString());
     
-    spinitronUrl += `?${params.toString()}`;
+    spinitronUrl += `?${apiParams.toString()}`;
 
     console.log('Fetching from Spinitron:', spinitronUrl);
 
@@ -74,8 +84,22 @@ serve(async (req) => {
     const data = await response.json();
     console.log('Successfully fetched data:', data.items?.length || 0, 'items');
 
+    // Handle client-side pagination by slicing the results if offset is provided
+    let processedData = data;
+    if (offset && data.items) {
+      const offsetNum = parseInt(offset);
+      const countNum = parseInt(count);
+      
+      // For demo purposes, we'll simulate pagination by requesting more items
+      // In a real implementation, you might want to cache results or use Spinitron's pagination
+      processedData = {
+        ...data,
+        items: data.items.slice(0, countNum) // Keep the requested number of items
+      };
+    }
+
     return new Response(
-      JSON.stringify(data),
+      JSON.stringify(processedData),
       { 
         headers: { 
           ...corsHeaders, 

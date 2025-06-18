@@ -1,11 +1,14 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Music, Clock, User, Disc, RefreshCw } from 'lucide-react';
+import { Search, Music, Clock, User, Disc, RefreshCw, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface SpinItem {
   id: number;
@@ -36,29 +39,46 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
 }) => {
   const [spins, setSpins] = useState<SpinItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
-  const fetchSpins = useCallback(async (showLoader = true) => {
+  const fetchSpins = useCallback(async (showLoader = true, append = false, page = 1) => {
     try {
-      if (showLoader) setLoading(true);
-      setIsRefreshing(!showLoader);
+      if (showLoader && !append) setLoading(true);
+      if (append) setLoadingMore(true);
+      if (!showLoader && !append) setIsRefreshing(true);
       setError(null);
 
-      const params = new URLSearchParams({
-        endpoint: 'spins',
-        count: maxItems.toString(),
-      });
+      const queryParams = new URLSearchParams();
+      queryParams.append('endpoint', 'spins');
+      queryParams.append('count', maxItems.toString());
+      
+      if (stationId) queryParams.append('station', stationId);
+      if (searchTerm.trim()) queryParams.append('search', searchTerm.trim());
+      if (startDate) queryParams.append('start', startDate.toISOString());
+      if (endDate) queryParams.append('end', endDate.toISOString());
+      
+      // For pagination, we'll use a simple offset approach
+      if (page > 1) {
+        const offset = (page - 1) * maxItems;
+        queryParams.append('offset', offset.toString());
+      }
 
-      if (stationId) params.append('station', stationId);
-      if (searchTerm) params.append('search', searchTerm);
-
-      console.log('Fetching spins with params:', Object.fromEntries(params));
+      console.log('Fetching spins with params:', Object.fromEntries(queryParams));
 
       const { data, error: supabaseError } = await supabase.functions.invoke('spinitron-proxy', {
-        body: params.toString(),
+        method: 'POST',
+        body: queryParams.toString(),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
       });
 
       if (supabaseError) {
@@ -71,10 +91,18 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
 
       if (data?.items) {
         console.log('Received spins:', data.items.length);
-        setSpins(data.items);
+        if (append) {
+          setSpins(prev => [...prev, ...data.items]);
+        } else {
+          setSpins(data.items);
+        }
+        
+        // Check if we have more items to load
+        setHasMore(data.items.length === maxItems);
       } else {
         console.warn('No items in response:', data);
-        setSpins([]);
+        if (!append) setSpins([]);
+        setHasMore(false);
       }
 
     } catch (err) {
@@ -88,9 +116,10 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
       });
     } finally {
       setLoading(false);
+      setLoadingMore(false);
       setIsRefreshing(false);
     }
-  }, [stationId, searchTerm, maxItems, toast]);
+  }, [stationId, searchTerm, startDate, endDate, maxItems, toast]);
 
   // Auto-update with setTimeout for better network handling
   useEffect(() => {
@@ -100,9 +129,12 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
     
     const scheduleNextUpdate = () => {
       timeoutId = setTimeout(() => {
-        fetchSpins(false); // Don't show loader for auto-updates
-        scheduleNextUpdate(); // Schedule the next update
-      }, 30000); // 30 seconds
+        // Only auto-update if we're on the first page and no search/filters are active
+        if (currentPage === 1 && !searchTerm.trim() && !startDate && !endDate) {
+          fetchSpins(false, false, 1);
+        }
+        scheduleNextUpdate();
+      }, 30000);
     };
 
     scheduleNextUpdate();
@@ -110,12 +142,32 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [fetchSpins, autoUpdate]);
+  }, [fetchSpins, autoUpdate, currentPage, searchTerm, startDate, endDate]);
 
   // Initial load
   useEffect(() => {
-    fetchSpins();
-  }, [fetchSpins]);
+    setCurrentPage(1);
+    fetchSpins(true, false, 1);
+  }, [searchTerm, startDate, endDate]);
+
+  const handleLoadMore = () => {
+    const nextPage = currentPage + 1;
+    setCurrentPage(nextPage);
+    fetchSpins(false, true, nextPage);
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCurrentPage(1);
+    fetchSpins(true, false, 1);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setCurrentPage(1);
+  };
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -131,11 +183,6 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
     const startTime = new Date(start);
     const endTime = new Date(startTime.getTime() + duration * 1000);
     return now >= startTime && now <= endTime;
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchSpins();
   };
 
   if (loading && spins.length === 0) {
@@ -189,29 +236,77 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <CardTitle className="flex items-center gap-2">
-            <Music className="h-5 w-5" />
-            Live Playlist
-            {isRefreshing && <RefreshCw className="h-4 w-4 animate-spin" />}
-          </CardTitle>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <CardTitle className="flex items-center gap-2">
+              <Music className="h-5 w-5" />
+              Live Playlist
+              {isRefreshing && <RefreshCw className="h-4 w-4 animate-spin" />}
+            </CardTitle>
+          </div>
           
           {showSearch && (
-            <form onSubmit={handleSearch} className="flex gap-2 flex-1 sm:flex-initial">
-              <div className="relative flex-1 sm:w-64">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Search artist, song, album..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+            <div className="space-y-4">
+              <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search artist, song, album..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Button type="submit" size="default">
+                  Search
+                </Button>
+              </form>
+              
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="justify-start text-left font-normal">
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "PPP") : "Start date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={startDate}
+                      onSelect={setStartDate}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+                
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="justify-start text-left font-normal">
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "PPP") : "End date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={endDate}
+                      onSelect={setEndDate}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+                
+                {(searchTerm || startDate || endDate) && (
+                  <Button variant="ghost" onClick={clearFilters}>
+                    Clear Filters
+                  </Button>
+                )}
               </div>
-              <Button type="submit" size="sm">
-                Search
-              </Button>
-            </form>
+            </div>
           )}
         </div>
       </CardHeader>
@@ -287,12 +382,35 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
                 </div>
               );
             })}
+            
+            {hasMore && (
+              <div className="flex justify-center pt-4">
+                <Button 
+                  onClick={handleLoadMore} 
+                  variant="outline" 
+                  disabled={loadingMore}
+                  className="min-w-32"
+                >
+                  {loadingMore ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Load More'
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         )}
         
         <div className="mt-4 text-center text-sm text-muted-foreground">
-          {autoUpdate && (
+          {autoUpdate && currentPage === 1 && !searchTerm && !startDate && !endDate && (
             <p>Updates automatically every 30 seconds</p>
+          )}
+          {spins.length > 0 && (
+            <p className="mt-1">Showing {spins.length} tracks</p>
           )}
         </div>
       </CardContent>
