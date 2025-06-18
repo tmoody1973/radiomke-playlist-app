@@ -50,7 +50,7 @@ serve(async (req) => {
     const offset = body.offset || '0';
     const useCache = body.use_cache === 'true';
 
-    console.log('Search parameters:', { search, useCache, offset, count });
+    console.log('Search parameters:', { search, useCache, offset, count, start, end });
 
     // If search is provided, search the database first
     if (search) {
@@ -122,7 +122,7 @@ serve(async (req) => {
       console.log('No results found in database, searching Spinitron API');
     }
 
-    // If using cache and no search term, try database first
+    // If using cache and no search term, try database first (including date filtering)
     if (useCache && !search) {
       console.log('Fetching from database cache');
       
@@ -153,7 +153,8 @@ serve(async (req) => {
 
       console.log('Database cache result:', { 
         foundSongs: cachedSongs?.length || 0, 
-        error: dbError?.message || 'none' 
+        error: dbError?.message || 'none',
+        dateFilter: { start, end }
       });
 
       if (!dbError && cachedSongs && cachedSongs.length > 0) {

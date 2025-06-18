@@ -27,6 +27,8 @@ interface SpinitinonPlaylistProps {
   showSearch?: boolean;
   maxItems?: number;
   compact?: boolean;
+  startDate?: string;
+  endDate?: string;
 }
 
 const SpinitinonPlaylist = ({ 
@@ -34,7 +36,9 @@ const SpinitinonPlaylist = ({
   autoUpdate = true, 
   showSearch = true, 
   maxItems = 20,
-  compact = false 
+  compact = false,
+  startDate = '',
+  endDate = ''
 }: SpinitinonPlaylistProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
@@ -54,7 +58,9 @@ const SpinitinonPlaylist = ({
       endpoint: 'spins',
       count: maxItems.toString(),
       search: debouncedSearchTerm,
-      use_cache: debouncedSearchTerm ? 'true' : 'true'
+      start: startDate,
+      end: endDate,
+      use_cache: 'true'
     });
 
     const { data, error } = await supabase.functions.invoke('spinitron-proxy', {
@@ -62,6 +68,8 @@ const SpinitinonPlaylist = ({
         endpoint: 'spins',
         count: maxItems.toString(),
         search: debouncedSearchTerm,
+        start: startDate,
+        end: endDate,
         use_cache: 'true'
       }
     });
@@ -76,20 +84,20 @@ const SpinitinonPlaylist = ({
   };
 
   const { data: spins = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['spins', stationId, page, maxItems, debouncedSearchTerm],
+    queryKey: ['spins', stationId, page, maxItems, debouncedSearchTerm, startDate, endDate],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate && !debouncedSearchTerm ? 30000 : false, // Don't auto-refresh during search
+    refetchInterval: autoUpdate && !debouncedSearchTerm && !startDate && !endDate ? 30000 : false, // Don't auto-refresh during search or date filtering
     staleTime: 25000,
   });
 
   useEffect(() => {
-    if (autoUpdate && !debouncedSearchTerm) {
+    if (autoUpdate && !debouncedSearchTerm && !startDate && !endDate) {
       const interval = setInterval(() => {
         refetch();
       }, 30000);
       return () => clearInterval(interval);
     }
-  }, [autoUpdate, refetch, debouncedSearchTerm]);
+  }, [autoUpdate, refetch, debouncedSearchTerm, startDate, endDate]);
 
   // No need to filter spins anymore since search is done in the database
   const displayedSpins = spins;
@@ -107,6 +115,8 @@ const SpinitinonPlaylist = ({
 
   // Check if we're in embed mode (no padding/margin on body)
   const isEmbedMode = window.location.pathname === '/embed';
+  const hasDateFilter = startDate || endDate;
+  const hasActiveFilters = debouncedSearchTerm || hasDateFilter;
 
   if (error) {
     return (
@@ -124,12 +134,23 @@ const SpinitinonPlaylist = ({
     );
   }
 
+  const getTitle = () => {
+    if (hasDateFilter && debouncedSearchTerm) {
+      return 'Filtered Results';
+    } else if (hasDateFilter) {
+      return 'Date Range Results';
+    } else if (debouncedSearchTerm) {
+      return 'Search Results';
+    }
+    return 'Live Playlist';
+  };
+
   return (
     <Card className={`w-full ${isEmbedMode ? 'h-full flex flex-col' : ''}`}>
       <CardHeader className={compact ? "pb-3" : ""}>
         <CardTitle className={`flex items-center gap-2 ${compact ? "text-lg" : ""}`}>
           <Radio className={`${compact ? "h-4 w-4" : "h-5 w-5"}`} />
-          {debouncedSearchTerm ? 'Search Results' : 'Live Playlist'}
+          {getTitle()}
           {isLoading && (
             <div className="animate-pulse">
               <div className="h-2 w-2 bg-red-500 rounded-full"></div>
@@ -138,14 +159,22 @@ const SpinitinonPlaylist = ({
         </CardTitle>
         
         {showSearch && (
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search songs or artists..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="space-y-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search songs or artists..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            {hasDateFilter && (
+              <div className="flex gap-2 text-xs text-muted-foreground">
+                {startDate && <span>From: {formatDate(startDate)}</span>}
+                {endDate && <span>To: {formatDate(endDate)}</span>}
+              </div>
+            )}
           </div>
         )}
       </CardHeader>
@@ -166,7 +195,7 @@ const SpinitinonPlaylist = ({
               <div className="text-center py-8">
                 <Music className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-muted-foreground">
-                  {debouncedSearchTerm ? 'No matching songs found' : 'No songs playing right now'}
+                  {hasActiveFilters ? 'No matching songs found' : 'No songs playing right now'}
                 </p>
               </div>
             ) : (
@@ -174,7 +203,7 @@ const SpinitinonPlaylist = ({
                 <div 
                   key={`${spin.id}-${index}`}
                   className={`p-3 border rounded-lg transition-colors hover:bg-accent/50 ${
-                    index === 0 && !debouncedSearchTerm ? 'bg-primary/5 border-primary/20' : 'bg-card'
+                    index === 0 && !hasActiveFilters ? 'bg-primary/5 border-primary/20' : 'bg-card'
                   }`}
                 >
                   <div className="flex gap-3">
@@ -232,7 +261,7 @@ const SpinitinonPlaylist = ({
                           )}
                         </div>
                         <div className="flex flex-col items-end ml-2">
-                          {index === 0 && !debouncedSearchTerm && (
+                          {index === 0 && !hasActiveFilters && (
                             <Badge variant="secondary" className={compact ? "text-xs px-2 py-0" : ""}>
                               Now Playing
                             </Badge>

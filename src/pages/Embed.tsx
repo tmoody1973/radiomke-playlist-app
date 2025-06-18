@@ -13,6 +13,8 @@ const Embed = () => {
   const compact = searchParams.get('compact') === 'true';
   const height = searchParams.get('height') || 'auto';
   const theme = searchParams.get('theme') || 'light';
+  const startDate = searchParams.get('startDate') || '';
+  const endDate = searchParams.get('endDate') || '';
 
   return (
     <div 
@@ -30,6 +32,8 @@ const Embed = () => {
             showSearch={showSearch}
             maxItems={maxItems}
             compact={compact}
+            startDate={startDate}
+            endDate={endDate}
           />
         </div>
       </div>

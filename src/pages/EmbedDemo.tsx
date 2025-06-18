@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,8 +5,12 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Copy, ExternalLink } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Copy, ExternalLink, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const EmbedDemo = () => {
   const [stationId, setStationId] = useState('');
@@ -17,6 +20,9 @@ const EmbedDemo = () => {
   const [compact, setCompact] = useState(false);
   const [height, setHeight] = useState('600');
   const [theme, setTheme] = useState('light');
+  const [enableDateSearch, setEnableDateSearch] = useState(false);
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
   const { toast } = useToast();
 
   const generateEmbedUrl = () => {
@@ -28,6 +34,8 @@ const EmbedDemo = () => {
     if (compact) params.append('compact', 'true');
     if (height !== 'auto') params.append('height', height);
     if (theme !== 'light') params.append('theme', theme);
+    if (enableDateSearch && startDate) params.append('startDate', startDate.toISOString());
+    if (enableDateSearch && endDate) params.append('endDate', endDate.toISOString());
 
     const baseUrl = window.location.origin;
     return `${baseUrl}/embed?${params.toString()}`;
@@ -141,7 +149,113 @@ const EmbedDemo = () => {
                     onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
                   />
                 </div>
+
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="enableDateSearch">Enable Date Search</Label>
+                  <Switch
+                    id="enableDateSearch"
+                    checked={enableDateSearch}
+                    onCheckedChange={setEnableDateSearch}
+                  />
+                </div>
               </div>
+
+              {enableDateSearch && (
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                  <h4 className="font-medium">Date Range Filter</h4>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Start Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !startDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {startDate ? format(startDate, "PPP") : "Pick start date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={startDate}
+                            onSelect={setStartDate}
+                            initialFocus
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>End Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !endDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {endDate ? format(endDate, "PPP") : "Pick end date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={endDate}
+                            onSelect={setEndDate}
+                            initialFocus
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const today = new Date();
+                        setStartDate(new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000));
+                        setEndDate(today);
+                      }}
+                    >
+                      Last 7 Days
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const today = new Date();
+                        setStartDate(new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000));
+                        setEndDate(today);
+                      }}
+                    >
+                      Last 30 Days
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setStartDate(undefined);
+                        setEndDate(undefined);
+                      }}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-3">
                 <Label>Embed Code</Label>
