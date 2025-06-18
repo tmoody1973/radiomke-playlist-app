@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Search, Music, Clock, User, Radio, ImageIcon } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Search, Music, Clock, User, Radio, ImageIcon, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import DateRangePicker from './DateRangePicker';
 
 interface Spin {
   id: number;
@@ -37,12 +39,22 @@ const SpinitinonPlaylist = ({
   showSearch = true, 
   maxItems = 20,
   compact = false,
-  startDate = '',
-  endDate = ''
+  startDate: initialStartDate = '',
+  endDate: initialEndDate = ''
 }: SpinitinonPlaylistProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [dateSearchEnabled, setDateSearchEnabled] = useState(false);
+  const [startDate, setStartDate] = useState(initialStartDate);
+  const [endDate, setEndDate] = useState(initialEndDate);
+
+  // Initialize date search if dates were provided via props
+  useEffect(() => {
+    if (initialStartDate || initialEndDate) {
+      setDateSearchEnabled(true);
+    }
+  }, [initialStartDate, initialEndDate]);
 
   // Debounce search term to avoid too many API calls
   useEffect(() => {
@@ -54,12 +66,15 @@ const SpinitinonPlaylist = ({
   }, [searchTerm]);
 
   const fetchSpins = async (): Promise<Spin[]> => {
+    const effectiveStartDate = dateSearchEnabled ? startDate : '';
+    const effectiveEndDate = dateSearchEnabled ? endDate : '';
+    
     console.log('Fetching spins with params:', {
       endpoint: 'spins',
       count: maxItems.toString(),
       search: debouncedSearchTerm,
-      start: startDate,
-      end: endDate,
+      start: effectiveStartDate,
+      end: effectiveEndDate,
       use_cache: 'true'
     });
 
@@ -68,8 +83,8 @@ const SpinitinonPlaylist = ({
         endpoint: 'spins',
         count: maxItems.toString(),
         search: debouncedSearchTerm,
-        start: startDate,
-        end: endDate,
+        start: effectiveStartDate,
+        end: effectiveEndDate,
         use_cache: 'true'
       }
     });
@@ -83,23 +98,25 @@ const SpinitinonPlaylist = ({
     return data.items || [];
   };
 
+  const effectiveStartDate = dateSearchEnabled ? startDate : '';
+  const effectiveEndDate = dateSearchEnabled ? endDate : '';
+
   const { data: spins = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['spins', stationId, page, maxItems, debouncedSearchTerm, startDate, endDate],
+    queryKey: ['spins', stationId, page, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate && !debouncedSearchTerm && !startDate && !endDate ? 30000 : false, // Don't auto-refresh during search or date filtering
+    refetchInterval: autoUpdate && !debouncedSearchTerm && !effectiveStartDate && !effectiveEndDate ? 30000 : false,
     staleTime: 25000,
   });
 
   useEffect(() => {
-    if (autoUpdate && !debouncedSearchTerm && !startDate && !endDate) {
+    if (autoUpdate && !debouncedSearchTerm && !effectiveStartDate && !effectiveEndDate) {
       const interval = setInterval(() => {
         refetch();
       }, 30000);
       return () => clearInterval(interval);
     }
-  }, [autoUpdate, refetch, debouncedSearchTerm, startDate, endDate]);
+  }, [autoUpdate, refetch, debouncedSearchTerm, effectiveStartDate, effectiveEndDate]);
 
-  // No need to filter spins anymore since search is done in the database
   const displayedSpins = spins;
 
   const formatTime = (dateString: string) => {
@@ -113,9 +130,26 @@ const SpinitinonPlaylist = ({
     return new Date(dateString).toLocaleDateString();
   };
 
-  // Check if we're in embed mode (no padding/margin on body)
+  const handleDateChange = (newStartDate: string, newEndDate: string) => {
+    setStartDate(newStartDate);
+    setEndDate(newEndDate);
+  };
+
+  const handleDateClear = () => {
+    setStartDate('');
+    setEndDate('');
+  };
+
+  const handleDateSearchToggle = (enabled: boolean) => {
+    setDateSearchEnabled(enabled);
+    if (!enabled) {
+      setStartDate('');
+      setEndDate('');
+    }
+  };
+
   const isEmbedMode = window.location.pathname === '/embed';
-  const hasDateFilter = startDate || endDate;
+  const hasDateFilter = dateSearchEnabled && (startDate || endDate);
   const hasActiveFilters = debouncedSearchTerm || hasDateFilter;
 
   if (error) {
@@ -159,7 +193,7 @@ const SpinitinonPlaylist = ({
         </CardTitle>
         
         {showSearch && (
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
@@ -169,6 +203,25 @@ const SpinitinonPlaylist = ({
                 className="pl-10"
               />
             </div>
+            
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Date Search</span>
+              <Switch
+                checked={dateSearchEnabled}
+                onCheckedChange={handleDateSearchToggle}
+              />
+            </div>
+            
+            {dateSearchEnabled && (
+              <DateRangePicker
+                startDate={startDate}
+                endDate={endDate}
+                onDateChange={handleDateChange}
+                onClear={handleDateClear}
+              />
+            )}
+            
             {hasDateFilter && (
               <div className="flex gap-2 text-xs text-muted-foreground">
                 {startDate && <span>From: {formatDate(startDate)}</span>}
