@@ -113,15 +113,18 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
           const newSpins = data.items.filter((spin: SpinItem) => !existingIds.has(spin.id));
           console.log('Adding', newSpins.length, 'new unique spins');
           setSpins(prev => [...prev, ...newSpins]);
+          
+          // For pagination: if we got 0 new unique items, assume no more data
+          if (newSpins.length === 0) {
+            setHasMore(false);
+          } else {
+            // Keep hasMore true if we got new items (backend typically returns 20 per page)
+            setHasMore(true);
+          }
         } else {
           setSpins(data.items);
-        }
-        
-        // Better hasMore logic: if we got fewer items than requested, we're likely at the end
-        if (data.items.length < maxItems) {
-          setHasMore(false);
-        } else {
-          setHasMore(true);
+          // For initial load: assume more data is available unless we get 0 items
+          setHasMore(data.items.length > 0);
         }
       } else {
         console.warn('No items in response:', data);
