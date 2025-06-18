@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -213,9 +214,8 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
   // Find the currently playing song
   const currentlyPlayingSong = spins.find(spin => isCurrentlyPlaying(spin.start, spin.duration || 180));
 
-  // Filter out the currently playing song from the main list if we have search/filter active
+  // Check if we have active search/filters
   const hasActiveFilters = debouncedSearchTerm.trim() || startDate || endDate;
-  const displaySpins = hasActiveFilters ? spins : spins;
 
   if (loading && spins.length === 0) {
     return (
@@ -448,9 +448,9 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
               </div>
             )}
             
-            {displaySpins.map((spin, index) => {
+            {spins.map((spin, index) => {
               const isPlaying = isCurrentlyPlaying(spin.start, spin.duration || 180);
-              // Don't show currently playing song in the main list if no filters
+              // Only hide currently playing song in the main list if NO active filters
               if (isPlaying && !hasActiveFilters) return null;
               
               return (
