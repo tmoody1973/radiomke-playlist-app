@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -548,8 +549,8 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
               );
             })}
             
-            {/* Load More Button */}
-            {hasMore && spins.length > 0 && !hasActiveFilters && (
+            {/* Load More Button - Show when there are more results available */}
+            {hasMore && spins.length > 0 && (
               <div className="flex justify-center pt-4">
                 <Button 
                   onClick={handleLoadMore} 
