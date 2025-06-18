@@ -81,9 +81,9 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
       if (startDate) queryParams.append('start', startDate.toISOString());
       if (endDate) queryParams.append('end', endDate.toISOString());
       
+      // Fix pagination: use the actual page number and let backend handle offset
       if (page > 1) {
-        const offset = (page - 1) * maxItems;
-        queryParams.append('offset', offset.toString());
+        queryParams.append('page', page.toString());
       }
 
       console.log('Fetching spins with params:', Object.fromEntries(queryParams));
@@ -105,21 +105,21 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
       }
 
       if (data?.items) {
-        console.log('Received spins:', data.items.length);
+        console.log('Received spins:', data.items.length, 'for page:', page);
+        
         if (append) {
-          setSpins(prev => [...prev, ...data.items]);
+          // When appending, filter out any duplicates based on ID
+          const existingIds = new Set(spins.map(spin => spin.id));
+          const newSpins = data.items.filter((spin: SpinItem) => !existingIds.has(spin.id));
+          console.log('Adding', newSpins.length, 'new unique spins');
+          setSpins(prev => [...prev, ...newSpins]);
         } else {
           setSpins(data.items);
         }
         
-        // Set hasMore based on whether we got the full requested amount
-        // If we got fewer items than requested, there are no more
-        // But for initial loads, assume there might be more unless we get 0 items
-        if (data.items.length === 0) {
+        // Better hasMore logic: if we got fewer items than requested, we're likely at the end
+        if (data.items.length < maxItems) {
           setHasMore(false);
-        } else if (data.items.length < maxItems) {
-          // If we got fewer than requested, there might still be more for initial loads
-          setHasMore(page === 1 ? true : false);
         } else {
           setHasMore(true);
         }
@@ -143,7 +143,7 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
       setLoadingMore(false);
       setIsRefreshing(false);
     }
-  }, [stationId, debouncedSearchTerm, startDate, endDate, maxItems, useCache, toast]);
+  }, [stationId, debouncedSearchTerm, startDate, endDate, maxItems, useCache, toast, spins]);
 
   // Auto-update effect
   useEffect(() => {
@@ -171,7 +171,7 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
   useEffect(() => {
     setCurrentPage(1);
     fetchSpins(true, false, 1);
-  }, [debouncedSearchTerm, startDate, endDate, useCache, fetchSpins]);
+  }, [debouncedSearchTerm, startDate, endDate, useCache]);
 
   const handleLoadMore = () => {
     const nextPage = currentPage + 1;
@@ -556,8 +556,8 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
               );
             })}
             
-            {/* Load More Button - Show when there are more results available or when we haven't confirmed there aren't more */}
-            {spins.length > 0 && (hasMore || spins.length >= maxItems) && (
+            {/* Load More Button - Show when there are more results available */}
+            {hasMore && spins.length > 0 && (
               <div className="flex justify-center pt-4">
                 <Button 
                   onClick={handleLoadMore} 
