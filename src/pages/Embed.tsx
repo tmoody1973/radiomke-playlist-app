@@ -16,20 +16,22 @@ const Embed = () => {
 
   return (
     <div 
-      className={`embed-container ${theme === 'dark' ? 'dark' : ''}`}
+      className={`embed-container w-full h-screen ${theme === 'dark' ? 'dark' : ''}`}
       style={{ 
-        height: height !== 'auto' ? `${height}px` : 'auto',
-        minHeight: compact ? '300px' : '400px'
+        height: height !== 'auto' ? `${height}px` : '100vh',
+        overflow: 'hidden'
       }}
     >
-      <div className="min-h-full bg-background p-2 sm:p-4 overflow-auto">
-        <SpinitinonPlaylist 
-          stationId={stationId}
-          autoUpdate={autoUpdate}
-          showSearch={showSearch}
-          maxItems={maxItems}
-          compact={compact}
-        />
+      <div className="h-full bg-background p-2 sm:p-4 flex flex-col">
+        <div className="flex-1 min-h-0">
+          <SpinitinonPlaylist 
+            stationId={stationId}
+            autoUpdate={autoUpdate}
+            showSearch={showSearch}
+            maxItems={maxItems}
+            compact={compact}
+          />
+        </div>
       </div>
     </div>
   );
