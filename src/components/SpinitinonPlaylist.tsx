@@ -216,6 +216,18 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
   // Check if we have active search/filters
   const hasActiveFilters = debouncedSearchTerm.trim() || startDate || endDate;
 
+  // Filter spins to show only matching results when searching
+  const getFilteredSpins = () => {
+    if (!debouncedSearchTerm.trim()) return spins;
+    
+    const searchTerm = debouncedSearchTerm.toLowerCase();
+    return spins.filter(spin => 
+      spin.song.toLowerCase().includes(searchTerm) ||
+      spin.artist.toLowerCase().includes(searchTerm) ||
+      (spin.release && spin.release.toLowerCase().includes(searchTerm))
+    );
+  };
+
   // Filter spins to count actual matches when searching
   const getSearchMatchCount = () => {
     if (!debouncedSearchTerm.trim()) return spins.length;
@@ -435,9 +447,6 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
               {debouncedSearchTerm.trim() ? (
                 <>
                   Found {getSearchMatchCount()} matching tracks
-                  {getSearchMatchCount() !== spins.length && (
-                    <span className="text-gray-500"> (showing {spins.length} total results)</span>
-                  )}
                 </>
               ) : (
                 <>Found {spins.length} tracks</>
@@ -468,7 +477,7 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
               </div>
             )}
             
-            {spins.map((spin, index) => {
+            {getFilteredSpins().map((spin, index) => {
               const isPlaying = isCurrentlyPlaying(spin.start, spin.duration || 180);
               // Only hide currently playing song in the main list if NO active filters
               if (isPlaying && !hasActiveFilters) return null;
@@ -540,7 +549,7 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
             })}
             
             {/* Load More Button */}
-            {hasMore && spins.length > 0 && (
+            {hasMore && spins.length > 0 && !hasActiveFilters && (
               <div className="flex justify-center pt-4">
                 <Button 
                   onClick={handleLoadMore} 
@@ -568,7 +577,11 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
           )}
           {spins.length > 0 && (
             <p className="mt-1">
-              Showing {spins.length} tracks
+              {hasActiveFilters ? (
+                <>Showing {getFilteredSpins().length} of {spins.length} tracks</>
+              ) : (
+                <>Showing {spins.length} tracks</>
+              )}
               {useCache && <span className="text-green-600 ml-1">(cached search enabled)</span>}
             </p>
           )}
