@@ -106,19 +106,54 @@ const SpinitinonPlaylist = ({
   const hasActiveFilters = debouncedSearchTerm || effectiveStartDate || effectiveEndDate;
 
   const { data: spins = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['spins', stationId, page, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate, Date.now()],
+    queryKey: ['spins', stationId, page, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate && !hasActiveFilters ? 15000 : false, // Reduced interval for more frequent updates
-    staleTime: hasActiveFilters ? 300000 : 10000, // Shorter stale time for live content
-    gcTime: hasActiveFilters ? 300000 : 30000,
+    refetchInterval: autoUpdate && !hasActiveFilters ? 5000 : false, // Check every 5 seconds for changes
+    staleTime: hasActiveFilters ? 300000 : 2000, // Very short stale time for live content
+    gcTime: hasActiveFilters ? 300000 : 10000,
   });
 
+  // Smart real-time update system
+  useEffect(() => {
+    if (!autoUpdate || hasActiveFilters || !spins.length) return;
+
+    const currentSpin = spins[0];
+    if (!currentSpin) return;
+
+    const now = new Date();
+    const startTime = new Date(currentSpin.start);
+    const duration = currentSpin.duration || 180; // Default 3 minutes
+    const endTime = new Date(startTime.getTime() + duration * 1000);
+    
+    // If the current song should have ended, refresh immediately
+    if (now > endTime) {
+      console.log('Current song should have ended, refreshing immediately...');
+      refetch();
+      return;
+    }
+
+    // Calculate when the current song will end and set a timer
+    const timeUntilEnd = endTime.getTime() - now.getTime();
+    
+    if (timeUntilEnd > 0 && timeUntilEnd < 300000) { // Only set timer if less than 5 minutes
+      console.log(`Setting timer to refresh in ${Math.round(timeUntilEnd / 1000)} seconds when current song ends`);
+      
+      const timer = setTimeout(() => {
+        console.log('Song should have ended, refreshing playlist...');
+        refetch();
+      }, timeUntilEnd + 5000); // Add 5 seconds buffer
+
+      return () => clearTimeout(timer);
+    }
+  }, [spins, autoUpdate, refetch, hasActiveFilters]);
+
+  // Fallback polling for when smart timing isn't available
   useEffect(() => {
     if (autoUpdate && !hasActiveFilters) {
       const interval = setInterval(() => {
-        console.log('Auto-refreshing playlist data...');
+        console.log('Fallback refresh - checking for updates...');
         refetch();
-      }, 15000); // More frequent updates for live content
+      }, 30000); // Fallback every 30 seconds
       return () => clearInterval(interval);
     }
   }, [autoUpdate, refetch, hasActiveFilters]);
