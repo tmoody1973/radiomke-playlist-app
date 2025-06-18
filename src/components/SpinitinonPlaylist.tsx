@@ -38,18 +38,30 @@ const SpinitinonPlaylist = ({
 }: SpinitinonPlaylistProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  // Debounce search term to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const fetchSpins = async (): Promise<Spin[]> => {
     console.log('Fetching spins with params:', {
       endpoint: 'spins',
       count: maxItems.toString(),
-      use_cache: 'true'
+      search: debouncedSearchTerm,
+      use_cache: debouncedSearchTerm ? 'true' : 'true'
     });
 
     const { data, error } = await supabase.functions.invoke('spinitron-proxy', {
       body: {
         endpoint: 'spins',
         count: maxItems.toString(),
+        search: debouncedSearchTerm,
         use_cache: 'true'
       }
     });
@@ -59,30 +71,28 @@ const SpinitinonPlaylist = ({
       throw error;
     }
 
-    console.log('Received spins:', data.items?.length || 0, 'for page:', page);
+    console.log('Received spins:', data.items?.length || 0, 'for search:', debouncedSearchTerm);
     return data.items || [];
   };
 
   const { data: spins = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['spins', stationId, page, maxItems],
+    queryKey: ['spins', stationId, page, maxItems, debouncedSearchTerm],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate ? 30000 : false,
+    refetchInterval: autoUpdate && !debouncedSearchTerm ? 30000 : false, // Don't auto-refresh during search
     staleTime: 25000,
   });
 
   useEffect(() => {
-    if (autoUpdate) {
+    if (autoUpdate && !debouncedSearchTerm) {
       const interval = setInterval(() => {
         refetch();
       }, 30000);
       return () => clearInterval(interval);
     }
-  }, [autoUpdate, refetch]);
+  }, [autoUpdate, refetch, debouncedSearchTerm]);
 
-  const filteredSpins = spins.filter(spin =>
-    spin.artist.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    spin.song.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // No need to filter spins anymore since search is done in the database
+  const displayedSpins = spins;
 
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString([], { 
@@ -119,7 +129,7 @@ const SpinitinonPlaylist = ({
       <CardHeader className={compact ? "pb-3" : ""}>
         <CardTitle className={`flex items-center gap-2 ${compact ? "text-lg" : ""}`}>
           <Radio className={`${compact ? "h-4 w-4" : "h-5 w-5"}`} />
-          Live Playlist
+          {debouncedSearchTerm ? 'Search Results' : 'Live Playlist'}
           {isLoading && (
             <div className="animate-pulse">
               <div className="h-2 w-2 bg-red-500 rounded-full"></div>
@@ -152,19 +162,19 @@ const SpinitinonPlaylist = ({
           type="always"
         >
           <div className="space-y-3">
-            {filteredSpins.length === 0 ? (
+            {displayedSpins.length === 0 ? (
               <div className="text-center py-8">
                 <Music className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-muted-foreground">
-                  {searchTerm ? 'No matching songs found' : 'No songs playing right now'}
+                  {debouncedSearchTerm ? 'No matching songs found' : 'No songs playing right now'}
                 </p>
               </div>
             ) : (
-              filteredSpins.map((spin, index) => (
+              displayedSpins.map((spin, index) => (
                 <div 
                   key={`${spin.id}-${index}`}
                   className={`p-3 border rounded-lg transition-colors hover:bg-accent/50 ${
-                    index === 0 ? 'bg-primary/5 border-primary/20' : 'bg-card'
+                    index === 0 && !debouncedSearchTerm ? 'bg-primary/5 border-primary/20' : 'bg-card'
                   }`}
                 >
                   <div className="flex gap-3">
@@ -222,7 +232,7 @@ const SpinitinonPlaylist = ({
                           )}
                         </div>
                         <div className="flex flex-col items-end ml-2">
-                          {index === 0 && (
+                          {index === 0 && !debouncedSearchTerm && (
                             <Badge variant="secondary" className={compact ? "text-xs px-2 py-0" : ""}>
                               Now Playing
                             </Badge>

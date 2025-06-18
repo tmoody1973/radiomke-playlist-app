@@ -33,29 +33,28 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
     // Parse request body for parameters
-    let params: URLSearchParams;
+    let body;
     if (req.method === 'POST') {
-      const body = await req.text();
-      params = new URLSearchParams(body);
+      body = await req.json();
     } else {
       const url = new URL(req.url);
-      params = url.searchParams;
+      body = Object.fromEntries(url.searchParams);
     }
 
-    const endpoint = params.get('endpoint') || 'spins';
-    const stationId = params.get('station') || '';
-    const count = params.get('count') || '20';
-    const start = params.get('start') || '';
-    const end = params.get('end') || '';
-    const search = params.get('search') || '';
-    const offset = params.get('offset') || '0';
-    const useCache = params.get('use_cache') === 'true';
+    const endpoint = body.endpoint || 'spins';
+    const stationId = body.station || '';
+    const count = body.count || '20';
+    const start = body.start || '';
+    const end = body.end || '';
+    const search = body.search || '';
+    const offset = body.offset || '0';
+    const useCache = body.use_cache === 'true';
 
     console.log('Search parameters:', { search, useCache, offset, count });
 
-    // If search is provided or we want to use cache, try database first
-    if (search || useCache) {
-      console.log('Searching in database for:', search || 'cached songs');
+    // If search is provided, search the database first
+    if (search) {
+      console.log('Searching in database for:', search);
       
       let query = supabase
         .from('songs')
@@ -75,11 +74,9 @@ serve(async (req) => {
         query = query.lte('start_time', end);
       }
       
-      if (search) {
-        // Use simpler ILIKE search instead of full-text search
-        const searchTerm = `%${search}%`;
-        query = query.or(`song.ilike.${searchTerm},artist.ilike.${searchTerm},release.ilike.${searchTerm}`);
-      }
+      // Use simpler ILIKE search for song, artist, and release
+      const searchTerm = `%${search}%`;
+      query = query.or(`song.ilike.${searchTerm},artist.ilike.${searchTerm},release.ilike.${searchTerm}`);
 
       const offsetNum = parseInt(offset);
       const countNum = parseInt(count);
@@ -120,9 +117,75 @@ serve(async (req) => {
           }
         );
       }
+
+      // If no results found in database, fall back to API search
+      console.log('No results found in database, searching Spinitron API');
     }
 
-    // Fetch from Spinitron API if not found in cache or no search
+    // If using cache and no search term, try database first
+    if (useCache && !search) {
+      console.log('Fetching from database cache');
+      
+      let query = supabase
+        .from('songs')
+        .select('*')
+        .order('start_time', { ascending: false });
+
+      // Apply filters
+      if (stationId) {
+        query = query.eq('station_id', stationId);
+      }
+      
+      if (start) {
+        query = query.gte('start_time', start);
+      }
+      
+      if (end) {
+        query = query.lte('start_time', end);
+      }
+
+      const offsetNum = parseInt(offset);
+      const countNum = parseInt(count);
+      
+      query = query.range(offsetNum, offsetNum + countNum - 1);
+
+      const { data: cachedSongs, error: dbError } = await query;
+
+      console.log('Database cache result:', { 
+        foundSongs: cachedSongs?.length || 0, 
+        error: dbError?.message || 'none' 
+      });
+
+      if (!dbError && cachedSongs && cachedSongs.length > 0) {
+        console.log('Found cached songs:', cachedSongs.length);
+        
+        // Transform database format to API format
+        const transformedSongs = cachedSongs.map(song => ({
+          id: song.spinitron_id,
+          start: song.start_time,
+          duration: song.duration || 180,
+          song: song.song,
+          artist: song.artist,
+          release: song.release,
+          label: song.label,
+          image: song.image,
+          episode: song.episode_title ? { title: song.episode_title } : undefined
+        }));
+
+        return new Response(
+          JSON.stringify({ items: transformedSongs }),
+          { 
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache, no-store, must-revalidate'
+            }
+          }
+        );
+      }
+    }
+
+    // Fetch from Spinitron API if not found in cache or has search
     let spinitronUrl = `https://spinitron.com/api/${endpoint}`;
     const apiParams = new URLSearchParams();
     
