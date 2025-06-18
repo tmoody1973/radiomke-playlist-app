@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Music, Clock, User, Radio } from 'lucide-react';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Search, Music, Clock, User, Radio, ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Spin {
@@ -17,6 +18,7 @@ interface Spin {
   composer?: string;
   label?: string;
   release?: string;
+  image?: string;
 }
 
 interface SpinitinonPlaylistProps {
@@ -165,50 +167,81 @@ const SpinitinonPlaylist = ({
                     index === 0 ? 'bg-primary/5 border-primary/20' : 'bg-card'
                   }`}
                 >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1 min-w-0">
-                      <h3 className={`font-semibold truncate ${compact ? "text-sm" : ""}`}>
-                        {spin.song}
-                      </h3>
-                      <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-                        <User className="inline h-3 w-3 mr-1" />
-                        {spin.artist}
-                      </p>
-                      {spin.composer && (
-                        <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-                          Composer: {spin.composer}
-                        </p>
-                      )}
-                      {spin.label && (
-                        <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-                          Label: {spin.label}
-                        </p>
-                      )}
-                      {spin.release && (
-                        <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-                          Release: {spin.release}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-end ml-2">
-                      {index === 0 && (
-                        <Badge variant="secondary" className={compact ? "text-xs px-2 py-0" : ""}>
-                          Now Playing
-                        </Badge>
-                      )}
-                      <div className={`text-right mt-1 ${compact ? "text-xs" : "text-sm"}`}>
-                        <div className="flex items-center text-muted-foreground">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {formatTime(spin.start)}
-                        </div>
-                        <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
-                          {formatDate(spin.start)}
-                        </div>
-                        {spin.duration && (
-                          <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
-                            {Math.floor(spin.duration / 60)}:{(spin.duration % 60).toString().padStart(2, '0')}
+                  <div className="flex gap-3">
+                    {/* Album Artwork */}
+                    <div className={`flex-shrink-0 ${compact ? 'w-12 h-12' : 'w-16 h-16'}`}>
+                      <AspectRatio ratio={1} className="bg-muted rounded-md overflow-hidden">
+                        {spin.image ? (
+                          <img
+                            src={spin.image}
+                            alt={`${spin.song} by ${spin.artist}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback to placeholder if image fails to load
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent) {
+                                parent.innerHTML = `<div class="w-full h-full bg-muted flex items-center justify-center"><svg class="w-6 h-6 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`;
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-muted flex items-center justify-center">
+                            <ImageIcon className={`${compact ? 'w-4 h-4' : 'w-6 h-6'} text-muted-foreground`} />
                           </div>
                         )}
+                      </AspectRatio>
+                    </div>
+
+                    {/* Song Information */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1 min-w-0">
+                          <h3 className={`font-semibold truncate ${compact ? "text-sm" : ""}`}>
+                            {spin.song}
+                          </h3>
+                          <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
+                            <User className="inline h-3 w-3 mr-1" />
+                            {spin.artist}
+                          </p>
+                          {spin.composer && (
+                            <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
+                              Composer: {spin.composer}
+                            </p>
+                          )}
+                          {spin.label && (
+                            <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
+                              Label: {spin.label}
+                            </p>
+                          )}
+                          {spin.release && (
+                            <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
+                              Release: {spin.release}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-col items-end ml-2">
+                          {index === 0 && (
+                            <Badge variant="secondary" className={compact ? "text-xs px-2 py-0" : ""}>
+                              Now Playing
+                            </Badge>
+                          )}
+                          <div className={`text-right mt-1 ${compact ? "text-xs" : "text-sm"}`}>
+                            <div className="flex items-center text-muted-foreground">
+                              <Clock className="h-3 w-3 mr-1" />
+                              {formatTime(spin.start)}
+                            </div>
+                            <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
+                              {formatDate(spin.start)}
+                            </div>
+                            {spin.duration && (
+                              <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
+                                {Math.floor(spin.duration / 60)}:{(spin.duration % 60).toString().padStart(2, '0')}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
