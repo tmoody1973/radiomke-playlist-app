@@ -51,6 +51,8 @@ serve(async (req) => {
     const offset = params.get('offset') || '0';
     const useCache = params.get('use_cache') === 'true';
 
+    console.log('Search parameters:', { search, useCache, offset, count });
+
     // If search is provided or we want to use cache, try database first
     if (search || useCache) {
       console.log('Searching in database for:', search || 'cached songs');
@@ -74,12 +76,9 @@ serve(async (req) => {
       }
       
       if (search) {
-        // Use full-text search for better performance
-        query = query.or(`
-          to_tsvector('english', song).@@.websearch_to_tsquery('english', '${search}'),
-          to_tsvector('english', artist).@@.websearch_to_tsquery('english', '${search}'),
-          to_tsvector('english', release).@@.websearch_to_tsquery('english', '${search}')
-        `);
+        // Use simpler ILIKE search instead of full-text search
+        const searchTerm = `%${search}%`;
+        query = query.or(`song.ilike.${searchTerm},artist.ilike.${searchTerm},release.ilike.${searchTerm}`);
       }
 
       const offsetNum = parseInt(offset);
@@ -88,6 +87,11 @@ serve(async (req) => {
       query = query.range(offsetNum, offsetNum + countNum - 1);
 
       const { data: cachedSongs, error: dbError } = await query;
+
+      console.log('Database search result:', { 
+        foundSongs: cachedSongs?.length || 0, 
+        error: dbError?.message || 'none' 
+      });
 
       if (!dbError && cachedSongs && cachedSongs.length > 0) {
         console.log('Found cached songs:', cachedSongs.length);
