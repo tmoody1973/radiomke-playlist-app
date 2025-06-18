@@ -1,15 +1,17 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Music, Clock, User, Disc, RefreshCw, Calendar, Database } from 'lucide-react';
+import { Search, Music, Clock, User, Disc, RefreshCw, Calendar, Database, Radio } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 
 interface SpinItem {
   id: number;
@@ -193,12 +195,28 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
     });
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
   const isCurrentlyPlaying = (start: string, duration: number) => {
     const now = new Date();
     const startTime = new Date(start);
     const endTime = new Date(startTime.getTime() + duration * 1000);
     return now >= startTime && now <= endTime;
   };
+
+  // Find the currently playing song
+  const currentlyPlayingSong = spins.find(spin => isCurrentlyPlaying(spin.start, spin.duration || 180));
+
+  // Filter out the currently playing song from the main list if we have search/filter active
+  const hasActiveFilters = debouncedSearchTerm.trim() || startDate || endDate;
+  const displaySpins = hasActiveFilters ? spins : spins;
 
   if (loading && spins.length === 0) {
     return (
@@ -337,6 +355,77 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
       </CardHeader>
       
       <CardContent>
+        {/* Now Playing Section */}
+        {currentlyPlayingSong && !hasActiveFilters && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Radio className="h-5 w-5 text-red-500" />
+              <h3 className="text-lg font-semibold text-red-500">Now Playing</h3>
+            </div>
+            <div className="p-4 rounded-lg border-2 border-red-200 bg-red-50/50 shadow-md">
+              <div className="flex gap-4">
+                <div className="flex-shrink-0">
+                  {currentlyPlayingSong.image ? (
+                    <img
+                      src={currentlyPlayingSong.image}
+                      alt={`${currentlyPlayingSong.release || 'Album'} cover`}
+                      className="w-16 h-16 rounded object-cover shadow-sm"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-red-100 rounded flex items-center justify-center">
+                      <Disc className="h-8 w-8 text-red-400" />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-bold text-lg text-red-700 truncate mb-1">
+                    {currentlyPlayingSong.song}
+                  </h4>
+                  <div className="flex items-center gap-1 text-red-600 mb-1">
+                    <User className="h-4 w-4" />
+                    <span className="font-medium truncate">{currentlyPlayingSong.artist}</span>
+                  </div>
+                  {currentlyPlayingSong.release && (
+                    <div className="flex items-center gap-1 text-red-500 text-sm">
+                      <Disc className="h-3 w-3" />
+                      <span className="truncate">{currentlyPlayingSong.release}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1 text-red-500 text-sm mt-2">
+                    <Clock className="h-3 w-3" />
+                    <span>Started at {formatTime(currentlyPlayingSong.start)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <Separator className="my-6" />
+          </div>
+        )}
+
+        {/* Search Results Header */}
+        {hasActiveFilters && spins.length > 0 && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Search className="h-5 w-5 text-blue-500" />
+              <h3 className="text-lg font-semibold">
+                Search Results 
+                {debouncedSearchTerm && <span className="text-blue-500 ml-1">for "{debouncedSearchTerm}"</span>}
+              </h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Found {spins.length} tracks
+              {startDate && <span> from {formatDate(startDate.toISOString())}</span>}
+              {endDate && <span> to {formatDate(endDate.toISOString())}</span>}
+            </p>
+            <Separator className="mb-4" />
+          </div>
+        )}
+
+        {/* Main Playlist */}
         {spins.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <Music className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -347,15 +436,25 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
           </div>
         ) : (
           <div className="space-y-3">
-            {spins.map((spin, index) => {
+            {/* Playlist Header for non-search results */}
+            {!hasActiveFilters && (
+              <div className="flex items-center gap-2 mb-4">
+                <Music className="h-5 w-5" />
+                <h3 className="text-lg font-semibold">Recent Playlist</h3>
+              </div>
+            )}
+            
+            {displaySpins.map((spin, index) => {
               const isPlaying = isCurrentlyPlaying(spin.start, spin.duration || 180);
+              // Don't show currently playing song in the main list if no filters
+              if (isPlaying && !hasActiveFilters) return null;
               
               return (
                 <div
                   key={`${spin.id}-${index}`}
                   className={`p-4 rounded-lg border transition-all duration-300 ${
                     isPlaying 
-                      ? 'bg-primary/10 border-primary/30 shadow-md animate-pulse' 
+                      ? 'bg-primary/10 border-primary/30 shadow-md' 
                       : 'bg-card hover:bg-accent/50'
                   }`}
                 >
@@ -380,9 +479,9 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1">
                         <div className="min-w-0 flex-1">
-                          <h3 className={`font-medium truncate ${isPlaying ? 'text-primary' : ''}`}>
+                          <h4 className={`font-medium truncate ${isPlaying ? 'text-primary' : ''}`}>
                             {spin.song}
-                          </h3>
+                          </h4>
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <User className="h-3 w-3" />
                             <span className="truncate">{spin.artist}</span>
@@ -395,12 +494,17 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
                           )}
                         </div>
                         
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground flex-shrink-0">
-                          <Clock className="h-3 w-3" />
-                          <span>{formatTime(spin.start)}</span>
+                        <div className="flex flex-col items-end gap-1 text-sm text-muted-foreground flex-shrink-0">
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span>{formatTime(spin.start)}</span>
+                          </div>
+                          {hasActiveFilters && (
+                            <span className="text-xs">{formatDate(spin.start)}</span>
+                          )}
                           {isPlaying && (
-                            <span className="ml-2 px-2 py-1 bg-primary text-primary-foreground rounded-full text-xs">
-                              NOW PLAYING
+                            <span className="px-2 py-1 bg-primary text-primary-foreground rounded-full text-xs">
+                              PLAYING
                             </span>
                           )}
                         </div>
@@ -411,7 +515,7 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
               );
             })}
             
-            {/* Load More Button - This should now appear when there are more items */}
+            {/* Load More Button */}
             {hasMore && spins.length > 0 && (
               <div className="flex justify-center pt-4">
                 <Button 
