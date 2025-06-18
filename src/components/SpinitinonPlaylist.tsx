@@ -101,21 +101,24 @@ const SpinitinonPlaylist = ({
   const effectiveStartDate = dateSearchEnabled ? startDate : '';
   const effectiveEndDate = dateSearchEnabled ? endDate : '';
 
+  // Check if we have active filters
+  const hasActiveFilters = debouncedSearchTerm || effectiveStartDate || effectiveEndDate;
+
   const { data: spins = [], isLoading, error, refetch } = useQuery({
     queryKey: ['spins', stationId, page, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate && !debouncedSearchTerm && !effectiveStartDate && !effectiveEndDate ? 30000 : false,
+    refetchInterval: autoUpdate && !hasActiveFilters ? 30000 : false,
     staleTime: 25000,
   });
 
   useEffect(() => {
-    if (autoUpdate && !debouncedSearchTerm && !effectiveStartDate && !effectiveEndDate) {
+    if (autoUpdate && !hasActiveFilters) {
       const interval = setInterval(() => {
         refetch();
       }, 30000);
       return () => clearInterval(interval);
     }
-  }, [autoUpdate, refetch, debouncedSearchTerm, effectiveStartDate, effectiveEndDate]);
+  }, [autoUpdate, refetch, hasActiveFilters]);
 
   const displayedSpins = spins;
 
@@ -150,7 +153,6 @@ const SpinitinonPlaylist = ({
 
   const isEmbedMode = window.location.pathname === '/embed';
   const hasDateFilter = dateSearchEnabled && (startDate || endDate);
-  const hasActiveFilters = debouncedSearchTerm || hasDateFilter;
 
   if (error) {
     return (
