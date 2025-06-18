@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -108,7 +107,9 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
           setSpins(data.items);
         }
         
-        setHasMore(data.items.length === maxItems);
+        // Set hasMore based on whether we got the full requested amount
+        // If we got fewer items than requested, there are no more
+        setHasMore(data.items.length >= maxItems);
       } else {
         console.warn('No items in response:', data);
         if (!append) setSpins([]);
@@ -394,7 +395,8 @@ const SpinitinonPlaylist: React.FC<SpinitinonPlaylistProps> = ({
               );
             })}
             
-            {hasMore && (
+            {/* Load More Button - This should now appear when there are more items */}
+            {hasMore && spins.length > 0 && (
               <div className="flex justify-center pt-4">
                 <Button 
                   onClick={handleLoadMore} 
