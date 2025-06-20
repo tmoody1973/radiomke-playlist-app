@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Search, Music, Clock, User, Radio, ImageIcon, Calendar, Play, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import DateRangePicker from './DateRangePicker';
+import { useSpotifyData } from '@/hooks/useSpotifyData';
 
 interface Spin {
   id: number;
@@ -34,35 +35,51 @@ interface SpinitinonPlaylistProps {
   layout?: 'list' | 'grid';
 }
 
-// Component for handling image loading with fallback
-const AlbumArtwork = ({ 
+// Enhanced component for handling image loading with Spotify fallback
+const EnhancedAlbumArtwork = ({ 
   src, 
   alt, 
   className = "",
-  fallbackIconSize = "w-6 h-6"
+  fallbackIconSize = "w-6 h-6",
+  artist,
+  song
 }: { 
   src?: string; 
   alt: string; 
   className?: string;
   fallbackIconSize?: string;
+  artist: string;
+  song: string;
 }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const { spotifyData, loading } = useSpotifyData(artist, song);
+
+  // Use Spotify artwork if available, otherwise fall back to original
+  const finalImageSrc = spotifyData?.albumArt || src;
 
   // Reset error state when src changes
   useEffect(() => {
-    if (src) {
+    if (finalImageSrc) {
       setImageError(false);
       setImageLoaded(false);
     } else {
       setImageError(true);
     }
-  }, [src]);
+  }, [finalImageSrc]);
 
-  if (!src || imageError) {
+  if ((!finalImageSrc || imageError) && !loading) {
     return (
       <div className={`bg-muted flex items-center justify-center ${className}`}>
         <Music className={`${fallbackIconSize} text-muted-foreground`} />
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className={`bg-muted flex items-center justify-center ${className}`}>
+        <Music className={`${fallbackIconSize} text-muted-foreground animate-pulse`} />
       </div>
     );
   }
@@ -75,18 +92,61 @@ const AlbumArtwork = ({
         </div>
       )}
       <img
-        src={src}
+        src={finalImageSrc}
         alt={alt}
         className={`w-full h-full object-cover transition-opacity duration-200 ${
           imageLoaded ? 'opacity-100' : 'opacity-0'
         }`}
         onLoad={() => setImageLoaded(true)}
         onError={() => {
-          console.log('Image failed to load:', src);
+          console.log('Image failed to load:', finalImageSrc);
           setImageError(true);
         }}
         loading="lazy"
       />
+    </div>
+  );
+};
+
+// Component for handling song metadata with Spotify enhancement
+const EnhancedSongInfo = ({ 
+  spin, 
+  compact = false 
+}: { 
+  spin: Spin; 
+  compact?: boolean;
+}) => {
+  const { spotifyData } = useSpotifyData(spin.artist, spin.song);
+
+  // Use Spotify data if available, otherwise fall back to original
+  const displayTitle = spotifyData?.trackName || spin.song;
+  const displayArtist = spotifyData?.artistName || spin.artist;
+  const displayAlbum = spotifyData?.albumName || spin.release;
+
+  return (
+    <div className="flex-1 min-w-0">
+      <h3 className={`font-semibold truncate ${compact ? "text-sm" : ""}`}>
+        {displayTitle}
+      </h3>
+      <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
+        <User className="inline h-3 w-3 mr-1" />
+        {displayArtist}
+      </p>
+      {spin.composer && (
+        <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
+          Composer: {spin.composer}
+        </p>
+      )}
+      {spin.label && (
+        <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
+          Label: {spin.label}
+        </p>
+      )}
+      {displayAlbum && (
+        <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
+          Album: {displayAlbum}
+        </p>
+      )}
     </div>
   );
 };
@@ -240,11 +300,13 @@ const SpinitinonPlaylist = ({
       }`}
     >
       <AspectRatio ratio={1} className="bg-gradient-to-br from-muted to-muted/50">
-        <AlbumArtwork
+        <EnhancedAlbumArtwork
           src={spin.image}
           alt={`${spin.song} by ${spin.artist}`}
           className="w-full h-full rounded-lg overflow-hidden"
           fallbackIconSize="w-8 h-8"
+          artist={spin.artist}
+          song={spin.song}
         />
         
         {/* Overlay with song info */}
@@ -443,11 +505,13 @@ const SpinitinonPlaylist = ({
                       {/* Album Artwork */}
                       <div className={`flex-shrink-0 ${compact ? 'w-12 h-12' : 'w-16 h-16'}`}>
                         <AspectRatio ratio={1} className="bg-muted rounded-md overflow-hidden">
-                          <AlbumArtwork
+                          <EnhancedAlbumArtwork
                             src={spin.image}
                             alt={`${spin.song} by ${spin.artist}`}
                             className="w-full h-full"
                             fallbackIconSize={compact ? 'w-4 h-4' : 'w-6 h-6'}
+                            artist={spin.artist}
+                            song={spin.song}
                           />
                         </AspectRatio>
                       </div>
@@ -455,30 +519,7 @@ const SpinitinonPlaylist = ({
                       {/* Song Information */}
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start">
-                          <div className="flex-1 min-w-0">
-                            <h3 className={`font-semibold truncate ${compact ? "text-sm" : ""}`}>
-                              {spin.song}
-                            </h3>
-                            <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-                              <User className="inline h-3 w-3 mr-1" />
-                              {spin.artist}
-                            </p>
-                            {spin.composer && (
-                              <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-                                Composer: {spin.composer}
-                              </p>
-                            )}
-                            {spin.label && (
-                              <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-                                Label: {spin.label}
-                              </p>
-                            )}
-                            {spin.release && (
-                              <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-                                Release: {spin.release}
-                              </p>
-                            )}
-                          </div>
+                          <EnhancedSongInfo spin={spin} compact={compact} />
                           <div className="flex flex-col items-end ml-2">
                             {isCurrentlyPlaying(spin, index) && (
                               <Badge variant="secondary" className={compact ? "text-xs px-2 py-0" : ""}>
