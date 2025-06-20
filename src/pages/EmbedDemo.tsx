@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,9 +12,16 @@ import { Copy, ExternalLink, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Station {
+  id: string;
+  name: string;
+}
 
 const EmbedDemo = () => {
-  const [stationId, setStationId] = useState('');
+  const [stations, setStations] = useState<Station[]>([]);
+  const [selectedStation, setSelectedStation] = useState('hyfin');
   const [autoUpdate, setAutoUpdate] = useState(true);
   const [showSearch, setShowSearch] = useState(true);
   const [maxItems, setMaxItems] = useState(20);
@@ -27,9 +34,25 @@ const EmbedDemo = () => {
   const [endDate, setEndDate] = useState<Date>();
   const { toast } = useToast();
 
+  // Fetch available stations
+  useEffect(() => {
+    const fetchStations = async () => {
+      const { data, error } = await supabase
+        .from('stations')
+        .select('id, name')
+        .order('name');
+      
+      if (!error && data) {
+        setStations(data);
+      }
+    };
+
+    fetchStations();
+  }, []);
+
   const generateEmbedUrl = () => {
     const params = new URLSearchParams();
-    if (stationId) params.append('station', stationId);
+    if (selectedStation !== 'hyfin') params.append('station', selectedStation);
     if (!autoUpdate) params.append('autoUpdate', 'false');
     if (!showSearch) params.append('showSearch', 'false');
     if (maxItems !== 20) params.append('maxItems', maxItems.toString());
@@ -81,13 +104,19 @@ const EmbedDemo = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="station">Station ID (optional)</Label>
-                <Input
-                  id="station"
-                  placeholder="Leave empty for default station"
-                  value={stationId}
-                  onChange={(e) => setStationId(e.target.value)}
-                />
+                <Label htmlFor="station">Radio Station</Label>
+                <Select value={selectedStation} onValueChange={setSelectedStation}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a radio station" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {stations.map((station) => (
+                      <SelectItem key={station.id} value={station.id}>
+                        {station.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -325,10 +354,11 @@ const EmbedDemo = () => {
             <CardContent className="pt-6">
               <h3 className="text-lg font-semibold mb-2">How to Use</h3>
               <div className="text-sm text-muted-foreground space-y-2">
-                <p>1. Customize the settings above to match your needs</p>
-                <p>2. Copy the generated embed code</p>
-                <p>3. Paste it into your website's HTML where you want the playlist to appear</p>
-                <p>4. The widget will automatically update with live playlist data</p>
+                <p>1. Select your preferred radio station (HYFIN or 88Nine)</p>
+                <p>2. Customize the settings above to match your needs</p>
+                <p>3. Copy the generated embed code</p>
+                <p>4. Paste it into your website's HTML where you want the playlist to appear</p>
+                <p>5. The widget will automatically update with live playlist data</p>
               </div>
             </CardContent>
           </Card>

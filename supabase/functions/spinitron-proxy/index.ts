@@ -14,21 +14,9 @@ serve(async (req) => {
   }
 
   try {
-    const apiKey = Deno.env.get('SPINITRON_API_KEY');
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
-    if (!apiKey) {
-      console.error('SPINITRON_API_KEY not found in environment');
-      return new Response(
-        JSON.stringify({ error: 'API key not configured' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
     // Initialize Supabase client for database operations
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
@@ -42,7 +30,7 @@ serve(async (req) => {
     }
 
     const endpoint = body.endpoint || 'spins';
-    const stationId = body.station || '';
+    const stationId = body.station || 'hyfin'; // Default to HYFIN
     const count = body.count || '20';
     const start = body.start || '';
     const end = body.end || '';
@@ -50,22 +38,51 @@ serve(async (req) => {
     const offset = body.offset || '0';
     const useCache = body.use_cache === 'true';
 
-    console.log('Search parameters:', { search, useCache, offset, count, start, end });
+    console.log('Search parameters:', { search, useCache, offset, count, start, end, stationId });
+
+    // Get the station info and API key
+    const { data: stationData, error: stationError } = await supabase
+      .from('stations')
+      .select('*')
+      .eq('id', stationId)
+      .single();
+
+    if (stationError || !stationData) {
+      console.error('Station not found:', stationId, stationError);
+      return new Response(
+        JSON.stringify({ error: 'Station not found' }),
+        { 
+          status: 404, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Get the appropriate API key for this station
+    const apiKey = Deno.env.get(stationData.api_key_secret_name);
+    
+    if (!apiKey) {
+      console.error(`API key not found for station ${stationId}:`, stationData.api_key_secret_name);
+      return new Response(
+        JSON.stringify({ error: 'API key not configured for this station' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
     // If search is provided, search the database first
     if (search) {
-      console.log('Searching in database for:', search);
+      console.log('Searching in database for:', search, 'station:', stationId);
       
       let query = supabase
         .from('songs')
         .select('*')
+        .eq('station_id', stationId)
         .order('start_time', { ascending: false });
 
-      // Apply filters
-      if (stationId) {
-        query = query.eq('station_id', stationId);
-      }
-      
+      // Apply date filters
       if (start) {
         query = query.gte('start_time', start);
       }
@@ -87,13 +104,13 @@ serve(async (req) => {
 
       console.log('Database search result:', { 
         foundSongs: cachedSongs?.length || 0, 
-        error: dbError?.message || 'none' 
+        error: dbError?.message || 'none',
+        station: stationId
       });
 
       if (!dbError && cachedSongs && cachedSongs.length > 0) {
         console.log('Found cached songs:', cachedSongs.length);
         
-        // Transform database format to API format
         const transformedSongs = cachedSongs.map(song => ({
           id: song.spinitron_id,
           start: song.start_time,
@@ -122,20 +139,17 @@ serve(async (req) => {
       console.log('No results found in database, searching Spinitron API');
     }
 
-    // If using cache and no search term, try database first (including date filtering)
+    // If using cache and no search term, try database first
     if (useCache && !search) {
-      console.log('Fetching from database cache');
+      console.log('Fetching from database cache for station:', stationId);
       
       let query = supabase
         .from('songs')
         .select('*')
+        .eq('station_id', stationId)
         .order('start_time', { ascending: false });
 
-      // Apply filters
-      if (stationId) {
-        query = query.eq('station_id', stationId);
-      }
-      
+      // Apply date filters
       if (start) {
         query = query.gte('start_time', start);
       }
@@ -154,77 +168,35 @@ serve(async (req) => {
       console.log('Database cache result:', { 
         foundSongs: cachedSongs?.length || 0, 
         error: dbError?.message || 'none',
-        dateFilter: { start, end }
+        dateFilter: { start, end },
+        station: stationId
       });
 
       if (!dbError && cachedSongs && cachedSongs.length > 0) {
         console.log('Found cached songs:', cachedSongs.length);
         
-        // Check if we should also fetch fresh data from API for live updates
-        const shouldFetchFresh = !hasActiveFilters && cachedSongs.length > 0;
-        
-        if (shouldFetchFresh) {
-          // Check the timestamp of the most recent cached song
-          const mostRecentSong = cachedSongs[0];
-          const songAge = Date.now() - new Date(mostRecentSong.start_time).getTime();
-          
-          // If the most recent song is older than 10 minutes, fetch fresh data
-          if (songAge > 600000) { // 10 minutes
-            console.log('Most recent cached song is old, fetching fresh data from API...');
-            // Continue to API fetch below
-          } else {
-            // Transform database format to API format
-            const transformedSongs = cachedSongs.map(song => ({
-              id: song.spinitron_id,
-              start: song.start_time,
-              duration: song.duration || 180,
-              song: song.song,
-              artist: song.artist,
-              release: song.release,
-              label: song.label,
-              image: song.image,
-              episode: song.episode_title ? { title: song.episode_title } : undefined
-            }));
+        const transformedSongs = cachedSongs.map(song => ({
+          id: song.spinitron_id,
+          start: song.start_time,
+          duration: song.duration || 180,
+          song: song.song,
+          artist: song.artist,
+          release: song.release,
+          label: song.label,
+          image: song.image,
+          episode: song.episode_title ? { title: song.episode_title } : undefined
+        }));
 
-            // Still fetch fresh data in background but return cached data immediately
-            fetchFreshDataInBackground();
-
-            return new Response(
-              JSON.stringify({ items: transformedSongs }),
-              { 
-                headers: { 
-                  ...corsHeaders, 
-                  'Content-Type': 'application/json',
-                  'Cache-Control': 'no-cache, no-store, must-revalidate'
-                }
-              }
-            );
-          }
-        } else {
-          // Transform database format to API format
-          const transformedSongs = cachedSongs.map(song => ({
-            id: song.spinitron_id,
-            start: song.start_time,
-            duration: song.duration || 180,
-            song: song.song,
-            artist: song.artist,
-            release: song.release,
-            label: song.label,
-            image: song.image,
-            episode: song.episode_title ? { title: song.episode_title } : undefined
-          }));
-
-          return new Response(
-            JSON.stringify({ items: transformedSongs }),
-            { 
-              headers: { 
-                ...corsHeaders, 
-                'Content-Type': 'application/json',
-                'Cache-Control': 'no-cache, no-store, must-revalidate'
-              }
+        return new Response(
+          JSON.stringify({ items: transformedSongs }),
+          { 
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache, no-store, must-revalidate'
             }
-          );
-        }
+          }
+        );
       }
     }
 
@@ -243,7 +215,7 @@ serve(async (req) => {
     
     spinitronUrl += `?${apiParams.toString()}`;
 
-    console.log('Fetching from Spinitron API:', spinitronUrl);
+    console.log('Fetching from Spinitron API:', spinitronUrl, 'for station:', stationId);
 
     const response = await fetch(spinitronUrl, {
       headers: {
@@ -267,11 +239,11 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log('Successfully fetched data from API:', data.items?.length || 0, 'items');
+    console.log('Successfully fetched data from API:', data.items?.length || 0, 'items for station:', stationId);
 
     // Always store new songs in database (upsert to avoid duplicates)
     if (data.items && data.items.length > 0) {
-      console.log('Storing songs in database...');
+      console.log('Storing songs in database for station:', stationId);
       
       const songsToStore = data.items.map((item: any) => ({
         spinitron_id: item.id,
@@ -283,10 +255,10 @@ serve(async (req) => {
         start_time: item.start,
         duration: item.duration || 180,
         episode_title: item.episode?.title || null,
-        station_id: stationId || null
+        station_id: stationId
       }));
 
-      console.log('Songs to store:', songsToStore.length, 'songs');
+      console.log('Songs to store:', songsToStore.length, 'songs for station:', stationId);
 
       const { data: insertedData, error: insertError } = await supabase
         .from('songs')
@@ -299,58 +271,10 @@ serve(async (req) => {
       if (insertError) {
         console.error('Error storing songs in database:', insertError);
       } else {
-        console.log('Successfully stored', insertedData?.length || songsToStore.length, 'songs in database');
+        console.log('Successfully stored', insertedData?.length || songsToStore.length, 'songs in database for station:', stationId);
       }
     } else {
-      console.log('No songs received from API to store');
-    }
-
-    // Background function to fetch fresh data
-    async function fetchFreshDataInBackground() {
-      try {
-        console.log('Background: Fetching fresh data from Spinitron API...');
-        
-        const bgResponse = await fetch(spinitronUrl, {
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Accept': 'application/json',
-          },
-        });
-
-        if (bgResponse.ok) {
-          const bgData = await bgResponse.json();
-          
-          if (bgData.items && bgData.items.length > 0) {
-            const bgSongsToStore = bgData.items.map((item: any) => ({
-              spinitron_id: item.id,
-              song: item.song || 'Unknown Song',
-              artist: item.artist || 'Unknown Artist',
-              release: item.release || null,
-              label: item.label || null,
-              image: item.image || null,
-              start_time: item.start,
-              duration: item.duration || 180,
-              episode_title: item.episode?.title || null,
-              station_id: stationId || null
-            }));
-
-            const { error: bgInsertError } = await supabase
-              .from('songs')
-              .upsert(bgSongsToStore, { 
-                onConflict: 'spinitron_id',
-                ignoreDuplicates: false 
-              });
-
-            if (bgInsertError) {
-              console.error('Background: Error storing songs:', bgInsertError);
-            } else {
-              console.log('Background: Stored', bgSongsToStore.length, 'fresh songs');
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Background fetch error:', error);
-      }
+      console.log('No songs received from API to store for station:', stationId);
     }
 
     return new Response(

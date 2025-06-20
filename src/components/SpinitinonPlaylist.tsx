@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -93,7 +92,7 @@ const AlbumArtwork = ({
 };
 
 const SpinitinonPlaylist = ({ 
-  stationId = '', 
+  stationId = 'hyfin', // Default to HYFIN
   autoUpdate = true, 
   showSearch = true, 
   maxItems = 20,
@@ -131,6 +130,7 @@ const SpinitinonPlaylist = ({
     
     console.log('Fetching spins with params:', {
       endpoint: 'spins',
+      station: stationId,
       count: maxItems.toString(),
       search: debouncedSearchTerm,
       start: effectiveStartDate,
@@ -142,6 +142,7 @@ const SpinitinonPlaylist = ({
     const { data, error } = await supabase.functions.invoke('spinitron-proxy', {
       body: {
         endpoint: 'spins',
+        station: stationId,
         count: maxItems.toString(),
         search: debouncedSearchTerm,
         start: effectiveStartDate,
@@ -156,7 +157,7 @@ const SpinitinonPlaylist = ({
       throw error;
     }
 
-    console.log('Received spins:', data.items?.length || 0, 'for search:', debouncedSearchTerm);
+    console.log('Received spins:', data.items?.length || 0, 'for station:', stationId, 'search:', debouncedSearchTerm);
     return data.items || [];
   };
 

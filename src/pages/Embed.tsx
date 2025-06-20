@@ -6,7 +6,7 @@ const Embed = () => {
   const [searchParams] = useSearchParams();
   
   // Extract parameters from URL
-  const stationId = searchParams.get('station') || '';
+  const stationId = searchParams.get('station') || 'hyfin'; // Default to HYFIN
   const autoUpdate = searchParams.get('autoUpdate') !== 'false';
   const showSearch = searchParams.get('showSearch') !== 'false';
   const maxItems = parseInt(searchParams.get('maxItems') || '20');
