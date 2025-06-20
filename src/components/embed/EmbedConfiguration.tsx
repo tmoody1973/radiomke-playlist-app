@@ -112,21 +112,15 @@ const EmbedConfiguration = ({
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="height">Height</Label>
-          <Select value={height} onValueChange={setHeight}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select height" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="300">300px</SelectItem>
-              <SelectItem value="400">400px</SelectItem>
-              <SelectItem value="500">500px</SelectItem>
-              <SelectItem value="600">600px</SelectItem>
-              <SelectItem value="700">700px</SelectItem>
-              <SelectItem value="800">800px</SelectItem>
-              <SelectItem value="100%">100% (Full Container Height)</SelectItem>
-            </SelectContent>
-          </Select>
+          <Label htmlFor="height">Height (px)</Label>
+          <Input
+            id="height"
+            type="number"
+            min="300"
+            max="1000"
+            value={height}
+            onChange={(e) => setHeight(e.target.value)}
+          />
         </div>
       </div>
 

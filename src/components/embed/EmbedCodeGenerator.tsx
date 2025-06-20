@@ -1,4 +1,3 @@
-
 interface EmbedConfig {
   selectedStation: string;
   autoUpdate: boolean;
@@ -34,12 +33,11 @@ export const generateEmbedUrl = (config: EmbedConfig): string => {
 
 export const generateIframeCode = (config: EmbedConfig): string => {
   const embedUrl = generateEmbedUrl(config);
-  const heightValue = config.height === '100%' ? '100%' : `${config.height}px`;
   
   return `<iframe 
   src="${embedUrl}" 
   width="100%" 
-  height="${heightValue}" 
+  height="${config.height}px" 
   style="border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);"
   title="Spinitron Live Playlist"
   id="spinitron-iframe">
