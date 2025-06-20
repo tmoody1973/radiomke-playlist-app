@@ -51,16 +51,14 @@ const EnhancedAlbumArtwork = ({
   artist: string;
   song: string;
 }) => {
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const { spotifyData, loading } = useSpotifyData(artist, song);
 
   // Use Spotify artwork if available, otherwise fall back to original
   const finalImageSrc = spotifyData?.albumArt || src;
 
-  // Reset states when image source changes
+  // Reset error state when image source changes
   useEffect(() => {
-    setImageLoaded(false);
     setImageError(false);
   }, [finalImageSrc]);
 
@@ -74,24 +72,13 @@ const EnhancedAlbumArtwork = ({
   }
 
   return (
-    <div className={`relative ${className}`}>
-      {/* Always show the image, let browser handle loading */}
-      <img
-        src={finalImageSrc}
-        alt={alt}
-        className="w-full h-full object-cover"
-        onLoad={() => setImageLoaded(true)}
-        onError={() => setImageError(true)}
-        loading="lazy"
-      />
-      
-      {/* Show loading state only when image hasn't loaded yet */}
-      {!imageLoaded && !imageError && (
-        <div className="absolute inset-0 bg-muted flex items-center justify-center">
-          <Music className={`${fallbackIconSize} text-muted-foreground animate-pulse`} />
-        </div>
-      )}
-    </div>
+    <img
+      src={finalImageSrc}
+      alt={alt}
+      className={`w-full h-full object-cover ${className}`}
+      onError={() => setImageError(true)}
+      loading="lazy"
+    />
   );
 };
 
