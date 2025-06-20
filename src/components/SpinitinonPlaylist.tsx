@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -352,7 +351,7 @@ const SpinitinonPlaylist = ({
 
   if (error) {
     return (
-      <Card className={`w-full ${isEmbedMode && layout === 'ticker' ? 'h-full flex flex-col' : ''}`}>
+      <Card className="w-full">
         <CardContent className="p-6">
           <div className="text-center text-red-500">
             <Radio className="h-8 w-8 mx-auto mb-2" />
@@ -378,7 +377,7 @@ const SpinitinonPlaylist = ({
   };
 
   return (
-    <Card className={`w-full ${isEmbedMode && layout === 'ticker' ? 'h-full flex flex-col' : ''}`}>
+    <Card className="w-full">
       <CardHeader className={compact || layout === 'ticker' ? "pb-3" : ""}>
         <CardTitle className={`flex items-center gap-2 ${compact || layout === 'ticker' ? "text-lg" : ""}`}>
           <Radio className={`${compact || layout === 'ticker' ? "h-4 w-4" : "h-5 w-5"}`} />
@@ -430,136 +429,167 @@ const SpinitinonPlaylist = ({
         )}
       </CardHeader>
       
-      <CardContent className={`${compact || layout === 'ticker' ? "pt-0" : ""} ${isEmbedMode && layout === 'ticker' ? 'flex-1 flex flex-col min-h-0' : ''}`}>
-        <div className={isEmbedMode && layout === 'ticker' ? "flex-1 flex flex-col min-h-0" : ""}>
-          {displayedSpins.length === 0 ? (
-            <div className="text-center py-8">
-              <Music className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="text-muted-foreground">
-                {hasActiveFilters ? 'No matching songs found' : 'No songs playing right now'}
-              </p>
+      <CardContent className={compact || layout === 'ticker' ? "pt-0" : ""}>
+        {layout === 'ticker' && isEmbedMode ? (
+          // Special layout for ticker in embed mode
+          <div className="h-full flex flex-col min-h-0">
+            <div className="flex-1 flex flex-col min-h-0">
+              {displayedSpins.length === 0 ? (
+                <div className="text-center py-8">
+                  <Music className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-muted-foreground">
+                    {hasActiveFilters ? 'No matching songs found' : 'No songs playing right now'}
+                  </p>
+                </div>
+              ) : (
+                // Ticker Layout with configurable scroll speed
+                <div className="relative overflow-hidden bg-gradient-to-r from-background via-background/95 to-background rounded-lg border">
+                  <div 
+                    className="flex hover:[animation-play-state:paused]"
+                    style={{ 
+                      animation: `scroll-left ${scrollSpeed}s linear infinite` 
+                    }}
+                  >
+                    {[...displayedSpins, ...displayedSpins].map((spin, index) => (
+                      <TickerItem key={`ticker-${spin.id}-${index}`} spin={spin} index={index % displayedSpins.length} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          ) : layout === 'ticker' ? (
-            // Ticker Layout with configurable scroll speed
-            <div className="relative overflow-hidden bg-gradient-to-r from-background via-background/95 to-background rounded-lg border">
-              <div 
-                className="flex hover:[animation-play-state:paused]"
-                style={{ 
-                  animation: `scroll-left ${scrollSpeed}s linear infinite` 
-                }}
-              >
-                {[...displayedSpins, ...displayedSpins].map((spin, index) => (
-                  <TickerItem key={`ticker-${spin.id}-${index}`} spin={spin} index={index % displayedSpins.length} />
+          </div>
+        ) : (
+          // Normal layout for list, grid, and non-embed ticker
+          <div>
+            {displayedSpins.length === 0 ? (
+              <div className="text-center py-8">
+                <Music className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-muted-foreground">
+                  {hasActiveFilters ? 'No matching songs found' : 'No songs playing right now'}
+                </p>
+              </div>
+            ) : layout === 'ticker' ? (
+              // Ticker Layout with configurable scroll speed
+              <div className="relative overflow-hidden bg-gradient-to-r from-background via-background/95 to-background rounded-lg border">
+                <div 
+                  className="flex hover:[animation-play-state:paused]"
+                  style={{ 
+                    animation: `scroll-left ${scrollSpeed}s linear infinite` 
+                  }}
+                >
+                  {[...displayedSpins, ...displayedSpins].map((spin, index) => (
+                    <TickerItem key={`ticker-${spin.id}-${index}`} spin={spin} index={index % displayedSpins.length} />
+                  ))}
+                </div>
+              </div>
+            ) : layout === 'grid' ? (
+              // Grid Layout
+              <div className={`grid gap-4 ${compact ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
+                {displayedSpins.map((spin, index) => (
+                  <GridItem key={`${spin.id}-${index}`} spin={spin} index={index} />
                 ))}
               </div>
-            </div>
-          ) : layout === 'grid' ? (
-            // Grid Layout
-            <div className={`grid gap-4 ${compact ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
-              {displayedSpins.map((spin, index) => (
-                <GridItem key={`${spin.id}-${index}`} spin={spin} index={index} />
-              ))}
-            </div>
-          ) : (
-            // List Layout
-            <div className="space-y-3">
-              {displayedSpins.map((spin, index) => (
-                <div 
-                  key={`${spin.id}-${index}`}
-                  className={`p-3 border rounded-lg transition-colors hover:bg-accent/50 ${
-                    isCurrentlyPlaying(spin, index) ? 'bg-primary/5 border-primary/20' : 'bg-card'
-                  }`}
-                >
-                  <div className="flex gap-3">
-                    {/* Album Artwork */}
-                    <div className={`flex-shrink-0 ${compact ? 'w-12 h-12' : 'w-16 h-16'}`}>
-                      <AspectRatio ratio={1} className="bg-muted rounded-md overflow-hidden">
-                        <AlbumArtwork
-                          src={spin.image}
-                          alt={`${spin.song} by ${spin.artist}`}
-                          className="w-full h-full"
-                          fallbackIconSize={compact ? 'w-4 h-4' : 'w-6 h-6'}
-                        />
-                      </AspectRatio>
-                    </div>
+            ) : (
+              // List Layout
+              <div className="space-y-3">
+                {displayedSpins.map((spin, index) => (
+                  <div 
+                    key={`${spin.id}-${index}`}
+                    className={`p-3 border rounded-lg transition-colors hover:bg-accent/50 ${
+                      isCurrentlyPlaying(spin, index) ? 'bg-primary/5 border-primary/20' : 'bg-card'
+                    }`}
+                  >
+                    <div className="flex gap-3">
+                      {/* Album Artwork */}
+                      <div className={`flex-shrink-0 ${compact ? 'w-12 h-12' : 'w-16 h-16'}`}>
+                        <AspectRatio ratio={1} className="bg-muted rounded-md overflow-hidden">
+                          <AlbumArtwork
+                            src={spin.image}
+                            alt={`${spin.song} by ${spin.artist}`}
+                            className="w-full h-full"
+                            fallbackIconSize={compact ? 'w-4 h-4' : 'w-6 h-6'}
+                          />
+                        </AspectRatio>
+                      </div>
 
-                    {/* Song Information */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1 min-w-0">
-                          <h3 className={`font-semibold truncate ${compact ? "text-sm" : ""}`}>
-                            {spin.song}
-                          </h3>
-                          <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-                            <User className="inline h-3 w-3 mr-1" />
-                            {spin.artist}
-                          </p>
-                          {spin.composer && (
+                      {/* Song Information */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 min-w-0">
+                            <h3 className={`font-semibold truncate ${compact ? "text-sm" : ""}`}>
+                              {spin.song}
+                            </h3>
                             <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-                              Composer: {spin.composer}
+                              <User className="inline h-3 w-3 mr-1" />
+                              {spin.artist}
                             </p>
-                          )}
-                          {spin.label && (
-                            <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-                              Label: {spin.label}
-                            </p>
-                          )}
-                          {spin.release && (
-                            <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-                              Release: {spin.release}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex flex-col items-end ml-2">
-                          {isCurrentlyPlaying(spin, index) && (
-                            <Badge variant="secondary" className={compact ? "text-xs px-2 py-0" : ""}>
-                              Now Playing
-                            </Badge>
-                          )}
-                          <div className={`text-right mt-1 ${compact ? "text-xs" : "text-sm"}`}>
-                            <div className="flex items-center text-muted-foreground">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {formatTime(spin.start)}
-                            </div>
-                            <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
-                              {formatDate(spin.start)}
-                            </div>
-                            {spin.duration && (
-                              <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
-                                {Math.floor(spin.duration / 60)}:{(spin.duration % 60).toString().padStart(2, '0')}
-                              </div>
+                            {spin.composer && (
+                              <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
+                                Composer: {spin.composer}
+                              </p>
                             )}
+                            {spin.label && (
+                              <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
+                                Label: {spin.label}
+                              </p>
+                            )}
+                            {spin.release && (
+                              <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
+                                Release: {spin.release}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end ml-2">
+                            {isCurrentlyPlaying(spin, index) && (
+                              <Badge variant="secondary" className={compact ? "text-xs px-2 py-0" : ""}>
+                                Now Playing
+                              </Badge>
+                            )}
+                            <div className={`text-right mt-1 ${compact ? "text-xs" : "text-sm"}`}>
+                              <div className="flex items-center text-muted-foreground">
+                                <Clock className="h-3 w-3 mr-1" />
+                                {formatTime(spin.start)}
+                              </div>
+                              <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
+                                {formatDate(spin.start)}
+                              </div>
+                              {spin.duration && (
+                                <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
+                                  {Math.floor(spin.duration / 60)}:{(spin.duration % 60).toString().padStart(2, '0')}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-          
-          {/* Load More Button - hidden for ticker layout */}
-          {hasMoreSpins && layout !== 'ticker' && (
-            <div className="mt-4 flex justify-center">
-              <Button
-                variant="outline"
-                onClick={handleLoadMore}
-                disabled={loadingMore}
-                className="w-full sm:w-auto"
-              >
-                {loadingMore ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  `Load More (${Math.min(5, allSpins.length - displayCount)} more songs)`
-                )}
-              </Button>
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Load More Button - hidden for ticker layout */}
+            {hasMoreSpins && layout !== 'ticker' && (
+              <div className="mt-4 flex justify-center">
+                <Button
+                  variant="outline"
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className="w-full sm:w-auto"
+                >
+                  {loadingMore ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    `Load More (${Math.min(5, allSpins.length - displayCount)} more songs)`
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
