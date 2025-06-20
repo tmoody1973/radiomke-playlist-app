@@ -57,7 +57,8 @@ export const generateIframeCode = (config: EmbedConfig): string => {
 };
 
 export const generateJavaScriptCode = (config: EmbedConfig): string => {
-  const baseUrl = window.location.origin;
+  // Use the actual Supabase URL instead of window.location.origin for external embeds
+  const supabaseUrl = 'https://ftrivovjultfayttemce.supabase.co';
   const embedConfig = {
     station: config.selectedStation,
     autoUpdate: config.autoUpdate,
@@ -85,7 +86,7 @@ export const generateJavaScriptCode = (config: EmbedConfig): string => {
   
   // Configuration for this widget
   var config = ${JSON.stringify(embedConfig, null, 2)};
-  var baseUrl = '${baseUrl}';
+  var baseUrl = '${supabaseUrl}';
   
   // Prevent multiple loading
   if (window.SpinitinonWidgetInstances) {
