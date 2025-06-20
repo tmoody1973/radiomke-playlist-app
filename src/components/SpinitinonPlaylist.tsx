@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Switch } from '@/components/ui/switch';
-import { Search, Music, Clock, User, Radio, ImageIcon, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Search, Music, Clock, User, Radio, ImageIcon, Calendar, Play } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import DateRangePicker from './DateRangePicker';
 
@@ -31,6 +31,7 @@ interface SpinitinonPlaylistProps {
   compact?: boolean;
   startDate?: string;
   endDate?: string;
+  layout?: 'list' | 'grid'; // New layout prop
 }
 
 const SpinitinonPlaylist = ({ 
@@ -40,7 +41,8 @@ const SpinitinonPlaylist = ({
   maxItems = 20,
   compact = false,
   startDate: initialStartDate = '',
-  endDate: initialEndDate = ''
+  endDate: initialEndDate = '',
+  layout = 'list' // Default to list layout
 }: SpinitinonPlaylistProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
@@ -132,7 +134,72 @@ const SpinitinonPlaylist = ({
 
   const displayedSpins = spins;
 
-  // Determine if a song is currently playing (within the last 5 minutes of its start time + duration)
+  // Grid item component for better organization
+  const GridItem = ({ spin, index }: { spin: Spin; index: number }) => (
+    <div 
+      className={`relative group overflow-hidden rounded-lg transition-all hover:scale-105 ${
+        isCurrentlyPlaying(spin, index) ? 'ring-2 ring-primary shadow-lg' : ''
+      }`}
+    >
+      <AspectRatio ratio={1} className="bg-gradient-to-br from-muted to-muted/50">
+        {spin.image ? (
+          <img
+            src={spin.image}
+            alt={`${spin.song} by ${spin.artist}`}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              const parent = target.parentElement;
+              if (parent) {
+                parent.innerHTML = `<div class="w-full h-full bg-muted flex items-center justify-center"><svg class="w-8 h-8 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`;
+              }
+            }}
+          />
+        ) : (
+          <div className="w-full h-full bg-muted flex items-center justify-center">
+            <Music className="w-8 h-8 text-muted-foreground" />
+          </div>
+        )}
+        
+        {/* Overlay with song info */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+            <div className="flex items-center gap-2 mb-1">
+              {isCurrentlyPlaying(spin, index) && (
+                <Play className="h-3 w-3 text-primary fill-current" />
+              )}
+              <span className="text-xs font-medium">{formatTime(spin.start)}</span>
+            </div>
+            <h3 className="font-semibold text-sm truncate">{spin.song}</h3>
+            <p className="text-xs text-white/80 truncate">{spin.artist}</p>
+          </div>
+        </div>
+        
+        {/* Now playing badge */}
+        {isCurrentlyPlaying(spin, index) && (
+          <div className="absolute top-2 right-2">
+            <Badge variant="secondary" className="text-xs bg-primary text-primary-foreground">
+              Live
+            </Badge>
+          </div>
+        )}
+      </AspectRatio>
+      
+      {/* Song details below image */}
+      <div className="p-2 space-y-1">
+        <h3 className="font-medium text-sm truncate">{spin.song}</h3>
+        <p className="text-xs text-muted-foreground truncate">{spin.artist}</p>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>{formatTime(spin.start)}</span>
+          {spin.duration && (
+            <span>{Math.floor(spin.duration / 60)}:{(spin.duration % 60).toString().padStart(2, '0')}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   const isCurrentlyPlaying = (spin: Spin, index: number) => {
     if (hasActiveFilters) return false; // Don't show "now playing" when filtering
     if (index !== 0) return false; // Only the first song can be "now playing"
@@ -267,16 +334,24 @@ const SpinitinonPlaylist = ({
           } 
           type="always"
         >
-          <div className="space-y-3">
-            {displayedSpins.length === 0 ? (
-              <div className="text-center py-8">
-                <Music className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-muted-foreground">
-                  {hasActiveFilters ? 'No matching songs found' : 'No songs playing right now'}
-                </p>
-              </div>
-            ) : (
-              displayedSpins.map((spin, index) => (
+          {displayedSpins.length === 0 ? (
+            <div className="text-center py-8">
+              <Music className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+              <p className="text-muted-foreground">
+                {hasActiveFilters ? 'No matching songs found' : 'No songs playing right now'}
+              </p>
+            </div>
+          ) : layout === 'grid' ? (
+            // Grid Layout
+            <div className={`grid gap-4 ${compact ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
+              {displayedSpins.map((spin, index) => (
+                <GridItem key={`${spin.id}-${index}`} spin={spin} index={index} />
+              ))}
+            </div>
+          ) : (
+            // List Layout (existing code)
+            <div className="space-y-3">
+              {displayedSpins.map((spin, index) => (
                 <div 
                   key={`${spin.id}-${index}`}
                   className={`p-3 border rounded-lg transition-colors hover:bg-accent/50 ${
@@ -362,9 +437,9 @@ const SpinitinonPlaylist = ({
                     </div>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </ScrollArea>
       </CardContent>
     </Card>

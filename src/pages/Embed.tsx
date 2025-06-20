@@ -15,6 +15,7 @@ const Embed = () => {
   const theme = searchParams.get('theme') || 'light';
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
+  const layout = searchParams.get('layout') || 'list'; // New layout parameter
 
   return (
     <div 
@@ -34,6 +35,7 @@ const Embed = () => {
             compact={compact}
             startDate={startDate}
             endDate={endDate}
+            layout={layout}
           />
         </div>
       </div>

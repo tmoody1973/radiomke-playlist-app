@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Copy, ExternalLink, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -20,6 +21,7 @@ const EmbedDemo = () => {
   const [compact, setCompact] = useState(false);
   const [height, setHeight] = useState('600');
   const [theme, setTheme] = useState('light');
+  const [layout, setLayout] = useState('list'); // New layout state
   const [enableDateSearch, setEnableDateSearch] = useState(false);
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
@@ -34,6 +36,7 @@ const EmbedDemo = () => {
     if (compact) params.append('compact', 'true');
     if (height !== 'auto') params.append('height', height);
     if (theme !== 'light') params.append('theme', theme);
+    if (layout !== 'list') params.append('layout', layout); // Add layout parameter
     if (enableDateSearch && startDate) params.append('startDate', startDate.toISOString());
     if (enableDateSearch && endDate) params.append('endDate', endDate.toISOString());
 
@@ -111,6 +114,19 @@ const EmbedDemo = () => {
                     onChange={(e) => setHeight(e.target.value)}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="layout">Layout Style</Label>
+                <Select value={layout} onValueChange={setLayout}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select layout style" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="list">List View</SelectItem>
+                    <SelectItem value="grid">Grid View</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-4">
