@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Search, Music, Clock, User, Radio, ImageIcon, Calendar, Play } from 'lucide-react';
+import { Search, Music, Clock, User, Radio, ImageIcon, Calendar, Play, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import DateRangePicker from './DateRangePicker';
 
@@ -103,12 +102,14 @@ const SpinitinonPlaylist = ({
   layout = 'list'
 }: SpinitinonPlaylistProps) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [page, setPage] = useState(1);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [dateSearchEnabled, setDateSearchEnabled] = useState(false);
   const [startDate, setStartDate] = useState(initialStartDate);
   const [endDate, setEndDate] = useState(initialEndDate);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [allSpins, setAllSpins] = useState<Spin[]>([]);
+  const [displayCount, setDisplayCount] = useState(5);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Initialize date search if dates were provided via props
   useEffect(() => {
@@ -134,6 +135,12 @@ const SpinitinonPlaylist = ({
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  // Reset display count when search or date filters change
+  useEffect(() => {
+    setDisplayCount(5);
+    setAllSpins([]);
+  }, [debouncedSearchTerm, startDate, endDate, dateSearchEnabled, stationId]);
 
   const fetchSpins = async (): Promise<Spin[]> => {
     const effectiveStartDate = dateSearchEnabled ? startDate : '';
@@ -179,14 +186,31 @@ const SpinitinonPlaylist = ({
   const hasActiveFilters = debouncedSearchTerm || effectiveStartDate || effectiveEndDate;
 
   const { data: spins = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['spins', stationId, page, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate],
+    queryKey: ['spins', stationId, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate],
     queryFn: fetchSpins,
     refetchInterval: autoUpdate ? 10000 : false, // Always poll every 10 seconds if autoUpdate is enabled
     staleTime: 0, // Always consider data stale to ensure fresh fetches
     gcTime: 5000, // Keep in cache for 5 seconds
   });
 
-  const displayedSpins = spins;
+  // Update allSpins when new data comes in
+  useEffect(() => {
+    if (spins && spins.length > 0) {
+      setAllSpins(spins);
+    }
+  }, [spins]);
+
+  const displayedSpins = allSpins.slice(0, displayCount);
+  const hasMoreSpins = displayCount < allSpins.length;
+
+  const handleLoadMore = async () => {
+    setLoadingMore(true);
+    // Simulate loading delay for better UX
+    setTimeout(() => {
+      setDisplayCount(prev => Math.min(prev + 5, allSpins.length));
+      setLoadingMore(false);
+    }, 500);
+  };
 
   // Improved "now playing" detection
   const isCurrentlyPlaying = (spin: Spin, index: number) => {
@@ -374,109 +398,132 @@ const SpinitinonPlaylist = ({
       </CardHeader>
       
       <CardContent className={`${compact ? "pt-0" : ""} ${isEmbedMode ? 'flex-1 flex flex-col min-h-0' : ''}`}>
-        <ScrollArea 
-          className={
-            isEmbedMode 
-              ? "flex-1" 
-              : compact 
-                ? "h-64" 
-                : "h-96"
-          } 
-          type="always"
-        >
-          {displayedSpins.length === 0 ? (
-            <div className="text-center py-8">
-              <Music className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="text-muted-foreground">
-                {hasActiveFilters ? 'No matching songs found' : 'No songs playing right now'}
-              </p>
-            </div>
-          ) : layout === 'grid' ? (
-            // Grid Layout
-            <div className={`grid gap-4 ${compact ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
-              {displayedSpins.map((spin, index) => (
-                <GridItem key={`${spin.id}-${index}`} spin={spin} index={index} />
-              ))}
-            </div>
-          ) : (
-            // List Layout
-            <div className="space-y-3">
-              {displayedSpins.map((spin, index) => (
-                <div 
-                  key={`${spin.id}-${index}`}
-                  className={`p-3 border rounded-lg transition-colors hover:bg-accent/50 ${
-                    isCurrentlyPlaying(spin, index) ? 'bg-primary/5 border-primary/20' : 'bg-card'
-                  }`}
-                >
-                  <div className="flex gap-3">
-                    {/* Album Artwork */}
-                    <div className={`flex-shrink-0 ${compact ? 'w-12 h-12' : 'w-16 h-16'}`}>
-                      <AspectRatio ratio={1} className="bg-muted rounded-md overflow-hidden">
-                        <AlbumArtwork
-                          src={spin.image}
-                          alt={`${spin.song} by ${spin.artist}`}
-                          className="w-full h-full"
-                          fallbackIconSize={compact ? 'w-4 h-4' : 'w-6 h-6'}
-                        />
-                      </AspectRatio>
-                    </div>
+        <div className={isEmbedMode ? "flex-1 flex flex-col min-h-0" : ""}>
+          <ScrollArea 
+            className={
+              isEmbedMode 
+                ? "flex-1" 
+                : compact 
+                  ? "h-64" 
+                  : "h-96"
+            } 
+            type="always"
+          >
+            {displayedSpins.length === 0 ? (
+              <div className="text-center py-8">
+                <Music className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-muted-foreground">
+                  {hasActiveFilters ? 'No matching songs found' : 'No songs playing right now'}
+                </p>
+              </div>
+            ) : layout === 'grid' ? (
+              // Grid Layout
+              <div className={`grid gap-4 ${compact ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
+                {displayedSpins.map((spin, index) => (
+                  <GridItem key={`${spin.id}-${index}`} spin={spin} index={index} />
+                ))}
+              </div>
+            ) : (
+              // List Layout
+              <div className="space-y-3">
+                {displayedSpins.map((spin, index) => (
+                  <div 
+                    key={`${spin.id}-${index}`}
+                    className={`p-3 border rounded-lg transition-colors hover:bg-accent/50 ${
+                      isCurrentlyPlaying(spin, index) ? 'bg-primary/5 border-primary/20' : 'bg-card'
+                    }`}
+                  >
+                    <div className="flex gap-3">
+                      {/* Album Artwork */}
+                      <div className={`flex-shrink-0 ${compact ? 'w-12 h-12' : 'w-16 h-16'}`}>
+                        <AspectRatio ratio={1} className="bg-muted rounded-md overflow-hidden">
+                          <AlbumArtwork
+                            src={spin.image}
+                            alt={`${spin.song} by ${spin.artist}`}
+                            className="w-full h-full"
+                            fallbackIconSize={compact ? 'w-4 h-4' : 'w-6 h-6'}
+                          />
+                        </AspectRatio>
+                      </div>
 
-                    {/* Song Information */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1 min-w-0">
-                          <h3 className={`font-semibold truncate ${compact ? "text-sm" : ""}`}>
-                            {spin.song}
-                          </h3>
-                          <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-                            <User className="inline h-3 w-3 mr-1" />
-                            {spin.artist}
-                          </p>
-                          {spin.composer && (
+                      {/* Song Information */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 min-w-0">
+                            <h3 className={`font-semibold truncate ${compact ? "text-sm" : ""}`}>
+                              {spin.song}
+                            </h3>
                             <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-                              Composer: {spin.composer}
+                              <User className="inline h-3 w-3 mr-1" />
+                              {spin.artist}
                             </p>
-                          )}
-                          {spin.label && (
-                            <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-                              Label: {spin.label}
-                            </p>
-                          )}
-                          {spin.release && (
-                            <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-                              Release: {spin.release}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex flex-col items-end ml-2">
-                          {isCurrentlyPlaying(spin, index) && (
-                            <Badge variant="secondary" className={compact ? "text-xs px-2 py-0" : ""}>
-                              Now Playing
-                            </Badge>
-                          )}
-                          <div className={`text-right mt-1 ${compact ? "text-xs" : "text-sm"}`}>
-                            <div className="flex items-center text-muted-foreground">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {formatTime(spin.start)}
-                            </div>
-                            <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
-                              {formatDate(spin.start)}
-                            </div>
-                            {spin.duration && (
-                              <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
-                                {Math.floor(spin.duration / 60)}:{(spin.duration % 60).toString().padStart(2, '0')}
-                              </div>
+                            {spin.composer && (
+                              <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
+                                Composer: {spin.composer}
+                              </p>
                             )}
+                            {spin.label && (
+                              <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
+                                Label: {spin.label}
+                              </p>
+                            )}
+                            {spin.release && (
+                              <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
+                                Release: {spin.release}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end ml-2">
+                            {isCurrentlyPlaying(spin, index) && (
+                              <Badge variant="secondary" className={compact ? "text-xs px-2 py-0" : ""}>
+                                Now Playing
+                              </Badge>
+                            )}
+                            <div className={`text-right mt-1 ${compact ? "text-xs" : "text-sm"}`}>
+                              <div className="flex items-center text-muted-foreground">
+                                <Clock className="h-3 w-3 mr-1" />
+                                {formatTime(spin.start)}
+                              </div>
+                              <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
+                                {formatDate(spin.start)}
+                              </div>
+                              {spin.duration && (
+                                <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
+                                  {Math.floor(spin.duration / 60)}:{(spin.duration % 60).toString().padStart(2, '0')}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+          
+          {/* Load More Button */}
+          {hasMoreSpins && (
+            <div className="mt-4 flex justify-center">
+              <Button
+                variant="outline"
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="w-full sm:w-auto"
+              >
+                {loadingMore ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  `Load More (${Math.min(5, allSpins.length - displayCount)} more songs)`
+                )}
+              </Button>
             </div>
           )}
-        </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   );
