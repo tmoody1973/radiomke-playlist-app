@@ -22,6 +22,20 @@
   const SCRIPT_SRC = SCRIPT_TAG ? SCRIPT_TAG.src : '';
   const BASE_URL = SCRIPT_SRC ? new URL(SCRIPT_SRC).origin : window.location.origin;
 
+  // Check if we're inside an iframe
+  const isInIframe = window !== window.parent;
+
+  // Function to send height updates to parent window
+  function sendHeightUpdate() {
+    if (isInIframe) {
+      const height = document.body.scrollHeight;
+      window.parent.postMessage({
+        type: 'spinitron-resize',
+        height: height
+      }, '*');
+    }
+  }
+
   // CSS styles for the widget
   const CSS = `
     .spinitron-widget {
@@ -245,6 +259,9 @@
       this.render();
       await this.loadSongs();
       
+      // Send initial height update
+      setTimeout(sendHeightUpdate, 100);
+      
       if (config.autoUpdate) {
         setInterval(() => this.loadSongs(), 30000); // Update every 30 seconds
       }
@@ -298,6 +315,9 @@
       }
       
       this.loading = false;
+      
+      // Send height update after loading
+      setTimeout(sendHeightUpdate, 100);
     }
 
     filterSongs() {
@@ -329,6 +349,7 @@
       if (this.filteredSongs.length === 0) {
         playlistDiv.innerHTML = '<div class="spinitron-loading">No songs found</div>';
         loadMoreDiv.style.display = 'none';
+        setTimeout(sendHeightUpdate, 100);
         return;
       }
 
@@ -347,6 +368,9 @@
       } else {
         loadMoreDiv.style.display = 'none';
       }
+      
+      // Send height update after display changes
+      setTimeout(sendHeightUpdate, 100);
     }
 
     createSongElement(song) {
