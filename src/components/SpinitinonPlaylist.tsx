@@ -31,8 +31,7 @@ interface SpinitinonPlaylistProps {
   compact?: boolean;
   startDate?: string;
   endDate?: string;
-  layout?: 'list' | 'grid' | 'ticker';
-  scrollSpeed?: number;
+  layout?: 'list' | 'grid';
 }
 
 // Component for handling image loading with fallback
@@ -100,8 +99,7 @@ const SpinitinonPlaylist = ({
   compact = false,
   startDate: initialStartDate = '',
   endDate: initialEndDate = '',
-  layout = 'list',
-  scrollSpeed = 60
+  layout = 'list'
 }: SpinitinonPlaylistProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -287,36 +285,6 @@ const SpinitinonPlaylist = ({
     </div>
   );
 
-  // Ticker item component for scrolling layout
-  const TickerItem = ({ spin, index }: { spin: Spin; index: number }) => (
-    <div 
-      className={`inline-flex items-center gap-3 px-6 py-2 whitespace-nowrap ${
-        isCurrentlyPlaying(spin, index) ? 'bg-primary/10 text-primary' : ''
-      }`}
-    >
-      <div className="flex-shrink-0 w-8 h-8">
-        <AlbumArtwork
-          src={spin.image}
-          alt={`${spin.song} by ${spin.artist}`}
-          className="w-full h-full rounded"
-          fallbackIconSize="w-4 h-4"
-        />
-      </div>
-      
-      <div className="flex items-center gap-2">
-        {isCurrentlyPlaying(spin, index) && (
-          <div className="flex items-center gap-1">
-            <div className="w-1 h-1 bg-red-500 rounded-full animate-pulse"></div>
-            <span className="text-xs font-medium text-red-500">LIVE</span>
-          </div>
-        )}
-        <span className="font-semibold">{spin.song}</span>
-        <span className="text-muted-foreground">by {spin.artist}</span>
-        <span className="text-xs text-muted-foreground">• {formatTime(spin.start)}</span>
-      </div>
-    </div>
-  );
-
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString([], { 
       hour: '2-digit', 
@@ -351,7 +319,7 @@ const SpinitinonPlaylist = ({
 
   if (error) {
     return (
-      <Card className="w-full">
+      <Card className={`w-full ${isEmbedMode ? 'h-full flex flex-col' : ''}`}>
         <CardContent className="p-6">
           <div className="text-center text-red-500">
             <Radio className="h-8 w-8 mx-auto mb-2" />
@@ -373,14 +341,14 @@ const SpinitinonPlaylist = ({
     } else if (debouncedSearchTerm) {
       return 'Search Results';
     }
-    return layout === 'ticker' ? 'Live Radio' : 'Live Playlist';
+    return 'Live Playlist';
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader className={compact || layout === 'ticker' ? "pb-3" : ""}>
-        <CardTitle className={`flex items-center gap-2 ${compact || layout === 'ticker' ? "text-lg" : ""}`}>
-          <Radio className={`${compact || layout === 'ticker' ? "h-4 w-4" : "h-5 w-5"}`} />
+    <Card className={`w-full ${isEmbedMode ? 'h-full flex flex-col' : ''}`}>
+      <CardHeader className={compact ? "pb-3" : ""}>
+        <CardTitle className={`flex items-center gap-2 ${compact ? "text-lg" : ""}`}>
+          <Radio className={`${compact ? "h-4 w-4" : "h-5 w-5"}`} />
           {getTitle()}
           {isLoading && (
             <div className="animate-pulse">
@@ -389,7 +357,7 @@ const SpinitinonPlaylist = ({
           )}
         </CardTitle>
         
-        {showSearch && layout !== 'ticker' && (
+        {showSearch && (
           <div className="space-y-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -429,58 +397,24 @@ const SpinitinonPlaylist = ({
         )}
       </CardHeader>
       
-      <CardContent className={compact || layout === 'ticker' ? "pt-0" : ""}>
-        {layout === 'ticker' && isEmbedMode ? (
-          // Special layout for ticker in embed mode
-          <div className="h-full flex flex-col min-h-0">
-            <div className="flex-1 flex flex-col min-h-0">
-              {displayedSpins.length === 0 ? (
-                <div className="text-center py-8">
-                  <Music className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-muted-foreground">
-                    {hasActiveFilters ? 'No matching songs found' : 'No songs playing right now'}
-                  </p>
-                </div>
-              ) : (
-                // Ticker Layout with configurable scroll speed
-                <div className="relative overflow-hidden bg-gradient-to-r from-background via-background/95 to-background rounded-lg border">
-                  <div 
-                    className="flex hover:[animation-play-state:paused]"
-                    style={{ 
-                      animation: `scroll-left ${scrollSpeed}s linear infinite` 
-                    }}
-                  >
-                    {[...displayedSpins, ...displayedSpins].map((spin, index) => (
-                      <TickerItem key={`ticker-${spin.id}-${index}`} spin={spin} index={index % displayedSpins.length} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        ) : (
-          // Normal layout for list, grid, and non-embed ticker
-          <div>
+      <CardContent className={`${compact ? "pt-0" : ""} ${isEmbedMode ? 'flex-1 flex flex-col min-h-0' : ''}`}>
+        <div className={isEmbedMode ? "flex-1 flex flex-col min-h-0" : ""}>
+          <ScrollArea 
+            className={
+              isEmbedMode 
+                ? "flex-1" 
+                : compact 
+                  ? "h-64" 
+                  : "h-96"
+            } 
+            type="always"
+          >
             {displayedSpins.length === 0 ? (
               <div className="text-center py-8">
                 <Music className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-muted-foreground">
                   {hasActiveFilters ? 'No matching songs found' : 'No songs playing right now'}
                 </p>
-              </div>
-            ) : layout === 'ticker' ? (
-              // Ticker Layout with configurable scroll speed
-              <div className="relative overflow-hidden bg-gradient-to-r from-background via-background/95 to-background rounded-lg border">
-                <div 
-                  className="flex hover:[animation-play-state:paused]"
-                  style={{ 
-                    animation: `scroll-left ${scrollSpeed}s linear infinite` 
-                  }}
-                >
-                  {[...displayedSpins, ...displayedSpins].map((spin, index) => (
-                    <TickerItem key={`ticker-${spin.id}-${index}`} spin={spin} index={index % displayedSpins.length} />
-                  ))}
-                </div>
               </div>
             ) : layout === 'grid' ? (
               // Grid Layout
@@ -567,29 +501,29 @@ const SpinitinonPlaylist = ({
                 ))}
               </div>
             )}
-            
-            {/* Load More Button - hidden for ticker layout */}
-            {hasMoreSpins && layout !== 'ticker' && (
-              <div className="mt-4 flex justify-center">
-                <Button
-                  variant="outline"
-                  onClick={handleLoadMore}
-                  disabled={loadingMore}
-                  className="w-full sm:w-auto"
-                >
-                  {loadingMore ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    `Load More (${Math.min(5, allSpins.length - displayCount)} more songs)`
-                  )}
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
+          </ScrollArea>
+          
+          {/* Load More Button */}
+          {hasMoreSpins && (
+            <div className="mt-4 flex justify-center">
+              <Button
+                variant="outline"
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="w-full sm:w-auto"
+              >
+                {loadingMore ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  `Load More (${Math.min(5, allSpins.length - displayCount)} more songs)`
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

@@ -8,7 +8,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Slider } from '@/components/ui/slider';
 
 interface Station {
   id: string;
@@ -41,8 +40,6 @@ interface EmbedConfigurationProps {
   setStartDate: (value: Date | undefined) => void;
   endDate?: Date;
   setEndDate: (value: Date | undefined) => void;
-  scrollSpeed?: number;
-  setScrollSpeed?: (value: number) => void;
 }
 
 const EmbedConfiguration = ({
@@ -71,8 +68,6 @@ const EmbedConfiguration = ({
   setStartDate,
   endDate,
   setEndDate,
-  scrollSpeed = 60,
-  setScrollSpeed,
 }: EmbedConfigurationProps) => {
   return (
     <div className="space-y-6">
@@ -138,32 +133,9 @@ const EmbedConfiguration = ({
           <SelectContent>
             <SelectItem value="list">List View</SelectItem>
             <SelectItem value="grid">Grid View</SelectItem>
-            <SelectItem value="ticker">Ticker Bar</SelectItem>
           </SelectContent>
         </Select>
       </div>
-
-      {layout === 'ticker' && setScrollSpeed && (
-        <div className="space-y-2">
-          <Label htmlFor="scrollSpeed">Scroll Speed (seconds)</Label>
-          <div className="px-3">
-            <Slider
-              id="scrollSpeed"
-              min={20}
-              max={120}
-              step={10}
-              value={[scrollSpeed]}
-              onValueChange={(value) => setScrollSpeed(value[0])}
-              className="w-full"
-            />
-            <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              <span>Fast (20s)</span>
-              <span>{scrollSpeed}s</span>
-              <span>Slow (120s)</span>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">

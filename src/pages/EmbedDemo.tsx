@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -31,7 +32,6 @@ const EmbedDemo = () => {
   const [endDate, setEndDate] = useState<Date>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [scrollSpeed, setScrollSpeed] = useState(60);
   const { toast } = useToast();
 
   // Fetch available stations
@@ -86,7 +86,6 @@ const EmbedDemo = () => {
     enableDateSearch,
     startDate,
     endDate,
-    scrollSpeed,
   };
 
   if (loading) {
@@ -163,8 +162,6 @@ const EmbedDemo = () => {
                 setStartDate={setStartDate}
                 endDate={endDate}
                 setEndDate={setEndDate}
-                scrollSpeed={scrollSpeed}
-                setScrollSpeed={setScrollSpeed}
               />
 
               <div className="mt-6">

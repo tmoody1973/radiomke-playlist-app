@@ -6,7 +6,7 @@ const Embed = () => {
   const [searchParams] = useSearchParams();
   
   // Extract parameters from URL
-  const stationId = searchParams.get('station') || 'hyfin';
+  const stationId = searchParams.get('station') || 'hyfin'; // Default to HYFIN
   const autoUpdate = searchParams.get('autoUpdate') !== 'false';
   const showSearch = searchParams.get('showSearch') !== 'false';
   const maxItemsParam = searchParams.get('maxItems') || '20';
@@ -16,14 +16,10 @@ const Embed = () => {
   const theme = searchParams.get('theme') || 'light';
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
-  const scrollSpeedParam = searchParams.get('scrollSpeed') || '60';
-  const scrollSpeed = parseInt(scrollSpeedParam);
   
   // Validate layout parameter to ensure it matches the expected type
   const layoutParam = searchParams.get('layout');
-  const layout: 'list' | 'grid' | 'ticker' = 
-    layoutParam === 'grid' ? 'grid' : 
-    layoutParam === 'ticker' ? 'ticker' : 'list';
+  const layout: 'list' | 'grid' = layoutParam === 'grid' ? 'grid' : 'list';
 
   return (
     <div 
@@ -44,7 +40,6 @@ const Embed = () => {
             startDate={startDate}
             endDate={endDate}
             layout={layout}
-            scrollSpeed={scrollSpeed}
           />
         </div>
       </div>
