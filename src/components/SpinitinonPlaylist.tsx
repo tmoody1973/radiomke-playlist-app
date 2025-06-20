@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -226,6 +227,7 @@ const SpinitinonPlaylist = ({
         start: effectiveStartDate,
         end: effectiveEndDate,
         use_cache: 'false',
+        force_refresh: true,
         _cache_bust: Date.now().toString()
       }
     });
@@ -246,11 +248,13 @@ const SpinitinonPlaylist = ({
   const hasActiveFilters = debouncedSearchTerm || effectiveStartDate || effectiveEndDate;
 
   const { data: spins = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['spins', stationId, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate],
+    queryKey: ['spins', stationId, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate, Date.now()],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate ? 10000 : false, // Always poll every 10 seconds if autoUpdate is enabled
-    staleTime: 0, // Always consider data stale to ensure fresh fetches
-    gcTime: 5000, // Keep in cache for 5 seconds
+    refetchInterval: autoUpdate ? 5000 : false, // Reduced to 5 seconds for more frequent updates
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Don't cache data
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 
   // Update allSpins when new data comes in
