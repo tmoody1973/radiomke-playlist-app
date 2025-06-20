@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Copy, ExternalLink, CalendarIcon, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -97,6 +97,44 @@ const EmbedDemo = () => {
   style="border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);"
   title="Spinitron Live Playlist">
 </iframe>`;
+  };
+
+  const generateJavaScriptCode = () => {
+    const params = new URLSearchParams();
+    if (selectedStation !== 'hyfin') params.append('station', selectedStation);
+    if (!autoUpdate) params.append('autoUpdate', 'false');
+    if (!showSearch) params.append('showSearch', 'false');
+    if (!unlimitedSongs && maxItems !== 20) params.append('maxItems', maxItems.toString());
+    if (unlimitedSongs) params.append('maxItems', 'unlimited');
+    if (compact) params.append('compact', 'true');
+    if (height !== 'auto') params.append('height', height);
+    if (theme !== 'light') params.append('theme', theme);
+    if (layout !== 'list') params.append('layout', layout);
+    if (enableDateSearch && startDate) params.append('startDate', startDate.toISOString());
+    if (enableDateSearch && endDate) params.append('endDate', endDate.toISOString());
+
+    const baseUrl = window.location.origin;
+    const config = {
+      station: selectedStation,
+      autoUpdate,
+      showSearch,
+      maxItems: unlimitedSongs ? 'unlimited' : maxItems,
+      compact,
+      height,
+      theme,
+      layout,
+      ...(enableDateSearch && startDate && { startDate: startDate.toISOString() }),
+      ...(enableDateSearch && endDate && { endDate: endDate.toISOString() })
+    };
+
+    return `<!-- Add this div where you want the playlist to appear -->
+<div id="spinitron-playlist-widget"></div>
+
+<!-- Add this script before closing </body> tag -->
+<script>
+  window.SpinitinonConfig = ${JSON.stringify(config, null, 2)};
+</script>
+<script src="${baseUrl}/embed.js" async></script>`;
   };
 
   const copyToClipboard = (text: string) => {
@@ -367,28 +405,66 @@ const EmbedDemo = () => {
 
               <div className="space-y-3">
                 <Label>Embed Code</Label>
-                <Textarea
-                  value={generateIframeCode()}
-                  readOnly
-                  className="font-mono text-sm"
-                  rows={6}
-                />
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => copyToClipboard(generateIframeCode())}
-                    className="flex-1"
-                  >
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copy Embed Code
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => window.open(generateEmbedUrl(), '_blank')}
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Test
-                  </Button>
-                </div>
+                <Tabs defaultValue="iframe" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="iframe">iFrame</TabsTrigger>
+                    <TabsTrigger value="javascript">JavaScript</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="iframe" className="space-y-3">
+                    <div className="text-sm text-muted-foreground mb-2">
+                      Simple iframe embed - works everywhere but limited SEO benefits
+                    </div>
+                    <Textarea
+                      value={generateIframeCode()}
+                      readOnly
+                      className="font-mono text-sm"
+                      rows={6}
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => copyToClipboard(generateIframeCode())}
+                        className="flex-1"
+                      >
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy iFrame Code
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => window.open(generateEmbedUrl(), '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Test
+                      </Button>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="javascript" className="space-y-3">
+                    <div className="text-sm text-muted-foreground mb-2">
+                      JavaScript embed - better SEO, seamless integration, customizable styling
+                    </div>
+                    <Textarea
+                      value={generateJavaScriptCode()}
+                      readOnly
+                      className="font-mono text-sm"
+                      rows={10}
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => copyToClipboard(generateJavaScriptCode())}
+                        className="flex-1"
+                      >
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy JS Code
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => window.open(generateEmbedUrl(), '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Test
+                      </Button>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
             </CardContent>
           </Card>
@@ -417,10 +493,12 @@ const EmbedDemo = () => {
             <CardContent className="pt-6">
               <h3 className="text-lg font-semibold mb-2">How to Use</h3>
               <div className="text-sm text-muted-foreground space-y-2">
+                <p><strong>iFrame Method:</strong> Simple copy-paste solution that works everywhere</p>
+                <p><strong>JavaScript Method:</strong> Better for SEO and customization - content is rendered directly on your page</p>
                 <p>1. Select your preferred radio station from the available options</p>
                 <p>2. Customize the settings above to match your needs</p>
-                <p>3. Copy the generated embed code</p>
-                <p>4. Paste it into your website's HTML where you want the playlist to appear</p>
+                <p>3. Choose between iFrame or JavaScript embed method</p>
+                <p>4. Copy the generated embed code and paste it into your website's HTML</p>
                 <p>5. The widget will automatically update with live playlist data</p>
               </div>
             </CardContent>
