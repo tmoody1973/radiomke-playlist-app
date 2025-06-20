@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -213,9 +212,7 @@ const SpinitinonPlaylist = ({
       count: maxItems.toString(),
       search: debouncedSearchTerm,
       start: effectiveStartDate,
-      end: effectiveEndDate,
-      use_cache: 'false',
-      timestamp: Date.now()
+      end: effectiveEndDate
     });
 
     const { data, error } = await supabase.functions.invoke('spinitron-proxy', {
@@ -226,9 +223,7 @@ const SpinitinonPlaylist = ({
         search: debouncedSearchTerm,
         start: effectiveStartDate,
         end: effectiveEndDate,
-        use_cache: 'false',
-        force_refresh: true,
-        _cache_bust: Date.now().toString()
+        use_cache: 'false'
       }
     });
 
@@ -237,7 +232,7 @@ const SpinitinonPlaylist = ({
       throw error;
     }
 
-    console.log('Received spins:', data.items?.length || 0, 'for station:', stationId, 'search:', debouncedSearchTerm);
+    console.log('Received spins:', data.items?.length || 0, 'for station:', stationId);
     return data.items || [];
   };
 
@@ -248,11 +243,11 @@ const SpinitinonPlaylist = ({
   const hasActiveFilters = debouncedSearchTerm || effectiveStartDate || effectiveEndDate;
 
   const { data: spins = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['spins', stationId, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate, Date.now()],
+    queryKey: ['spins', stationId, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate ? 5000 : false, // Reduced to 5 seconds for more frequent updates
-    staleTime: 0, // Always consider data stale
-    gcTime: 0, // Don't cache data
+    refetchInterval: autoUpdate ? 5000 : false,
+    staleTime: 0,
+    gcTime: 0,
     refetchOnWindowFocus: true,
     refetchOnMount: true,
   });
