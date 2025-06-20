@@ -350,6 +350,12 @@ const SpinitinonPlaylist = ({
         <CardTitle className={`flex items-center gap-2 ${compact ? "text-lg" : ""}`}>
           <Radio className={`${compact ? "h-4 w-4" : "h-5 w-5"}`} />
           {getTitle()}
+          <Badge 
+            variant="secondary" 
+            className="ml-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-2 py-1 font-semibold tracking-wide shadow-sm"
+          >
+            BETA
+          </Badge>
           {isLoading && (
             <div className="animate-pulse">
               <div className="h-2 w-2 bg-red-500 rounded-full"></div>
