@@ -4,6 +4,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { CalendarIcon, X, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -18,6 +19,10 @@ interface DateRangePickerProps {
 const DateRangePicker = ({ startDate, endDate, onDateChange, onClear }: DateRangePickerProps) => {
   const [startCalendarOpen, setStartCalendarOpen] = useState(false);
   const [endCalendarOpen, setEndCalendarOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [useTimeRange, setUseTimeRange] = useState(false);
 
   const handleStartDateSelect = (date: Date | undefined) => {
     if (date) {
@@ -32,6 +37,27 @@ const DateRangePicker = ({ startDate, endDate, onDateChange, onClear }: DateRang
       const isoString = date.toISOString();
       onDateChange(startDate || '', isoString);
       setEndCalendarOpen(false);
+    }
+  };
+
+  const handleTimeRangeSearch = () => {
+    if (selectedDate && startTime && endTime) {
+      const startDateTime = new Date(selectedDate);
+      const endDateTime = new Date(selectedDate);
+      
+      // Parse time (HH:MM format)
+      const [startHour, startMinute] = startTime.split(':').map(Number);
+      const [endHour, endMinute] = endTime.split(':').map(Number);
+      
+      startDateTime.setHours(startHour, startMinute, 0, 0);
+      endDateTime.setHours(endHour, endMinute, 59, 999);
+      
+      // If end time is before start time, assume it's the next day
+      if (endDateTime <= startDateTime) {
+        endDateTime.setDate(endDateTime.getDate() + 1);
+      }
+      
+      onDateChange(startDateTime.toISOString(), endDateTime.toISOString());
     }
   };
 
@@ -104,6 +130,71 @@ const DateRangePicker = ({ startDate, endDate, onDateChange, onClear }: DateRang
             <SelectItem value="last-30-days">Last 30 Days</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Specific Date & Time Range Search */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Search by Date & Time</span>
+        </div>
+        
+        <div className="space-y-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !selectedDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {selectedDate ? format(selectedDate, 'PPP') : "Select date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                initialFocus
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Start time</label>
+              <Input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">End time</label>
+              <Input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="text-sm"
+              />
+            </div>
+          </div>
+
+          {selectedDate && startTime && endTime && (
+            <Button
+              onClick={handleTimeRangeSearch}
+              size="sm"
+              className="w-full"
+            >
+              Search this timeframe
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Custom Date Range */}
