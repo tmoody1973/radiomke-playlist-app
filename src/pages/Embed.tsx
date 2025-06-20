@@ -15,7 +15,10 @@ const Embed = () => {
   const theme = searchParams.get('theme') || 'light';
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
-  const layout = searchParams.get('layout') || 'list'; // New layout parameter
+  
+  // Validate layout parameter to ensure it matches the expected type
+  const layoutParam = searchParams.get('layout');
+  const layout: 'list' | 'grid' = layoutParam === 'grid' ? 'grid' : 'list';
 
   return (
     <div 
