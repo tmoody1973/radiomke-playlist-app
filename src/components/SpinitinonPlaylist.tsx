@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -351,7 +352,7 @@ const SpinitinonPlaylist = ({
 
   if (error) {
     return (
-      <Card className={`w-full ${isEmbedMode ? 'h-full flex flex-col' : ''}`}>
+      <Card className={`w-full ${isEmbedMode && layout === 'ticker' ? 'h-full flex flex-col' : ''}`}>
         <CardContent className="p-6">
           <div className="text-center text-red-500">
             <Radio className="h-8 w-8 mx-auto mb-2" />
@@ -377,7 +378,7 @@ const SpinitinonPlaylist = ({
   };
 
   return (
-    <Card className={`w-full ${isEmbedMode ? 'h-full flex flex-col' : ''}`}>
+    <Card className={`w-full ${isEmbedMode && layout === 'ticker' ? 'h-full flex flex-col' : ''}`}>
       <CardHeader className={compact || layout === 'ticker' ? "pb-3" : ""}>
         <CardTitle className={`flex items-center gap-2 ${compact || layout === 'ticker' ? "text-lg" : ""}`}>
           <Radio className={`${compact || layout === 'ticker' ? "h-4 w-4" : "h-5 w-5"}`} />
@@ -429,8 +430,8 @@ const SpinitinonPlaylist = ({
         )}
       </CardHeader>
       
-      <CardContent className={`${compact || layout === 'ticker' ? "pt-0" : ""} ${isEmbedMode ? 'flex-1 flex flex-col min-h-0' : ''}`}>
-        <div className={isEmbedMode ? "flex-1 flex flex-col min-h-0" : ""}>
+      <CardContent className={`${compact || layout === 'ticker' ? "pt-0" : ""} ${isEmbedMode && layout === 'ticker' ? 'flex-1 flex flex-col min-h-0' : ''}`}>
+        <div className={isEmbedMode && layout === 'ticker' ? "flex-1 flex flex-col min-h-0" : ""}>
           {displayedSpins.length === 0 ? (
             <div className="text-center py-8">
               <Music className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
