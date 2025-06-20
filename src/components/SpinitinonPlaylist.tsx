@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -68,16 +69,13 @@ const SpinitinonPlaylist = ({
     const effectiveStartDate = dateSearchEnabled ? startDate : '';
     const effectiveEndDate = dateSearchEnabled ? endDate : '';
     
-    // For live updates (no filters), always fetch fresh data from API
-    const shouldUseFreshData = !hasActiveFilters && autoUpdate;
-    
     console.log('Fetching spins with params:', {
       endpoint: 'spins',
       count: maxItems.toString(),
       search: debouncedSearchTerm,
       start: effectiveStartDate,
       end: effectiveEndDate,
-      use_cache: shouldUseFreshData ? 'false' : 'true', // Force fresh data for live updates
+      use_cache: 'false', // Always fetch fresh data for live updates
       timestamp: Date.now()
     });
 
@@ -88,7 +86,7 @@ const SpinitinonPlaylist = ({
         search: debouncedSearchTerm,
         start: effectiveStartDate,
         end: effectiveEndDate,
-        use_cache: shouldUseFreshData ? 'false' : 'true',
+        use_cache: 'false', // Always get fresh data
         _cache_bust: Date.now().toString()
       }
     });
@@ -111,54 +109,25 @@ const SpinitinonPlaylist = ({
   const { data: spins = [], isLoading, error, refetch } = useQuery({
     queryKey: ['spins', stationId, page, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate && !hasActiveFilters ? 5000 : false, // Check every 5 seconds for changes
-    staleTime: hasActiveFilters ? 300000 : 1000, // Very short stale time for live content
-    gcTime: hasActiveFilters ? 300000 : 10000,
+    refetchInterval: autoUpdate && !hasActiveFilters ? 10000 : false, // Consistent 10 second updates
+    staleTime: 0, // Always consider data stale for immediate updates
+    gcTime: 5000, // Short garbage collection time
   });
 
-  // Smart real-time update system
+  // Consistent polling for live updates
   useEffect(() => {
-    if (!autoUpdate || hasActiveFilters || !spins.length) return;
+    if (!autoUpdate || hasActiveFilters) return;
 
-    const currentSpin = spins[0];
-    if (!currentSpin) return;
-
-    const now = new Date();
-    const startTime = new Date(currentSpin.start);
-    const duration = currentSpin.duration || 180; // Default 3 minutes
-    const endTime = new Date(startTime.getTime() + duration * 1000);
-    
-    // If the current song should have ended, refresh immediately
-    if (now > endTime) {
-      console.log('Current song should have ended, refreshing immediately...');
+    console.log('Setting up consistent polling for live updates...');
+    const interval = setInterval(() => {
+      console.log('Polling for updates...');
       refetch();
-      return;
-    }
+    }, 10000); // Poll every 10 seconds consistently
 
-    // Calculate when the current song will end and set a timer
-    const timeUntilEnd = endTime.getTime() - now.getTime();
-    
-    if (timeUntilEnd > 0 && timeUntilEnd < 300000) { // Only set timer if less than 5 minutes
-      console.log(`Setting timer to refresh in ${Math.round(timeUntilEnd / 1000)} seconds when current song ends`);
-      
-      const timer = setTimeout(() => {
-        console.log('Song should have ended, refreshing playlist...');
-        refetch();
-      }, timeUntilEnd + 5000); // Add 5 seconds buffer
-
-      return () => clearTimeout(timer);
-    }
-  }, [spins, autoUpdate, refetch, hasActiveFilters]);
-
-  // Fallback polling for when smart timing isn't available
-  useEffect(() => {
-    if (autoUpdate && !hasActiveFilters) {
-      const interval = setInterval(() => {
-        console.log('Fallback refresh - checking for updates...');
-        refetch();
-      }, 30000); // Fallback every 30 seconds
-      return () => clearInterval(interval);
-    }
+    return () => {
+      console.log('Cleaning up polling interval');
+      clearInterval(interval);
+    };
   }, [autoUpdate, refetch, hasActiveFilters]);
 
   const displayedSpins = spins;
