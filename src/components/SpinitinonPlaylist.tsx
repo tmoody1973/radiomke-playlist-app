@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -107,6 +108,7 @@ const SpinitinonPlaylist = ({
   const [dateSearchEnabled, setDateSearchEnabled] = useState(false);
   const [startDate, setStartDate] = useState(initialStartDate);
   const [endDate, setEndDate] = useState(initialEndDate);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Initialize date search if dates were provided via props
   useEffect(() => {
@@ -114,6 +116,15 @@ const SpinitinonPlaylist = ({
       setDateSearchEnabled(true);
     }
   }, [initialStartDate, initialEndDate]);
+
+  // Update current time every second for accurate "now playing" detection
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   // Debounce search term to avoid too many API calls
   useEffect(() => {
@@ -170,28 +181,32 @@ const SpinitinonPlaylist = ({
   const { data: spins = [], isLoading, error, refetch } = useQuery({
     queryKey: ['spins', stationId, page, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate && !hasActiveFilters ? 10000 : false,
-    staleTime: 0,
-    gcTime: 5000,
+    refetchInterval: autoUpdate ? 10000 : false, // Always poll every 10 seconds if autoUpdate is enabled
+    staleTime: 0, // Always consider data stale to ensure fresh fetches
+    gcTime: 5000, // Keep in cache for 5 seconds
   });
 
-  // Consistent polling for live updates
-  useEffect(() => {
-    if (!autoUpdate || hasActiveFilters) return;
-
-    console.log('Setting up consistent polling for live updates...');
-    const interval = setInterval(() => {
-      console.log('Polling for updates...');
-      refetch();
-    }, 10000);
-
-    return () => {
-      console.log('Cleaning up polling interval');
-      clearInterval(interval);
-    };
-  }, [autoUpdate, refetch, hasActiveFilters]);
-
   const displayedSpins = spins;
+
+  // Improved "now playing" detection
+  const isCurrentlyPlaying = (spin: Spin, index: number) => {
+    // Only show "now playing" for live data (no active filters)
+    if (hasActiveFilters) return false;
+    
+    const startTime = new Date(spin.start);
+    const endTime = new Date(startTime.getTime() + (spin.duration || 180) * 1000);
+    
+    // Check if current time is within the song's play window
+    const isWithinTimeWindow = currentTime >= startTime && currentTime <= endTime;
+    
+    // For live playlist, the currently playing song should be the most recent one that's within its time window
+    if (index === 0 && isWithinTimeWindow) {
+      return true;
+    }
+    
+    // Check if this song is playing now (useful for historical data that might be current)
+    return isWithinTimeWindow;
+  };
 
   // Grid item component for better organization
   const GridItem = ({ spin, index }: { spin: Spin; index: number }) => (
@@ -245,17 +260,6 @@ const SpinitinonPlaylist = ({
       </div>
     </div>
   );
-
-  const isCurrentlyPlaying = (spin: Spin, index: number) => {
-    if (hasActiveFilters) return false;
-    if (index !== 0) return false;
-    
-    const now = new Date();
-    const startTime = new Date(spin.start);
-    const endTime = new Date(startTime.getTime() + (spin.duration || 180) * 1000);
-    
-    return now >= startTime && now <= endTime;
-  };
 
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString([], { 
