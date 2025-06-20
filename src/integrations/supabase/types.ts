@@ -22,7 +22,7 @@ export type Database = {
           song: string
           spinitron_id: number
           start_time: string
-          station_id: string | null
+          station_id: string
           updated_at: string
         }
         Insert: {
@@ -37,7 +37,7 @@ export type Database = {
           song: string
           spinitron_id: number
           start_time: string
-          station_id?: string | null
+          station_id: string
           updated_at?: string
         }
         Update: {
@@ -52,7 +52,39 @@ export type Database = {
           song?: string
           spinitron_id?: number
           start_time?: string
-          station_id?: string | null
+          station_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_songs_station"
+            columns: ["station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stations: {
+        Row: {
+          api_key_secret_name: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          api_key_secret_name: string
+          created_at?: string
+          id: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          api_key_secret_name?: string
+          created_at?: string
+          id?: string
+          name?: string
           updated_at?: string
         }
         Relationships: []
