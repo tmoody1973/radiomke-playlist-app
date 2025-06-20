@@ -1,16 +1,15 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Search, Music, Clock, User, Radio, ImageIcon, Calendar, Play, Loader2 } from 'lucide-react';
+import { Search, Music, Radio, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import DateRangePicker from './DateRangePicker';
-import { useSpotifyData } from '@/hooks/useSpotifyData';
+import { SearchFilters } from './playlist/SearchFilters';
+import { GridItem } from './playlist/GridItem';
+import { ListItem } from './playlist/ListItem';
 
 interface Spin {
   id: number;
@@ -35,98 +34,8 @@ interface SpinitinonPlaylistProps {
   layout?: 'list' | 'grid';
 }
 
-// Simplified component for handling image loading with Spotify fallback
-const EnhancedAlbumArtwork = ({ 
-  src, 
-  alt, 
-  className = "",
-  fallbackIconSize = "w-6 h-6",
-  artist,
-  song
-}: { 
-  src?: string; 
-  alt: string; 
-  className?: string;
-  fallbackIconSize?: string;
-  artist: string;
-  song: string;
-}) => {
-  const [imageError, setImageError] = useState(false);
-  const { spotifyData, loading } = useSpotifyData(artist, song);
-
-  // Use Spotify artwork if available, otherwise fall back to original
-  const finalImageSrc = spotifyData?.albumArt || src;
-
-  // Reset error state when image source changes
-  useEffect(() => {
-    setImageError(false);
-  }, [finalImageSrc]);
-
-  // Show fallback icon when no image or error
-  if (!finalImageSrc || imageError) {
-    return (
-      <div className={`bg-muted flex items-center justify-center ${className}`}>
-        <Music className={`${fallbackIconSize} text-muted-foreground`} />
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={finalImageSrc}
-      alt={alt}
-      className={`w-full h-full object-cover ${className}`}
-      onError={() => setImageError(true)}
-      loading="lazy"
-    />
-  );
-};
-
-// Component for handling song metadata with Spotify enhancement
-const EnhancedSongInfo = ({ 
-  spin, 
-  compact = false 
-}: { 
-  spin: Spin; 
-  compact?: boolean;
-}) => {
-  const { spotifyData } = useSpotifyData(spin.artist, spin.song);
-
-  // Use Spotify data if available, otherwise fall back to original
-  const displayTitle = spotifyData?.trackName || spin.song;
-  const displayArtist = spotifyData?.artistName || spin.artist;
-  const displayAlbum = spotifyData?.albumName || spin.release;
-
-  return (
-    <div className="flex-1 min-w-0">
-      <h3 className={`font-semibold truncate ${compact ? "text-sm" : ""}`}>
-        {displayTitle}
-      </h3>
-      <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-        <User className="inline h-3 w-3 mr-1" />
-        {displayArtist}
-      </p>
-      {spin.composer && (
-        <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-          Composer: {spin.composer}
-        </p>
-      )}
-      {spin.label && (
-        <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-          Label: {spin.label}
-        </p>
-      )}
-      {displayAlbum && (
-        <p className={`text-muted-foreground truncate ${compact ? "text-xs" : "text-sm"}`}>
-          Album: {displayAlbum}
-        </p>
-      )}
-    </div>
-  );
-};
-
 const SpinitinonPlaylist = ({ 
-  stationId = 'hyfin', // Default to HYFIN
+  stationId = 'hyfin',
   autoUpdate = true, 
   showSearch = true, 
   maxItems = 20,
@@ -265,61 +174,6 @@ const SpinitinonPlaylist = ({
     return isWithinTimeWindow;
   };
 
-  // Grid item component for better organization
-  const GridItem = ({ spin, index }: { spin: Spin; index: number }) => (
-    <div 
-      className={`relative group overflow-hidden rounded-lg transition-all hover:scale-105 ${
-        isCurrentlyPlaying(spin, index) ? 'ring-2 ring-primary shadow-lg' : ''
-      }`}
-    >
-      <AspectRatio ratio={1} className="bg-gradient-to-br from-muted to-muted/50">
-        <EnhancedAlbumArtwork
-          src={spin.image}
-          alt={`${spin.song} by ${spin.artist}`}
-          className="w-full h-full rounded-lg overflow-hidden"
-          fallbackIconSize="w-8 h-8"
-          artist={spin.artist}
-          song={spin.song}
-        />
-        
-        {/* Overlay with song info */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-            <div className="flex items-center gap-2 mb-1">
-              {isCurrentlyPlaying(spin, index) && (
-                <Play className="h-3 w-3 text-primary fill-current" />
-              )}
-              <span className="text-xs font-medium">{formatTime(spin.start)}</span>
-            </div>
-            <h3 className="font-semibold text-sm truncate">{spin.song}</h3>
-            <p className="text-xs text-white/80 truncate">{spin.artist}</p>
-          </div>
-        </div>
-        
-        {/* Now playing badge */}
-        {isCurrentlyPlaying(spin, index) && (
-          <div className="absolute top-2 right-2">
-            <Badge variant="secondary" className="text-xs bg-primary text-primary-foreground">
-              Live
-            </Badge>
-          </div>
-        )}
-      </AspectRatio>
-      
-      {/* Song details below image */}
-      <div className="p-2 space-y-1">
-        <h3 className="font-medium text-sm truncate">{spin.song}</h3>
-        <p className="text-xs text-muted-foreground truncate">{spin.artist}</p>
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{formatTime(spin.start)}</span>
-          {spin.duration && (
-            <span>{Math.floor(spin.duration / 60)}:{(spin.duration % 60).toString().padStart(2, '0')}</span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString([], { 
       hour: '2-digit', 
@@ -399,42 +253,17 @@ const SpinitinonPlaylist = ({
         </CardTitle>
         
         {showSearch && (
-          <div className="space-y-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search songs or artists..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Date Search</span>
-              <Switch
-                checked={dateSearchEnabled}
-                onCheckedChange={handleDateSearchToggle}
-              />
-            </div>
-            
-            {dateSearchEnabled && (
-              <DateRangePicker
-                startDate={startDate}
-                endDate={endDate}
-                onDateChange={handleDateChange}
-                onClear={handleDateClear}
-              />
-            )}
-            
-            {hasDateFilter && (
-              <div className="flex gap-2 text-xs text-muted-foreground">
-                {startDate && <span>From: {formatDate(startDate)}</span>}
-                {endDate && <span>To: {formatDate(endDate)}</span>}
-              </div>
-            )}
-          </div>
+          <SearchFilters
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            dateSearchEnabled={dateSearchEnabled}
+            setDateSearchEnabled={handleDateSearchToggle}
+            startDate={startDate}
+            endDate={endDate}
+            onDateChange={handleDateChange}
+            onDateClear={handleDateClear}
+            formatDate={formatDate}
+          />
         )}
       </CardHeader>
       
@@ -461,63 +290,28 @@ const SpinitinonPlaylist = ({
               // Grid Layout
               <div className={`grid gap-4 ${compact ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
                 {displayedSpins.map((spin, index) => (
-                  <GridItem key={`${spin.id}-${index}`} spin={spin} index={index} />
+                  <GridItem 
+                    key={`${spin.id}-${index}`} 
+                    spin={spin} 
+                    index={index}
+                    isCurrentlyPlaying={isCurrentlyPlaying(spin, index)}
+                    formatTime={formatTime}
+                  />
                 ))}
               </div>
             ) : (
               // List Layout
               <div className="space-y-3">
                 {displayedSpins.map((spin, index) => (
-                  <div 
+                  <ListItem
                     key={`${spin.id}-${index}`}
-                    className={`p-3 border rounded-lg transition-colors hover:bg-accent/50 ${
-                      isCurrentlyPlaying(spin, index) ? 'bg-primary/5 border-primary/20' : 'bg-card'
-                    }`}
-                  >
-                    <div className="flex gap-3">
-                      {/* Album Artwork */}
-                      <div className={`flex-shrink-0 ${compact ? 'w-12 h-12' : 'w-16 h-16'}`}>
-                        <AspectRatio ratio={1} className="bg-muted rounded-md overflow-hidden">
-                          <EnhancedAlbumArtwork
-                            src={spin.image}
-                            alt={`${spin.song} by ${spin.artist}`}
-                            className="w-full h-full"
-                            fallbackIconSize={compact ? 'w-4 h-4' : 'w-6 h-6'}
-                            artist={spin.artist}
-                            song={spin.song}
-                          />
-                        </AspectRatio>
-                      </div>
-
-                      {/* Song Information */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start">
-                          <EnhancedSongInfo spin={spin} compact={compact} />
-                          <div className="flex flex-col items-end ml-2">
-                            {isCurrentlyPlaying(spin, index) && (
-                              <Badge variant="secondary" className={compact ? "text-xs px-2 py-0" : ""}>
-                                Now Playing
-                              </Badge>
-                            )}
-                            <div className={`text-right mt-1 ${compact ? "text-xs" : "text-sm"}`}>
-                              <div className="flex items-center text-muted-foreground">
-                                <Clock className="h-3 w-3 mr-1" />
-                                {formatTime(spin.start)}
-                              </div>
-                              <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
-                                {formatDate(spin.start)}
-                              </div>
-                              {spin.duration && (
-                                <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
-                                  {Math.floor(spin.duration / 60)}:{(spin.duration % 60).toString().padStart(2, '0')}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    spin={spin}
+                    index={index}
+                    isCurrentlyPlaying={isCurrentlyPlaying(spin, index)}
+                    compact={compact}
+                    formatTime={formatTime}
+                    formatDate={formatDate}
+                  />
                 ))}
               </div>
             )}
