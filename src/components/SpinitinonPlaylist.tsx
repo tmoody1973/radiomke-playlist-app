@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,22 +54,26 @@ const EnhancedAlbumArtwork = ({
 }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [showFallback, setShowFallback] = useState(false);
   const { spotifyData, loading } = useSpotifyData(artist, song);
 
   // Use Spotify artwork if available, otherwise fall back to original
   const finalImageSrc = spotifyData?.albumArt || src;
 
-  // Reset error state when src changes
+  // Reset states when src changes, but prevent immediate fallback
   useEffect(() => {
     if (finalImageSrc) {
       setImageError(false);
       setImageLoaded(false);
-    } else {
-      setImageError(true);
+      setShowFallback(false);
+    } else if (!loading) {
+      // Only show fallback if we're not loading and have no image
+      setShowFallback(true);
     }
-  }, [finalImageSrc]);
+  }, [finalImageSrc, loading]);
 
-  if ((!finalImageSrc || imageError) && !loading) {
+  // Show fallback icon when there's no image source and not loading
+  if ((!finalImageSrc && !loading) || showFallback) {
     return (
       <div className={`bg-muted flex items-center justify-center ${className}`}>
         <Music className={`${fallbackIconSize} text-muted-foreground`} />
@@ -76,7 +81,8 @@ const EnhancedAlbumArtwork = ({
     );
   }
 
-  if (loading) {
+  // Show loading state
+  if (loading && !finalImageSrc) {
     return (
       <div className={`bg-muted flex items-center justify-center ${className}`}>
         <Music className={`${fallbackIconSize} text-muted-foreground animate-pulse`} />
@@ -84,26 +90,32 @@ const EnhancedAlbumArtwork = ({
     );
   }
 
+  // Show image with loading overlay
   return (
     <div className={`relative ${className}`}>
       {!imageLoaded && (
-        <div className="absolute inset-0 bg-muted flex items-center justify-center">
+        <div className="absolute inset-0 bg-muted flex items-center justify-center z-10">
           <Music className={`${fallbackIconSize} text-muted-foreground animate-pulse`} />
         </div>
       )}
-      <img
-        src={finalImageSrc}
-        alt={alt}
-        className={`w-full h-full object-cover transition-opacity duration-200 ${
-          imageLoaded ? 'opacity-100' : 'opacity-0'
-        }`}
-        onLoad={() => setImageLoaded(true)}
-        onError={() => {
-          console.log('Image failed to load:', finalImageSrc);
-          setImageError(true);
-        }}
-        loading="lazy"
-      />
+      {finalImageSrc && (
+        <img
+          src={finalImageSrc}
+          alt={alt}
+          className="w-full h-full object-cover"
+          onLoad={() => setImageLoaded(true)}
+          onError={() => {
+            console.log('Image failed to load:', finalImageSrc);
+            setImageError(true);
+            setShowFallback(true);
+          }}
+          loading="lazy"
+          style={{ 
+            opacity: imageLoaded ? 1 : 0,
+            transition: 'opacity 0.3s ease-in-out'
+          }}
+        />
+      )}
     </div>
   );
 };
