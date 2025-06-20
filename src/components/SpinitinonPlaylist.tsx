@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,8 +32,65 @@ interface SpinitinonPlaylistProps {
   compact?: boolean;
   startDate?: string;
   endDate?: string;
-  layout?: 'list' | 'grid'; // New layout prop
+  layout?: 'list' | 'grid';
 }
+
+// Component for handling image loading with fallback
+const AlbumArtwork = ({ 
+  src, 
+  alt, 
+  className = "",
+  fallbackIconSize = "w-6 h-6"
+}: { 
+  src?: string; 
+  alt: string; 
+  className?: string;
+  fallbackIconSize?: string;
+}) => {
+  const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Reset error state when src changes
+  useEffect(() => {
+    if (src) {
+      setImageError(false);
+      setImageLoaded(false);
+    } else {
+      setImageError(true);
+    }
+  }, [src]);
+
+  if (!src || imageError) {
+    return (
+      <div className={`bg-muted flex items-center justify-center ${className}`}>
+        <Music className={`${fallbackIconSize} text-muted-foreground`} />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative ${className}`}>
+      {!imageLoaded && (
+        <div className="absolute inset-0 bg-muted flex items-center justify-center">
+          <Music className={`${fallbackIconSize} text-muted-foreground animate-pulse`} />
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        className={`w-full h-full object-cover transition-opacity duration-200 ${
+          imageLoaded ? 'opacity-100' : 'opacity-0'
+        }`}
+        onLoad={() => setImageLoaded(true)}
+        onError={() => {
+          console.log('Image failed to load:', src);
+          setImageError(true);
+        }}
+        loading="lazy"
+      />
+    </div>
+  );
+};
 
 const SpinitinonPlaylist = ({ 
   stationId = '', 
@@ -42,7 +100,7 @@ const SpinitinonPlaylist = ({
   compact = false,
   startDate: initialStartDate = '',
   endDate: initialEndDate = '',
-  layout = 'list' // Default to list layout
+  layout = 'list'
 }: SpinitinonPlaylistProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
@@ -77,7 +135,7 @@ const SpinitinonPlaylist = ({
       search: debouncedSearchTerm,
       start: effectiveStartDate,
       end: effectiveEndDate,
-      use_cache: 'false', // Always fetch fresh data for live updates
+      use_cache: 'false',
       timestamp: Date.now()
     });
 
@@ -88,7 +146,7 @@ const SpinitinonPlaylist = ({
         search: debouncedSearchTerm,
         start: effectiveStartDate,
         end: effectiveEndDate,
-        use_cache: 'false', // Always get fresh data
+        use_cache: 'false',
         _cache_bust: Date.now().toString()
       }
     });
@@ -111,9 +169,9 @@ const SpinitinonPlaylist = ({
   const { data: spins = [], isLoading, error, refetch } = useQuery({
     queryKey: ['spins', stationId, page, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate && !hasActiveFilters ? 10000 : false, // Consistent 10 second updates
-    staleTime: 0, // Always consider data stale for immediate updates
-    gcTime: 5000, // Short garbage collection time
+    refetchInterval: autoUpdate && !hasActiveFilters ? 10000 : false,
+    staleTime: 0,
+    gcTime: 5000,
   });
 
   // Consistent polling for live updates
@@ -124,7 +182,7 @@ const SpinitinonPlaylist = ({
     const interval = setInterval(() => {
       console.log('Polling for updates...');
       refetch();
-    }, 10000); // Poll every 10 seconds consistently
+    }, 10000);
 
     return () => {
       console.log('Cleaning up polling interval');
@@ -142,25 +200,12 @@ const SpinitinonPlaylist = ({
       }`}
     >
       <AspectRatio ratio={1} className="bg-gradient-to-br from-muted to-muted/50">
-        {spin.image ? (
-          <img
-            src={spin.image}
-            alt={`${spin.song} by ${spin.artist}`}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
-              const parent = target.parentElement;
-              if (parent) {
-                parent.innerHTML = `<div class="w-full h-full bg-muted flex items-center justify-center"><svg class="w-8 h-8 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`;
-              }
-            }}
-          />
-        ) : (
-          <div className="w-full h-full bg-muted flex items-center justify-center">
-            <Music className="w-8 h-8 text-muted-foreground" />
-          </div>
-        )}
+        <AlbumArtwork
+          src={spin.image}
+          alt={`${spin.song} by ${spin.artist}`}
+          className="w-full h-full rounded-lg overflow-hidden"
+          fallbackIconSize="w-8 h-8"
+        />
         
         {/* Overlay with song info */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
@@ -201,8 +246,8 @@ const SpinitinonPlaylist = ({
   );
 
   const isCurrentlyPlaying = (spin: Spin, index: number) => {
-    if (hasActiveFilters) return false; // Don't show "now playing" when filtering
-    if (index !== 0) return false; // Only the first song can be "now playing"
+    if (hasActiveFilters) return false;
+    if (index !== 0) return false;
     
     const now = new Date();
     const startTime = new Date(spin.start);
@@ -349,7 +394,7 @@ const SpinitinonPlaylist = ({
               ))}
             </div>
           ) : (
-            // List Layout (existing code)
+            // List Layout
             <div className="space-y-3">
               {displayedSpins.map((spin, index) => (
                 <div 
@@ -362,26 +407,12 @@ const SpinitinonPlaylist = ({
                     {/* Album Artwork */}
                     <div className={`flex-shrink-0 ${compact ? 'w-12 h-12' : 'w-16 h-16'}`}>
                       <AspectRatio ratio={1} className="bg-muted rounded-md overflow-hidden">
-                        {spin.image ? (
-                          <img
-                            src={spin.image}
-                            alt={`${spin.song} by ${spin.artist}`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              // Fallback to placeholder if image fails to load
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const parent = target.parentElement;
-                              if (parent) {
-                                parent.innerHTML = `<div class="w-full h-full bg-muted flex items-center justify-center"><svg class="w-6 h-6 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`;
-                              }
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-muted flex items-center justify-center">
-                            <ImageIcon className={`${compact ? 'w-4 h-4' : 'w-6 h-6'} text-muted-foreground`} />
-                          </div>
-                        )}
+                        <AlbumArtwork
+                          src={spin.image}
+                          alt={`${spin.song} by ${spin.artist}`}
+                          className="w-full h-full"
+                          fallbackIconSize={compact ? 'w-4 h-4' : 'w-6 h-6'}
+                        />
                       </AspectRatio>
                     </div>
 
