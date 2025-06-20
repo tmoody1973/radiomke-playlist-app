@@ -17,8 +17,19 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing Supabase configuration');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     // Initialize Supabase client for database operations
-    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Parse request body for parameters
     let body;
@@ -50,7 +61,7 @@ serve(async (req) => {
     if (stationError || !stationData) {
       console.error('Station not found:', stationId, stationError);
       return new Response(
-        JSON.stringify({ error: 'Station not found' }),
+        JSON.stringify({ error: `Station '${stationId}' not found` }),
         { 
           status: 404, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -64,7 +75,7 @@ serve(async (req) => {
     if (!apiKey) {
       console.error(`API key not found for station ${stationId}:`, stationData.api_key_secret_name);
       return new Response(
-        JSON.stringify({ error: 'API key not configured for this station' }),
+        JSON.stringify({ error: `API key not configured for station '${stationId}'` }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -255,7 +266,7 @@ serve(async (req) => {
         start_time: item.start,
         duration: item.duration || 180,
         episode_title: item.episode?.title || null,
-        station_id: stationId
+        station_id: stationId // Ensure this is always set
       }));
 
       console.log('Songs to store:', songsToStore.length, 'songs for station:', stationId);

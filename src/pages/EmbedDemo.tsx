@@ -8,11 +8,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Copy, ExternalLink, CalendarIcon } from 'lucide-react';
+import { Copy, ExternalLink, CalendarIcon, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Station {
   id: string;
@@ -28,22 +29,39 @@ const EmbedDemo = () => {
   const [compact, setCompact] = useState(false);
   const [height, setHeight] = useState('600');
   const [theme, setTheme] = useState('light');
-  const [layout, setLayout] = useState('list'); // New layout state
+  const [layout, setLayout] = useState('list');
   const [enableDateSearch, setEnableDateSearch] = useState(false);
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Fetch available stations
   useEffect(() => {
     const fetchStations = async () => {
-      const { data, error } = await supabase
-        .from('stations')
-        .select('id, name')
-        .order('name');
-      
-      if (!error && data) {
-        setStations(data);
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const { data, error } = await supabase
+          .from('stations')
+          .select('id, name')
+          .order('name');
+        
+        if (error) {
+          console.error('Error fetching stations:', error);
+          setError('Failed to load stations. Please try refreshing the page.');
+        } else if (data && data.length > 0) {
+          setStations(data);
+        } else {
+          setError('No stations found. Please check your configuration.');
+        }
+      } catch (err) {
+        console.error('Unexpected error:', err);
+        setError('An unexpected error occurred. Please try refreshing the page.');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -59,7 +77,7 @@ const EmbedDemo = () => {
     if (compact) params.append('compact', 'true');
     if (height !== 'auto') params.append('height', height);
     if (theme !== 'light') params.append('theme', theme);
-    if (layout !== 'list') params.append('layout', layout); // Add layout parameter
+    if (layout !== 'list') params.append('layout', layout);
     if (enableDateSearch && startDate) params.append('startDate', startDate.toISOString());
     if (enableDateSearch && endDate) params.append('endDate', endDate.toISOString());
 
@@ -85,6 +103,37 @@ const EmbedDemo = () => {
       description: "Embed code copied to clipboard",
     });
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <div className="container mx-auto py-8 max-w-6xl">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold mb-4">Loading...</h1>
+            <p className="text-muted-foreground">Setting up your embed demo...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <div className="container mx-auto py-8 max-w-6xl">
+          <Alert className="mb-8">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+          <div className="text-center">
+            <Button onClick={() => window.location.reload()}>
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-4">
@@ -354,7 +403,7 @@ const EmbedDemo = () => {
             <CardContent className="pt-6">
               <h3 className="text-lg font-semibold mb-2">How to Use</h3>
               <div className="text-sm text-muted-foreground space-y-2">
-                <p>1. Select your preferred radio station (HYFIN or 88Nine)</p>
+                <p>1. Select your preferred radio station from the available options</p>
                 <p>2. Customize the settings above to match your needs</p>
                 <p>3. Copy the generated embed code</p>
                 <p>4. Paste it into your website's HTML where you want the playlist to appear</p>
