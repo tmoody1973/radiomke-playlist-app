@@ -133,6 +133,7 @@ const EmbedConfiguration = ({
           <SelectContent>
             <SelectItem value="list">List View</SelectItem>
             <SelectItem value="grid">Grid View</SelectItem>
+            <SelectItem value="ticker">Ticker Bar</SelectItem>
           </SelectContent>
         </Select>
       </div>

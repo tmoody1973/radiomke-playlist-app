@@ -6,7 +6,7 @@ const Embed = () => {
   const [searchParams] = useSearchParams();
   
   // Extract parameters from URL
-  const stationId = searchParams.get('station') || 'hyfin'; // Default to HYFIN
+  const stationId = searchParams.get('station') || 'hyfin';
   const autoUpdate = searchParams.get('autoUpdate') !== 'false';
   const showSearch = searchParams.get('showSearch') !== 'false';
   const maxItemsParam = searchParams.get('maxItems') || '20';
@@ -19,7 +19,9 @@ const Embed = () => {
   
   // Validate layout parameter to ensure it matches the expected type
   const layoutParam = searchParams.get('layout');
-  const layout: 'list' | 'grid' = layoutParam === 'grid' ? 'grid' : 'list';
+  const layout: 'list' | 'grid' | 'ticker' = 
+    layoutParam === 'grid' ? 'grid' : 
+    layoutParam === 'ticker' ? 'ticker' : 'list';
 
   return (
     <div 
