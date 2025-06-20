@@ -71,12 +71,34 @@ export const generateJavaScriptCode = (config: EmbedConfig): string => {
     ...(config.enableDateSearch && config.endDate && { endDate: config.endDate.toISOString() })
   };
 
-  return `<!-- Add this div where you want the playlist to appear -->
+  return `<!-- Spinitron Playlist Widget -->
 <div id="spinitron-playlist-widget"></div>
 
-<!-- Add this script before closing </body> tag -->
 <script>
+(function() {
+  // Ensure we don't load multiple times
+  if (window.SpinitinonWidgetLoaded) return;
+  window.SpinitinonWidgetLoaded = true;
+  
+  // Set configuration
   window.SpinitinonConfig = ${JSON.stringify(embedConfig, null, 2)};
-</script>
-<script src="${baseUrl}/embed.js" async></script>`;
+  
+  // Function to load script dynamically
+  function loadScript(src, callback) {
+    var script = document.createElement('script');
+    script.src = src;
+    script.async = true;
+    script.onload = callback;
+    script.onerror = function() {
+      console.error('Failed to load Spinitron widget script');
+    };
+    document.head.appendChild(script);
+  }
+  
+  // Load the main embed script
+  loadScript('${baseUrl}/embed.js', function() {
+    console.log('Spinitron widget loaded successfully');
+  });
+})();
+</script>`;
 };
