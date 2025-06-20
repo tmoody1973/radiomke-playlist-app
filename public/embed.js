@@ -17,8 +17,10 @@
   // Merge user config with defaults
   const config = Object.assign({}, defaultConfig, window.SpinitinonConfig || {});
 
-  // Base URL for API calls
-  const BASE_URL = window.location.protocol + '//' + window.location.host;
+  // Base URL for API calls - use the origin where the script is hosted
+  const SCRIPT_TAG = document.querySelector('script[src*="embed.js"]');
+  const SCRIPT_SRC = SCRIPT_TAG ? SCRIPT_TAG.src : '';
+  const BASE_URL = SCRIPT_SRC ? new URL(SCRIPT_SRC).origin : window.location.origin;
 
   // CSS styles for the widget
   const CSS = `
@@ -170,24 +172,50 @@
     return songDiv;
   }
 
-  // Fetch songs from API
+  // Fetch songs from API using Supabase edge function
   async function fetchSongs(offset = 0, limit = 5, searchQuery = '') {
     try {
-      const params = new URLSearchParams({
+      const requestBody = {
+        endpoint: 'spins',
         station: config.station,
-        limit: limit.toString(),
-        offset: offset.toString()
-      });
+        count: limit.toString(),
+        offset: offset.toString(),
+        search: searchQuery,
+        use_cache: 'false',
+        _cache_bust: Date.now().toString()
+      };
       
-      if (searchQuery) params.append('search', searchQuery);
-      if (config.startDate) params.append('startDate', config.startDate);
-      if (config.endDate) params.append('endDate', config.endDate);
+      if (config.startDate) requestBody.start = config.startDate;
+      if (config.endDate) requestBody.end = config.endDate;
 
-      const response = await fetch(`${BASE_URL}/api/songs?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch songs');
+      const response = await fetch(`${BASE_URL}/functions/v1/spinitron-proxy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0cml2b3ZqdWx0ZmF5dHRlbWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwMjU3NjYsImV4cCI6MjA2NTYwMTc2Nn0.OUZf7nDHHrEBPXmfgX88UBtPd0YV88l-fXme_13nm8o'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      }
       
       const data = await response.json();
-      return data.songs || [];
+      
+      // Transform the data to match expected format
+      const songs = (data.items || []).map(item => ({
+        id: item.id,
+        song: item.song,
+        artist: item.artist,
+        start_time: item.start,
+        duration: item.duration,
+        image: item.image,
+        release: item.release,
+        label: item.label
+      }));
+
+      return songs;
     } catch (error) {
       console.error('Error fetching songs:', error);
       throw error;
@@ -266,7 +294,7 @@
         this.songs = songs;
         this.filterSongs();
       } catch (error) {
-        playlistDiv.innerHTML = '<div class="spinitron-error">Failed to load playlist</div>';
+        playlistDiv.innerHTML = '<div class="spinitron-error">Failed to load playlist. Please check your connection and try again.</div>';
       }
       
       this.loading = false;
