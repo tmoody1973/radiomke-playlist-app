@@ -9,7 +9,8 @@ const Embed = () => {
   const stationId = searchParams.get('station') || 'hyfin'; // Default to HYFIN
   const autoUpdate = searchParams.get('autoUpdate') !== 'false';
   const showSearch = searchParams.get('showSearch') !== 'false';
-  const maxItems = parseInt(searchParams.get('maxItems') || '20');
+  const maxItemsParam = searchParams.get('maxItems') || '20';
+  const maxItems = maxItemsParam === 'unlimited' ? 1000 : parseInt(maxItemsParam);
   const compact = searchParams.get('compact') === 'true';
   const height = searchParams.get('height') || 'auto';
   const theme = searchParams.get('theme') || 'light';

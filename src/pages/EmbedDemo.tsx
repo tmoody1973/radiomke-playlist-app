@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -26,6 +27,7 @@ const EmbedDemo = () => {
   const [autoUpdate, setAutoUpdate] = useState(true);
   const [showSearch, setShowSearch] = useState(true);
   const [maxItems, setMaxItems] = useState(20);
+  const [unlimitedSongs, setUnlimitedSongs] = useState(false);
   const [compact, setCompact] = useState(false);
   const [height, setHeight] = useState('600');
   const [theme, setTheme] = useState('light');
@@ -73,7 +75,8 @@ const EmbedDemo = () => {
     if (selectedStation !== 'hyfin') params.append('station', selectedStation);
     if (!autoUpdate) params.append('autoUpdate', 'false');
     if (!showSearch) params.append('showSearch', 'false');
-    if (maxItems !== 20) params.append('maxItems', maxItems.toString());
+    if (!unlimitedSongs && maxItems !== 20) params.append('maxItems', maxItems.toString());
+    if (unlimitedSongs) params.append('maxItems', 'unlimited');
     if (compact) params.append('compact', 'true');
     if (height !== 'auto') params.append('height', height);
     if (theme !== 'light') params.append('theme', theme);
@@ -168,18 +171,29 @@ const EmbedDemo = () => {
                 </Select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="maxItems">Max Items</Label>
-                  <Input
-                    id="maxItems"
-                    type="number"
-                    min="5"
-                    max="100"
-                    value={maxItems}
-                    onChange={(e) => setMaxItems(parseInt(e.target.value) || 20)}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="unlimitedSongs">Unlimited Songs</Label>
+                  <Switch
+                    id="unlimitedSongs"
+                    checked={unlimitedSongs}
+                    onCheckedChange={setUnlimitedSongs}
                   />
                 </div>
+
+                {!unlimitedSongs && (
+                  <div className="space-y-2">
+                    <Label htmlFor="maxItems">Max Songs</Label>
+                    <Input
+                      id="maxItems"
+                      type="number"
+                      min="5"
+                      max="500"
+                      value={maxItems}
+                      onChange={(e) => setMaxItems(parseInt(e.target.value) || 20)}
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="height">Height (px)</Label>
