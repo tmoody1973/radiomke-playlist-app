@@ -32,6 +32,7 @@ interface SpinitinonPlaylistProps {
   startDate?: string;
   endDate?: string;
   layout?: 'list' | 'grid' | 'ticker';
+  scrollSpeed?: number;
 }
 
 // Component for handling image loading with fallback
@@ -99,7 +100,8 @@ const SpinitinonPlaylist = ({
   compact = false,
   startDate: initialStartDate = '',
   endDate: initialEndDate = '',
-  layout = 'list'
+  layout = 'list',
+  scrollSpeed = 60
 }: SpinitinonPlaylistProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -437,9 +439,14 @@ const SpinitinonPlaylist = ({
               </p>
             </div>
           ) : layout === 'ticker' ? (
-            // Ticker Layout
+            // Ticker Layout with configurable scroll speed
             <div className="relative overflow-hidden bg-gradient-to-r from-background via-background/95 to-background rounded-lg border">
-              <div className="flex animate-[scroll-left_60s_linear_infinite] hover:[animation-play-state:paused]">
+              <div 
+                className="flex hover:[animation-play-state:paused]"
+                style={{ 
+                  animation: `scroll-left ${scrollSpeed}s linear infinite` 
+                }}
+              >
                 {[...displayedSpins, ...displayedSpins].map((spin, index) => (
                   <TickerItem key={`ticker-${spin.id}-${index}`} spin={spin} index={index % displayedSpins.length} />
                 ))}

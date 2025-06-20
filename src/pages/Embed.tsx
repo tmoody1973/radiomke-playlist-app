@@ -16,6 +16,8 @@ const Embed = () => {
   const theme = searchParams.get('theme') || 'light';
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
+  const scrollSpeedParam = searchParams.get('scrollSpeed') || '60';
+  const scrollSpeed = parseInt(scrollSpeedParam);
   
   // Validate layout parameter to ensure it matches the expected type
   const layoutParam = searchParams.get('layout');
@@ -42,6 +44,7 @@ const Embed = () => {
             startDate={startDate}
             endDate={endDate}
             layout={layout}
+            scrollSpeed={scrollSpeed}
           />
         </div>
       </div>
