@@ -2,7 +2,7 @@
 import SpinitinonPlaylist from '@/components/SpinitinonPlaylist';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Code, ExternalLink, Heart } from 'lucide-react';
+import { Code, ExternalLink, Heart, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Index = () => {
@@ -28,6 +28,12 @@ const Index = () => {
                   <Button variant="outline" className="w-full sm:w-auto">
                     <ExternalLink className="h-4 w-4 mr-2" />
                     View Embed Demo
+                  </Button>
+                </Link>
+                <Link to="/article">
+                  <Button variant="secondary" className="w-full sm:w-auto">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Read Technical Article
                   </Button>
                 </Link>
               </div>
