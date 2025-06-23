@@ -332,7 +332,7 @@ const SpinitinonPlaylist = ({
                     Loading...
                   </>
                 ) : (
-                  `Load More (${Math.min(5, allSpins.length - displayCount)} more songs)`
+                  'Load More'
                 )}
               </Button>
             </div>
