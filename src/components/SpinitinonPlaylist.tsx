@@ -58,7 +58,7 @@ const SpinitinonPlaylist = ({
     hasActiveFilters
   });
 
-  const { data: spins = [], isLoading, error, refetch } = useSpinData({
+  const { data: spins = [], isLoading, error, refetch, dataUpdatedAt } = useSpinData({
     stationId,
     maxItems,
     debouncedSearchTerm: playlistState.debouncedSearchTerm,
@@ -69,10 +69,20 @@ const SpinitinonPlaylist = ({
     hasActiveFilters
   });
 
-  // Update playlist state when new data comes in - using a key-based approach for better tracking
+  // Track the last update time for better debugging
+  const lastUpdateRef = React.useRef<number>(0);
+  
+  // Update playlist state when new data comes in - using dataUpdatedAt for better tracking
   React.useEffect(() => {
-    if (spins && spins.length > 0) {
-      console.log(`🔄 Updating playlist with ${spins.length} spins for station ${stationId}, hasActiveFilters:`, hasActiveFilters, 'timestamp:', new Date().toISOString());
+    if (spins && spins.length > 0 && dataUpdatedAt !== lastUpdateRef.current) {
+      console.log(`🔄 Fresh data received for station ${stationId}:`, {
+        songsCount: spins.length,
+        hasActiveFilters,
+        lastSong: spins[0]?.artist + ' - ' + spins[0]?.song,
+        updateTime: new Date(dataUpdatedAt).toISOString()
+      });
+      
+      lastUpdateRef.current = dataUpdatedAt;
       
       // Always update with fresh data, ensuring component re-renders
       playlistState.setAllSpins([...spins]); // Create new array reference to trigger re-render
@@ -81,12 +91,18 @@ const SpinitinonPlaylist = ({
       if (!hasActiveFilters) {
         playlistState.setDisplayCount(15);
       }
-    } else if (!isLoading && !hasActiveFilters) {
+    } else if (!isLoading && !hasActiveFilters && spins.length === 0) {
       // If no spins and not loading and no filters, clear the state
       console.log(`🧹 Clearing playlist state for station ${stationId} - no spins received`);
       playlistState.setAllSpins([]);
     }
-  }, [spins, hasActiveFilters, isLoading, playlistState.setAllSpins, playlistState.setDisplayCount, stationId]);
+  }, [spins, hasActiveFilters, isLoading, dataUpdatedAt, playlistState.setAllSpins, playlistState.setDisplayCount, stationId]);
+
+  // Add a manual refresh button for debugging in development
+  const handleManualRefresh = React.useCallback(() => {
+    console.log('🔄 Manual refresh triggered for station:', stationId);
+    refetch();
+  }, [refetch, stationId]);
 
   // Force a re-render when live data comes in by tracking the latest song
   const latestSong = React.useMemo(() => {
@@ -152,6 +168,14 @@ const SpinitinonPlaylist = ({
             <p className="text-sm text-muted-foreground mt-1">
               Please check your connection and try again
             </p>
+            {process.env.NODE_ENV === 'development' && (
+              <button 
+                onClick={handleManualRefresh}
+                className="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs"
+              >
+                Manual Refresh
+              </button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -180,6 +204,19 @@ const SpinitinonPlaylist = ({
       
       <CardContent className={`${compact ? "pt-0" : ""} ${isEmbedMode ? 'flex-1 flex flex-col min-h-0' : ''}`}>
         <div className={isEmbedMode ? "flex-1 flex flex-col min-h-0" : ""}>
+          {/* Show last update time in development */}
+          {process.env.NODE_ENV === 'development' && !hasActiveFilters && (
+            <div className="text-xs text-muted-foreground mb-2 flex justify-between items-center">
+              <span>Last update: {new Date(dataUpdatedAt).toLocaleTimeString()}</span>
+              <button 
+                onClick={handleManualRefresh}
+                className="px-2 py-1 bg-gray-200 rounded text-xs hover:bg-gray-300"
+              >
+                Refresh
+              </button>
+            </div>
+          )}
+          
           <PlaylistContent
             displayedSpins={displayedSpins}
             hasActiveFilters={hasActiveFilters}

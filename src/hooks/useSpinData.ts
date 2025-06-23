@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -113,7 +114,7 @@ export const useSpinData = ({
         search: debouncedSearchTerm,
         start: effectiveStartDate,
         end: effectiveEndDate,
-        use_cache: hasActiveFilters ? 'true' : 'false',
+        use_cache: 'false', // Always fetch fresh data for live updates
         _cache_bust: Date.now().toString()
       }
     });
@@ -133,11 +134,13 @@ export const useSpinData = ({
   return useQuery({
     queryKey: ['spins', stationId, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate, dateSearchEnabled, hasActiveFilters],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate && !hasActiveFilters ? 10000 : false,
-    staleTime: hasActiveFilters ? 30000 : 0,
-    gcTime: hasActiveFilters ? 300000 : 0,
+    refetchInterval: autoUpdate && !hasActiveFilters ? 5000 : false, // Reduced from 10 seconds to 5 seconds for faster updates
+    staleTime: hasActiveFilters ? 30000 : 0, // Live data is immediately stale
+    gcTime: hasActiveFilters ? 300000 : 30000, // Reduced cache time for live data
     refetchOnWindowFocus: !hasActiveFilters,
     refetchOnMount: true,
     refetchIntervalInBackground: autoUpdate && !hasActiveFilters,
+    // Force network requests for live data
+    networkMode: hasActiveFilters ? 'online' : 'always',
   });
 };
