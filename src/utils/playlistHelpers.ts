@@ -17,29 +17,32 @@ export const isCurrentlyPlaying = (spin: Spin, index: number, currentTime: Date,
   
   const startTime = new Date(spin.start);
   const timeSinceStart = currentTime.getTime() - startTime.getTime();
-  const millisecondsInSecond = 1000;
   
-  // For live playlist, be more strict about "now playing"
+  // For live playlist, be more lenient about "now playing"
   // Only show as currently playing if:
   // 1. It's the most recent song (index 0)
-  // 2. It started within the last 15 minutes (to account for longer songs)
+  // 2. It started within a reasonable time window
   // 3. The start time is not in the future
   if (index === 0) {
-    const fifteenMinutesInMs = 15 * 60 * 1000;
-    const isRecentlyStarted = timeSinceStart >= 0 && timeSinceStart <= fifteenMinutesInMs;
-    
-    if (isRecentlyStarted) {
-      // Additional check: if we have duration info, verify we're within the song's duration
-      if (spin.duration && spin.duration > 0) {
-        const songDurationMs = spin.duration * millisecondsInSecond;
-        const endTime = new Date(startTime.getTime() + songDurationMs);
-        return currentTime >= startTime && currentTime <= endTime;
-      }
-      
-      // If no duration info, just check if it started recently (within 6 minutes max for most songs)
-      const sixMinutesInMs = 6 * 60 * 1000;
-      return timeSinceStart <= sixMinutesInMs;
+    // Don't show songs that haven't started yet (more than 2 minutes in future to account for clock drift)
+    const twoMinutesInMs = 2 * 60 * 1000;
+    if (timeSinceStart < -twoMinutesInMs) {
+      return false;
     }
+    
+    // If we have duration info, use it with some padding
+    if (spin.duration && spin.duration > 0) {
+      const songDurationMs = spin.duration * 1000;
+      const paddingMs = 30 * 1000; // 30 seconds padding for transitions
+      const maxTimeWindow = songDurationMs + paddingMs;
+      
+      // Show as playing if within the song duration + padding
+      return timeSinceStart >= -twoMinutesInMs && timeSinceStart <= maxTimeWindow;
+    }
+    
+    // If no duration info, use a generous window (most songs are under 8 minutes)
+    const defaultMaxDurationMs = 8 * 60 * 1000; // 8 minutes
+    return timeSinceStart >= -twoMinutesInMs && timeSinceStart <= defaultMaxDurationMs;
   }
   
   return false;
