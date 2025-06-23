@@ -1,4 +1,3 @@
-
 import SpinitinonPlaylist from '@/components/SpinitinonPlaylist';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,9 +21,6 @@ const Index = () => {
               alt="Radio Milwaukee Logo" 
               className="h-20 w-auto mb-4 drop-shadow-lg"
             />
-            <div className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
-              <h1 className="text-5xl font-bold mb-2 tracking-tight">Radio Milwaukee</h1>
-            </div>
             <div className="bg-gradient-to-r from-gray-600 to-gray-800 bg-clip-text text-transparent">
               <h2 className="text-2xl font-semibold mb-4">Playlist App</h2>
             </div>
