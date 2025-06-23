@@ -16,18 +16,33 @@ export const isCurrentlyPlaying = (spin: Spin, index: number, currentTime: Date,
   if (hasActiveFilters) return false;
   
   const startTime = new Date(spin.start);
-  const endTime = new Date(startTime.getTime() + (spin.duration || 180) * 1000);
+  const timeSinceStart = currentTime.getTime() - startTime.getTime();
+  const millisecondsInSecond = 1000;
   
-  // Check if current time is within the song's play window
-  const isWithinTimeWindow = currentTime >= startTime && currentTime <= endTime;
-  
-  // For live playlist, the currently playing song should be the most recent one that's within its time window
-  if (index === 0 && isWithinTimeWindow) {
-    return true;
+  // For live playlist, be more strict about "now playing"
+  // Only show as currently playing if:
+  // 1. It's the most recent song (index 0)
+  // 2. It started within the last 15 minutes (to account for longer songs)
+  // 3. The start time is not in the future
+  if (index === 0) {
+    const fifteenMinutesInMs = 15 * 60 * 1000;
+    const isRecentlyStarted = timeSinceStart >= 0 && timeSinceStart <= fifteenMinutesInMs;
+    
+    if (isRecentlyStarted) {
+      // Additional check: if we have duration info, verify we're within the song's duration
+      if (spin.duration && spin.duration > 0) {
+        const songDurationMs = spin.duration * millisecondsInSecond;
+        const endTime = new Date(startTime.getTime() + songDurationMs);
+        return currentTime >= startTime && currentTime <= endTime;
+      }
+      
+      // If no duration info, just check if it started recently (within 6 minutes max for most songs)
+      const sixMinutesInMs = 6 * 60 * 1000;
+      return timeSinceStart <= sixMinutesInMs;
+    }
   }
   
-  // Check if this song is playing now (useful for historical data that might be current)
-  return isWithinTimeWindow;
+  return false;
 };
 
 export const formatTime = (dateString: string) => {
