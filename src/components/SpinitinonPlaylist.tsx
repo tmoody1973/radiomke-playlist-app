@@ -51,7 +51,7 @@ const SpinitinonPlaylist = ({
   const [endDate, setEndDate] = useState(initialEndDate);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [allSpins, setAllSpins] = useState<Spin[]>([]);
-  const [displayCount, setDisplayCount] = useState(5);
+  const [displayCount, setDisplayCount] = useState(15);
   const [loadingMore, setLoadingMore] = useState(false);
 
   // Initialize date search if dates were provided via props
@@ -81,7 +81,7 @@ const SpinitinonPlaylist = ({
 
   // Reset display count when search or date filters change
   useEffect(() => {
-    setDisplayCount(5);
+    setDisplayCount(15);
     setAllSpins([]);
   }, [debouncedSearchTerm, startDate, endDate, dateSearchEnabled, stationId]);
 
@@ -149,7 +149,7 @@ const SpinitinonPlaylist = ({
     setLoadingMore(true);
     // Simulate loading delay for better UX
     setTimeout(() => {
-      setDisplayCount(prev => Math.min(prev + 5, allSpins.length));
+      setDisplayCount(prev => Math.min(prev + 15, allSpins.length));
       setLoadingMore(false);
     }, 500);
   };
