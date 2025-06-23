@@ -46,7 +46,8 @@ export const useSpinData = ({
       search: debouncedSearchTerm,
       start: effectiveStartDate,
       end: effectiveEndDate,
-      dateSearchEnabled
+      dateSearchEnabled,
+      timestamp: new Date().toISOString()
     });
 
     const { data, error } = await supabase.functions.invoke('spinitron-proxy', {
@@ -57,7 +58,8 @@ export const useSpinData = ({
         search: debouncedSearchTerm,
         start: effectiveStartDate,
         end: effectiveEndDate,
-        use_cache: 'false'
+        use_cache: hasActiveFilters ? 'true' : 'false', // Use cache for searches, fresh data for live
+        _cache_bust: Date.now().toString() // Force cache busting
       }
     });
 
@@ -66,7 +68,7 @@ export const useSpinData = ({
       throw error;
     }
 
-    console.log('Received spins:', data.items?.length || 0, 'for station:', stationId);
+    console.log('Received spins:', data.items?.length || 0, 'for station:', stationId, 'at', new Date().toISOString());
     return data.items || [];
   };
 
@@ -76,10 +78,11 @@ export const useSpinData = ({
   return useQuery({
     queryKey: ['spins', stationId, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate, dateSearchEnabled],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate && !hasActiveFilters ? 5000 : false,
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnWindowFocus: true,
+    refetchInterval: autoUpdate && !hasActiveFilters ? 10000 : false, // Refetch every 10 seconds for live data
+    staleTime: hasActiveFilters ? 30000 : 0, // Cache search results for 30s, fresh data for live
+    gcTime: hasActiveFilters ? 300000 : 0, // Keep search results for 5 minutes, no cache for live
+    refetchOnWindowFocus: !hasActiveFilters, // Only refetch on focus for live data
     refetchOnMount: true,
+    refetchIntervalInBackground: autoUpdate && !hasActiveFilters, // Continue updating in background
   });
 };

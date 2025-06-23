@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Radio } from 'lucide-react';
@@ -57,19 +58,19 @@ const SpinitinonPlaylist = ({
   // Update playlist state when new data comes in
   React.useEffect(() => {
     if (spins && spins.length > 0) {
-      // For live data (no filters), always replace the data to show latest songs
+      console.log('Updating playlist with', spins.length, 'spins, hasActiveFilters:', hasActiveFilters);
+      // Always update with fresh data
+      playlistState.setAllSpins(spins);
+      // Reset display count for live data to show latest songs
       if (!hasActiveFilters) {
-        playlistState.setAllSpins(spins);
-        playlistState.setDisplayCount(15); // Reset display count for fresh live data
-      } else {
-        // For filtered data, keep the existing behavior
-        playlistState.setAllSpins(spins);
+        playlistState.setDisplayCount(15);
       }
     } else if (!isLoading && !hasActiveFilters) {
       // If no spins and not loading and no filters, clear the state
+      console.log('Clearing playlist state - no spins received');
       playlistState.setAllSpins([]);
     }
-  }, [spins, hasActiveFilters, isLoading, playlistState]);
+  }, [spins, hasActiveFilters, isLoading]);
 
   const displayedSpins = playlistState.allSpins.slice(0, playlistState.displayCount);
   const hasMoreSpins = playlistState.displayCount < playlistState.allSpins.length;
