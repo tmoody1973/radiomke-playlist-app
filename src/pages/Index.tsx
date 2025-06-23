@@ -1,4 +1,3 @@
-
 import SpinitinonPlaylist from '@/components/SpinitinonPlaylist';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,7 +9,7 @@ const Index = () => {
     <div className="min-h-screen bg-background p-4">
       <div className="container mx-auto py-8">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4">Spinitron Playlist Widget</h1>
+          <h1 className="text-4xl font-bold mb-4">Radio Milwaukee Playlist App</h1>
           <p className="text-xl text-muted-foreground mb-6">
             Live radio playlist with real-time updates
           </p>
