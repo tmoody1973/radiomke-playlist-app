@@ -6,23 +6,16 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-
 const Index = () => {
   const [selectedStation, setSelectedStation] = useState('hyfin');
-
-  return (
-    <div className="min-h-screen bg-background p-4">
+  return <div className="min-h-screen bg-background p-4">
       <div className="container mx-auto py-8">
         <div className="text-center mb-8">
           {/* Enhanced header with logo */}
           <div className="mb-6 flex flex-col items-center">
-            <img 
-              src="/lovable-uploads/f79975fc-c2f8-4693-8bd1-b4b15d882845.png" 
-              alt="Radio Milwaukee Logo" 
-              className="h-20 w-auto mb-4 drop-shadow-lg"
-            />
+            <img src="/lovable-uploads/f79975fc-c2f8-4693-8bd1-b4b15d882845.png" alt="Radio Milwaukee Logo" className="h-20 w-auto mb-4 drop-shadow-lg" />
             <div className="bg-gradient-to-r from-gray-600 to-gray-800 bg-clip-text text-transparent">
-              <h2 className="text-2xl font-semibold mb-4">Playlist App</h2>
+              <h2 className="text-2xl font-semibold mb-4">Playlist App v.0.5 beta</h2>
             </div>
           </div>
           
@@ -31,11 +24,7 @@ const Index = () => {
             <CardContent className="pt-6">
               <div className="text-center">
                 <Label className="text-lg font-semibold mb-4 block">Select Station</Label>
-                <RadioGroup 
-                  value={selectedStation} 
-                  onValueChange={setSelectedStation}
-                  className="flex justify-center gap-8"
-                >
+                <RadioGroup value={selectedStation} onValueChange={setSelectedStation} className="flex justify-center gap-8">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="hyfin" id="hyfin" />
                     <Label htmlFor="hyfin" className="font-medium cursor-pointer">
@@ -87,12 +76,7 @@ const Index = () => {
           </Card>
         </div>
         
-        <SpinitinonPlaylist 
-          stationId={selectedStation}
-          autoUpdate={true}
-          showSearch={true}
-          maxItems={50}
-        />
+        <SpinitinonPlaylist stationId={selectedStation} autoUpdate={true} showSearch={true} maxItems={50} />
         
         <div className="mt-8 text-center text-sm text-muted-foreground">
           <p className="flex items-center justify-center gap-1">
@@ -100,8 +84,6 @@ const Index = () => {
           </p>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
