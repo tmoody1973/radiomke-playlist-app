@@ -1,4 +1,4 @@
-
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Radio } from 'lucide-react';
 import { useSpinData } from '@/hooks/useSpinData';
@@ -29,52 +29,44 @@ const SpinitinonPlaylist = ({
   endDate: initialEndDate = '',
   layout = 'list'
 }: SpinitinonPlaylistProps) => {
-  const {
-    searchTerm,
-    setSearchTerm,
-    debouncedSearchTerm,
-    dateSearchEnabled,
-    setDateSearchEnabled,
-    startDate,
-    setStartDate,
-    endDate,
-    setEndDate,
-    currentTime,
-    allSpins,
-    setAllSpins,
-    displayCount,
-    setDisplayCount,
-    loadingMore,
-    setLoadingMore
-  } = usePlaylistState({ 
+  const playlistState = usePlaylistState({ 
     spins: [], 
     hasActiveFilters: false, 
     initialStartDate, 
     initialEndDate 
   });
 
-  const effectiveStartDate = dateSearchEnabled ? startDate : '';
-  const effectiveEndDate = dateSearchEnabled ? endDate : '';
-  const hasActiveFilters = debouncedSearchTerm || effectiveStartDate || effectiveEndDate;
+  const effectiveStartDate = playlistState.dateSearchEnabled ? playlistState.startDate : '';
+  const effectiveEndDate = playlistState.dateSearchEnabled ? playlistState.endDate : '';
+  const hasActiveFilters = Boolean(playlistState.debouncedSearchTerm || effectiveStartDate || effectiveEndDate);
 
   const { data: spins = [], isLoading, error, refetch } = useSpinData({
     stationId,
     maxItems,
-    debouncedSearchTerm,
+    debouncedSearchTerm: playlistState.debouncedSearchTerm,
     startDate: effectiveStartDate,
     endDate: effectiveEndDate,
-    dateSearchEnabled,
+    dateSearchEnabled: playlistState.dateSearchEnabled,
     autoUpdate,
     hasActiveFilters
   });
 
-  // Update state hook with actual spins data
-  const playlistState = usePlaylistState({ 
-    spins, 
-    hasActiveFilters, 
-    initialStartDate, 
-    initialEndDate 
-  });
+  // Update playlist state when new data comes in
+  React.useEffect(() => {
+    if (spins && spins.length > 0) {
+      // For live data (no filters), always replace the data to show latest songs
+      if (!hasActiveFilters) {
+        playlistState.setAllSpins(spins);
+        playlistState.setDisplayCount(15); // Reset display count for fresh live data
+      } else {
+        // For filtered data, keep the existing behavior
+        playlistState.setAllSpins(spins);
+      }
+    } else if (!isLoading && !hasActiveFilters) {
+      // If no spins and not loading and no filters, clear the state
+      playlistState.setAllSpins([]);
+    }
+  }, [spins, hasActiveFilters, isLoading, playlistState]);
 
   const displayedSpins = playlistState.allSpins.slice(0, playlistState.displayCount);
   const hasMoreSpins = playlistState.displayCount < playlistState.allSpins.length;
@@ -116,7 +108,7 @@ const SpinitinonPlaylist = ({
   };
 
   const isEmbedMode = window.location.pathname === '/embed';
-  const hasDateFilter = playlistState.dateSearchEnabled && (playlistState.startDate || playlistState.endDate);
+  const hasDateFilter = playlistState.dateSearchEnabled && Boolean(playlistState.startDate || playlistState.endDate);
 
   if (error) {
     return (
