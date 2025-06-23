@@ -1,11 +1,17 @@
 
+import React from 'react';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Clock } from 'lucide-react';
+import { Clock, Music } from 'lucide-react';
 import { EnhancedAlbumArtwork } from './EnhancedAlbumArtwork';
 import { EnhancedSongInfo } from './EnhancedSongInfo';
 import { AudioPreviewButton } from './AudioPreviewButton';
-import { YouTubePreviewButton } from './YouTubePreviewButton';
+import TicketmasterEvents from '../TicketmasterEvents';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
 
 interface Spin {
   id: number;
@@ -30,94 +36,81 @@ interface ListItemProps {
   spin: Spin;
   index: number;
   isCurrentlyPlaying: boolean;
-  compact: boolean;
+  compact?: boolean;
   formatTime: (dateString: string) => string;
   formatDate: (dateString: string) => string;
   audioPlayer: AudioPlayer;
 }
 
-export const ListItem = ({ 
-  spin, 
-  index, 
-  isCurrentlyPlaying, 
-  compact, 
-  formatTime, 
+export const ListItem: React.FC<ListItemProps> = ({
+  spin,
+  index,
+  isCurrentlyPlaying,
+  compact,
+  formatTime,
   formatDate,
   audioPlayer
-}: ListItemProps) => {
-  const trackId = `${spin.artist}-${spin.song}-${spin.id}`;
-
-  // Debug logging for list item rendering
-  console.log(`🎵 Rendering ListItem for ${spin.artist} - ${spin.song}`, {
-    trackId,
-    spinId: spin.id,
-    audioPlayer: !!audioPlayer
-  });
-
+}) => {
   return (
-    <div 
-      className={`p-3 border rounded-lg transition-colors hover:bg-accent/50 ${
-        isCurrentlyPlaying ? 'bg-primary/5 border-primary/20' : 'bg-card'
-      }`}
-    >
-      <div className="flex gap-3">
-        {/* Album Artwork */}
-        <div className={`flex-shrink-0 relative group ${compact ? 'w-12 h-12' : 'w-16 h-16'}`}>
-          <AspectRatio ratio={1} className="bg-muted rounded-md overflow-hidden">
-            <EnhancedAlbumArtwork
-              src={spin.image}
-              alt={`${spin.song} by ${spin.artist}`}
-              className="w-full h-full"
-              fallbackIconSize={compact ? 'w-4 h-4' : 'w-6 h-6'}
-              artist={spin.artist}
-              song={spin.song}
-            />
-          </AspectRatio>
-          
-          {/* YouTube Preview Button Overlay */}
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-md">
-            <div className="debug-youtube-button">
-              <YouTubePreviewButton
-                artist={spin.artist}
-                song={spin.song}
-                trackId={trackId}
-                currentlyPlaying={audioPlayer.currentlyPlaying}
-                isLoading={audioPlayer.isLoading}
-                onPlay={audioPlayer.playVideo}
-                size={compact ? 'sm' : 'md'}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Song Information */}
+    <Card className={`p-4 transition-all duration-200 ${isCurrentlyPlaying ? 'ring-2 ring-orange-500 bg-orange-50 dark:bg-orange-950' : 'hover:shadow-md'}`}>
+      <div className="flex items-start gap-4">
+        <EnhancedAlbumArtwork 
+          image={spin.image} 
+          artist={spin.artist} 
+          song={spin.song}
+          size={compact ? 48 : 60}
+        />
+        
         <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-start">
-            <EnhancedSongInfo spin={spin} compact={compact} />
-            <div className="flex flex-col items-end ml-2">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="flex-1 min-w-0">
+              <HoverCard>
+                <HoverCardTrigger asChild>
+                  <h3 className="font-semibold text-base leading-tight line-clamp-1 cursor-pointer hover:text-orange-600 transition-colors">
+                    {spin.song || 'Unknown Song'}
+                  </h3>
+                </HoverCardTrigger>
+                <HoverCardContent className="w-80">
+                  <TicketmasterEvents artistName={spin.artist} compact={true} />
+                </HoverCardContent>
+              </HoverCard>
+              
+              <p className="text-muted-foreground text-sm line-clamp-1 mb-1">
+                {spin.artist || 'Unknown Artist'}
+              </p>
+              
+              <EnhancedSongInfo spin={spin} compact={compact} />
+            </div>
+            
+            <div className="flex items-center gap-2 shrink-0">
               {isCurrentlyPlaying && (
-                <Badge variant="secondary" className={compact ? "text-xs px-2 py-0" : ""}>
-                  Now Playing
+                <Badge variant="secondary" className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                  <Music className="h-3 w-3 mr-1" />
+                  Live
                 </Badge>
               )}
-              <div className={`text-right mt-1 ${compact ? "text-xs" : "text-sm"}`}>
-                <div className="flex items-center text-muted-foreground">
-                  <Clock className="h-3 w-3 mr-1" />
-                  {formatTime(spin.start)}
-                </div>
-                <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
-                  {formatDate(spin.start)}
-                </div>
-                {spin.duration && (
-                  <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
-                    {Math.floor(spin.duration / 60)}:{(spin.duration % 60).toString().padStart(2, '0')}
-                  </div>
-                )}
+              
+              <div className="flex items-center text-xs text-muted-foreground">
+                <Clock className="h-3 w-3 mr-1" />
+                {formatTime(spin.start)}
               </div>
             </div>
           </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-muted-foreground">
+              {formatDate(spin.start)}
+            </div>
+            
+            <AudioPreviewButton 
+              artist={spin.artist} 
+              song={spin.song}
+              trackId={`${spin.id}-${index}`}
+              audioPlayer={audioPlayer}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
