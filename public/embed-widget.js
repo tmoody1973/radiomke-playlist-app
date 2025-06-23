@@ -1,4 +1,3 @@
-
 (function() {
   'use strict';
   
@@ -104,7 +103,7 @@
     }
 
     loadMore() {
-      const newDisplayCount = Math.min(this.displayCount + 5, this.filteredSongs.length);
+      const newDisplayCount = Math.min(this.displayCount + 10, this.filteredSongs.length);
       this.displayCount = newDisplayCount;
       this.updateDisplay();
     }
