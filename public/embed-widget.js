@@ -1,3 +1,4 @@
+
 (function() {
   'use strict';
   
@@ -98,7 +99,7 @@
         );
       }
       
-      this.displayCount = Math.min(this.filteredSongs.length, 20);
+      this.displayCount = Math.min(this.filteredSongs.length, 10);
       this.updateDisplay();
     }
 
