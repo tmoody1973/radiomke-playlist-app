@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -55,8 +54,11 @@ export const ListItem: React.FC<ListItemProps> = ({
     <Card className={`p-4 transition-all duration-200 ${isCurrentlyPlaying ? 'ring-2 ring-orange-500 bg-orange-50 dark:bg-orange-950' : 'hover:shadow-md'}`}>
       <div className="flex items-start gap-4">
         <EnhancedAlbumArtwork 
-          spin={spin}
-          size={compact ? 48 : 60}
+          src={spin.image}
+          alt={`${spin.song} by ${spin.artist}`}
+          className="rounded-md"
+          artist={spin.artist}
+          song={spin.song}
         />
         
         <div className="flex-1 min-w-0">
@@ -104,10 +106,9 @@ export const ListItem: React.FC<ListItemProps> = ({
               artist={spin.artist} 
               song={spin.song}
               trackId={`${spin.id}-${index}`}
-              isLoading={audioPlayer.isLoading === `${spin.id}-${index}`}
-              isPlaying={audioPlayer.currentlyPlaying === `${spin.id}-${index}`}
-              onPlay={(embedUrl) => audioPlayer.playVideo(embedUrl, `${spin.id}-${index}`)}
-              onStop={audioPlayer.stopVideo}
+              currentlyPlaying={audioPlayer.currentlyPlaying}
+              isLoading={audioPlayer.isLoading}
+              onPlay={(embedUrl, trackId) => audioPlayer.playVideo(embedUrl, trackId)}
             />
           </div>
         </div>
