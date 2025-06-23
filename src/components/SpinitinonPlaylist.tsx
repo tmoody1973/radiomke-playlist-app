@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Radio } from 'lucide-react';
@@ -31,6 +30,8 @@ const SpinitinonPlaylist = ({
   endDate: initialEndDate = '',
   layout = 'list'
 }: SpinitinonPlaylistProps) => {
+  console.log(`🎵 SpinitinonPlaylist rendering for station: ${stationId}`);
+
   const playlistState = usePlaylistState({ 
     spins: [], 
     hasActiveFilters: false, 
@@ -58,7 +59,7 @@ const SpinitinonPlaylist = ({
   // Update playlist state when new data comes in - using a key-based approach for better tracking
   React.useEffect(() => {
     if (spins && spins.length > 0) {
-      console.log('🔄 Updating playlist with', spins.length, 'spins, hasActiveFilters:', hasActiveFilters, 'timestamp:', new Date().toISOString());
+      console.log(`🔄 Updating playlist with ${spins.length} spins for station ${stationId}, hasActiveFilters:`, hasActiveFilters, 'timestamp:', new Date().toISOString());
       
       // Always update with fresh data, ensuring component re-renders
       playlistState.setAllSpins([...spins]); // Create new array reference to trigger re-render
@@ -69,23 +70,25 @@ const SpinitinonPlaylist = ({
       }
     } else if (!isLoading && !hasActiveFilters) {
       // If no spins and not loading and no filters, clear the state
-      console.log('🧹 Clearing playlist state - no spins received');
+      console.log(`🧹 Clearing playlist state for station ${stationId} - no spins received`);
       playlistState.setAllSpins([]);
     }
-  }, [spins, hasActiveFilters, isLoading, playlistState.setAllSpins, playlistState.setDisplayCount]);
+  }, [spins, hasActiveFilters, isLoading, playlistState.setAllSpins, playlistState.setDisplayCount, stationId]);
 
   // Force a re-render when live data comes in by tracking the latest song
   const latestSong = React.useMemo(() => {
     if (!hasActiveFilters && playlistState.allSpins.length > 0) {
       const latest = playlistState.allSpins[0];
-      console.log('🎵 Latest song:', latest?.artist, '-', latest?.song, 'at', latest?.start);
+      console.log(`🎵 Latest song for station ${stationId}:`, latest?.artist, '-', latest?.song, 'at', latest?.start);
       return latest;
     }
     return null;
-  }, [playlistState.allSpins, hasActiveFilters]);
+  }, [playlistState.allSpins, hasActiveFilters, stationId]);
 
   const displayedSpins = playlistState.allSpins.slice(0, playlistState.displayCount);
   const hasMoreSpins = playlistState.displayCount < playlistState.allSpins.length;
+
+  console.log(`🎵 Displayed spins for station ${stationId}:`, displayedSpins.length, 'out of', playlistState.allSpins.length);
 
   const handleLoadMore = async () => {
     playlistState.setLoadingMore(true);

@@ -24,15 +24,18 @@ export const YouTubePreviewButton = ({
 }: YouTubePreviewButtonProps) => {
   const { youtubeData, loading } = useYouTubeData(artist, song);
 
-  // Debug logging
-  console.log(`YouTubePreviewButton for ${artist} - ${song}:`, {
+  // Enhanced debugging with station context
+  console.log(`🎵 YouTubePreviewButton DEBUG for ${artist} - ${song}:`, {
     loading,
     youtubeData,
-    hasVideoId: !!youtubeData?.videoId
+    hasVideoId: !!youtubeData?.videoId,
+    trackId,
+    stationContext: window.location.pathname
   });
 
   // Show loading state while fetching YouTube data
   if (loading) {
+    console.log(`⏳ Loading YouTube data for ${artist} - ${song}`);
     return (
       <Button
         variant="ghost"
@@ -47,16 +50,22 @@ export const YouTubePreviewButton = ({
 
   // If no YouTube data or no video ID, don't show button
   if (!youtubeData?.videoId) {
-    console.log(`No YouTube video available for ${artist} - ${song}`);
+    console.log(`❌ No YouTube video available for ${artist} - ${song}`, {
+      youtubeData,
+      hasData: !!youtubeData,
+      hasVideoId: youtubeData?.videoId
+    });
     return null;
   }
+
+  console.log(`✅ YouTube video found for ${artist} - ${song}:`, youtubeData.videoId);
 
   const isThisTrackPlaying = currentlyPlaying === trackId;
   const isThisTrackLoading = isLoading === trackId;
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log(`Playing YouTube video for ${artist} - ${song}`, youtubeData.embedUrl);
+    console.log(`🎬 Playing YouTube video for ${artist} - ${song}`, youtubeData.embedUrl);
     onPlay(youtubeData.embedUrl!, trackId);
   };
 

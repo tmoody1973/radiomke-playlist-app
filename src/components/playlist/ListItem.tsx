@@ -1,3 +1,4 @@
+
 import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Clock } from 'lucide-react';
@@ -46,6 +47,13 @@ export const ListItem = ({
 }: ListItemProps) => {
   const trackId = `${spin.artist}-${spin.song}-${spin.id}`;
 
+  // Debug logging for list item rendering
+  console.log(`🎵 Rendering ListItem for ${spin.artist} - ${spin.song}`, {
+    trackId,
+    spinId: spin.id,
+    audioPlayer: !!audioPlayer
+  });
+
   return (
     <div 
       className={`p-3 border rounded-lg transition-colors hover:bg-accent/50 ${
@@ -68,15 +76,17 @@ export const ListItem = ({
           
           {/* YouTube Preview Button Overlay */}
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-md">
-            <YouTubePreviewButton
-              artist={spin.artist}
-              song={spin.song}
-              trackId={trackId}
-              currentlyPlaying={audioPlayer.currentlyPlaying}
-              isLoading={audioPlayer.isLoading}
-              onPlay={audioPlayer.playVideo}
-              size={compact ? 'sm' : 'md'}
-            />
+            <div className="debug-youtube-button">
+              <YouTubePreviewButton
+                artist={spin.artist}
+                song={spin.song}
+                trackId={trackId}
+                currentlyPlaying={audioPlayer.currentlyPlaying}
+                isLoading={audioPlayer.isLoading}
+                onPlay={audioPlayer.playVideo}
+                size={compact ? 'sm' : 'md'}
+              />
+            </div>
           </div>
         </div>
 
