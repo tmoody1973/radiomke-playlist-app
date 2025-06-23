@@ -66,8 +66,8 @@ export const ListItem = ({
             />
           </AspectRatio>
           
-          {/* Audio Preview Button Overlay */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-md">
+          {/* Audio Preview Button Overlay - Always visible for testing */}
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-md">
             <AudioPreviewButton
               artist={spin.artist}
               song={spin.song}

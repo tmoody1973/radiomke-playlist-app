@@ -51,8 +51,8 @@ export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, audioPla
           song={spin.song}
         />
         
-        {/* Audio Preview Button */}
-        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Audio Preview Button - Always visible for testing */}
+        <div className="absolute top-2 right-2 z-10">
           <AudioPreviewButton
             artist={spin.artist}
             song={spin.song}
@@ -80,7 +80,7 @@ export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, audioPla
         
         {/* Now playing badge */}
         {isCurrentlyPlaying && (
-          <div className="absolute top-2 right-2">
+          <div className="absolute top-2 left-2">
             <Badge variant="secondary" className="text-xs bg-primary text-primary-foreground">
               Live
             </Badge>

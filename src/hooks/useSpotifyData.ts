@@ -38,13 +38,14 @@ export const useSpotifyData = (artist: string, song: string) => {
           
           // Use cached data if less than 24 hours old
           if (cacheAge < 24 * 60 * 60 * 1000) {
+            console.log(`Using cached Spotify data for: ${artist} - ${song}`, cachedData);
             setSpotifyData(cachedData);
             setLoading(false);
             return;
           }
         }
 
-        console.log(`Fetching Spotify data for: ${artist} - ${song}`);
+        console.log(`Fetching fresh Spotify data for: ${artist} - ${song}`);
 
         // Fetch from Spotify API
         const { data, error } = await supabase.functions.invoke('spotify-search', {
@@ -52,11 +53,10 @@ export const useSpotifyData = (artist: string, song: string) => {
         });
 
         if (error) {
-          console.error('Error fetching Spotify data:', error);
-          // Don't throw error, just set to null so UI doesn't break
+          console.error('Supabase function error:', error);
           setSpotifyData(null);
-        } else if (data?.found) {
-          console.log('Spotify data found:', data);
+        } else if (data?.found && data?.previewUrl) {
+          console.log('Spotify data found with preview:', data);
           const newSpotifyData: SpotifyData = {
             albumName: data.albumName,
             albumArt: data.albumArt,
@@ -76,6 +76,9 @@ export const useSpotifyData = (artist: string, song: string) => {
             lastFetched: new Date().toISOString()
           };
           localStorage.setItem(`spotify-${cacheKey}`, JSON.stringify(cacheData));
+        } else if (data?.found && !data?.previewUrl) {
+          console.log(`Spotify track found but no preview available for: ${artist} - ${song}`);
+          setSpotifyData(null);
         } else {
           console.log('No Spotify data found for:', artist, '-', song);
           setSpotifyData(null);
