@@ -7,6 +7,7 @@ interface SpotifyData {
   albumArt?: string;
   trackName?: string;
   artistName?: string;
+  previewUrl?: string | null;
 }
 
 interface CachedSpotifyData extends SpotifyData {
@@ -56,7 +57,8 @@ export const useSpotifyData = (artist: string, song: string) => {
             albumName: data.albumName,
             albumArt: data.albumArt,
             trackName: data.trackName,
-            artistName: data.artistName
+            artistName: data.artistName,
+            previewUrl: data.previewUrl
           };
           
           setSpotifyData(newSpotifyData);

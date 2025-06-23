@@ -13,6 +13,7 @@ interface SpotifyTrack {
     name: string;
     images: { url: string; height: number; width: number }[];
   };
+  preview_url: string | null;
 }
 
 interface SpotifySearchResponse {
@@ -121,7 +122,8 @@ serve(async (req) => {
         albumName: track.album.name,
         albumArt: albumArt,
         trackName: track.name,
-        artistName: track.artists[0]?.name
+        artistName: track.artists[0]?.name,
+        previewUrl: track.preview_url
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

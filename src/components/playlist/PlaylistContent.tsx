@@ -16,6 +16,13 @@ interface Spin {
   image?: string;
 }
 
+interface AudioPlayer {
+  currentlyPlaying: string | null;
+  isLoading: string | null;
+  playAudio: (previewUrl: string, trackId: string) => void;
+  stopAudio: () => void;
+}
+
 interface PlaylistContentProps {
   displayedSpins: Spin[];
   hasActiveFilters: boolean;
@@ -25,6 +32,7 @@ interface PlaylistContentProps {
   isCurrentlyPlaying: (spin: Spin, index: number) => boolean;
   formatTime: (dateString: string) => string;
   formatDate: (dateString: string) => string;
+  audioPlayer: AudioPlayer;
 }
 
 export const PlaylistContent = ({
@@ -35,7 +43,8 @@ export const PlaylistContent = ({
   isEmbedMode,
   isCurrentlyPlaying,
   formatTime,
-  formatDate
+  formatDate,
+  audioPlayer
 }: PlaylistContentProps) => {
   return (
     <ScrollArea 
@@ -65,6 +74,7 @@ export const PlaylistContent = ({
               index={index}
               isCurrentlyPlaying={isCurrentlyPlaying(spin, index)}
               formatTime={formatTime}
+              audioPlayer={audioPlayer}
             />
           ))}
         </div>
@@ -80,6 +90,7 @@ export const PlaylistContent = ({
               compact={compact}
               formatTime={formatTime}
               formatDate={formatDate}
+              audioPlayer={audioPlayer}
             />
           ))}
         </div>

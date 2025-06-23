@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Radio } from 'lucide-react';
 import { useSpinData } from '@/hooks/useSpinData';
 import { usePlaylistState } from '@/hooks/usePlaylistState';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { PlaylistHeader } from './playlist/PlaylistHeader';
 import { PlaylistContent } from './playlist/PlaylistContent';
 import { LoadMoreButton } from './playlist/LoadMoreButton';
@@ -35,6 +37,8 @@ const SpinitinonPlaylist = ({
     initialStartDate, 
     initialEndDate 
   });
+
+  const audioPlayer = useAudioPlayer();
 
   const effectiveStartDate = playlistState.dateSearchEnabled ? playlistState.startDate : '';
   const effectiveEndDate = playlistState.dateSearchEnabled ? playlistState.endDate : '';
@@ -157,6 +161,7 @@ const SpinitinonPlaylist = ({
             isCurrentlyPlaying={(spin, index) => isCurrentlyPlaying(spin, index, playlistState.currentTime, hasActiveFilters)}
             formatTime={formatTime}
             formatDate={formatDate}
+            audioPlayer={audioPlayer}
           />
           
           <LoadMoreButton
