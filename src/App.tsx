@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
-import EmbedDemo from "./pages/EmbemDemo";
+import EmbedDemo from "./pages/EmbedDemo";
 import Embed from "./pages/Embed";
 import TechnicalArticle from "./pages/TechnicalArticle";
 import NotFound from "./pages/NotFound";
