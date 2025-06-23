@@ -24,12 +24,13 @@ export const YouTubePreviewButton = ({
 }: YouTubePreviewButtonProps) => {
   const { youtubeData, loading } = useYouTubeData(artist, song);
 
-  // Enhanced debugging with station context
+  // Enhanced debugging with cache status
   console.log(`🎵 YouTubePreviewButton DEBUG for ${artist} - ${song}:`, {
     loading,
     youtubeData,
     hasVideoId: !!youtubeData?.videoId,
     trackId,
+    fromCache: youtubeData?.fromCache,
     stationContext: window.location.pathname
   });
 
@@ -53,19 +54,26 @@ export const YouTubePreviewButton = ({
     console.log(`❌ No YouTube video available for ${artist} - ${song}`, {
       youtubeData,
       hasData: !!youtubeData,
-      hasVideoId: youtubeData?.videoId
+      hasVideoId: youtubeData?.videoId,
+      fromCache: youtubeData?.fromCache
     });
     return null;
   }
 
-  console.log(`✅ YouTube video found for ${artist} - ${song}:`, youtubeData.videoId);
+  console.log(`✅ YouTube video found for ${artist} - ${song}:`, {
+    videoId: youtubeData.videoId,
+    fromCache: youtubeData.fromCache
+  });
 
   const isThisTrackPlaying = currentlyPlaying === trackId;
   const isThisTrackLoading = isLoading === trackId;
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log(`🎬 Playing YouTube video for ${artist} - ${song}`, youtubeData.embedUrl);
+    console.log(`🎬 Playing YouTube video for ${artist} - ${song}`, {
+      embedUrl: youtubeData.embedUrl,
+      fromCache: youtubeData.fromCache
+    });
     onPlay(youtubeData.embedUrl!, trackId);
   };
 
@@ -79,7 +87,7 @@ export const YouTubePreviewButton = ({
       size="icon"
       className={`${buttonSize} rounded-full bg-red-600 hover:bg-red-700 text-white transition-all shadow-md border border-red-500`}
       disabled={isThisTrackLoading}
-      title={`Play ${song} by ${artist} on YouTube`}
+      title={`Play ${song} by ${artist} on YouTube${youtubeData.fromCache ? ' (cached)' : ''}`}
     >
       {isThisTrackLoading ? (
         <Loader2 className={`${iconSize} animate-spin`} />

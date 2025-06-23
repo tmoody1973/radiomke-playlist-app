@@ -8,13 +8,7 @@ interface YouTubeData {
   channelTitle?: string;
   thumbnail?: string;
   embedUrl?: string;
-}
-
-interface CachedYouTubeData extends YouTubeData {
-  id: string;
-  artist: string;
-  song: string;
-  lastFetched: string;
+  fromCache?: boolean;
 }
 
 export const useYouTubeData = (artist: string, song: string) => {
@@ -28,26 +22,9 @@ export const useYouTubeData = (artist: string, song: string) => {
       setLoading(true);
       
       try {
-        // Check if we have cached data
-        const cacheKey = `${artist}-${song}`.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const cached = localStorage.getItem(`youtube-${cacheKey}`);
-        
-        if (cached) {
-          const cachedData: CachedYouTubeData = JSON.parse(cached);
-          const cacheAge = Date.now() - new Date(cachedData.lastFetched).getTime();
-          
-          // Use cached data if less than 24 hours old
-          if (cacheAge < 24 * 60 * 60 * 1000) {
-            console.log(`Using cached YouTube data for: ${artist} - ${song}`, cachedData);
-            setYouTubeData(cachedData);
-            setLoading(false);
-            return;
-          }
-        }
+        console.log(`Fetching YouTube data for: ${artist} - ${song}`);
 
-        console.log(`Fetching fresh YouTube data for: ${artist} - ${song}`);
-
-        // Fetch from YouTube API
+        // Fetch from YouTube API (which now checks database cache first)
         const { data, error } = await supabase.functions.invoke('youtube-search', {
           body: { artist, song }
         });
@@ -56,28 +33,19 @@ export const useYouTubeData = (artist: string, song: string) => {
           console.error('Supabase function error:', error);
           setYouTubeData(null);
         } else if (data?.found && data?.videoId) {
-          console.log('YouTube video found:', data);
+          console.log('YouTube video found:', data.fromCache ? '(from cache)' : '(fresh API call)', data);
           const newYouTubeData: YouTubeData = {
             videoId: data.videoId,
             title: data.title,
             channelTitle: data.channelTitle,
             thumbnail: data.thumbnail,
-            embedUrl: data.embedUrl
+            embedUrl: data.embedUrl,
+            fromCache: data.fromCache
           };
           
           setYouTubeData(newYouTubeData);
-          
-          // Cache the result
-          const cacheData: CachedYouTubeData = {
-            ...newYouTubeData,
-            id: cacheKey,
-            artist,
-            song,
-            lastFetched: new Date().toISOString()
-          };
-          localStorage.setItem(`youtube-${cacheKey}`, JSON.stringify(cacheData));
         } else {
-          console.log('No YouTube video found for:', artist, '-', song);
+          console.log('No YouTube video found for:', artist, '-', song, data.fromCache ? '(cached result)' : '(fresh API call)');
           setYouTubeData(null);
         }
       } catch (error) {
