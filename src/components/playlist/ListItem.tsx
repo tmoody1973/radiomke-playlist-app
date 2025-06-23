@@ -1,10 +1,10 @@
-
 import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Clock } from 'lucide-react';
 import { EnhancedAlbumArtwork } from './EnhancedAlbumArtwork';
 import { EnhancedSongInfo } from './EnhancedSongInfo';
 import { AudioPreviewButton } from './AudioPreviewButton';
+import { YouTubePreviewButton } from './YouTubePreviewButton';
 
 interface Spin {
   id: number;
@@ -21,8 +21,8 @@ interface Spin {
 interface AudioPlayer {
   currentlyPlaying: string | null;
   isLoading: string | null;
-  playAudio: (previewUrl: string, trackId: string) => void;
-  stopAudio: () => void;
+  playVideo: (embedUrl: string, trackId: string) => void;
+  stopVideo: () => void;
 }
 
 interface ListItemProps {
@@ -66,15 +66,15 @@ export const ListItem = ({
             />
           </AspectRatio>
           
-          {/* Audio Preview Button Overlay - Always visible for testing */}
+          {/* YouTube Preview Button Overlay */}
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-md">
-            <AudioPreviewButton
+            <YouTubePreviewButton
               artist={spin.artist}
               song={spin.song}
               trackId={trackId}
               currentlyPlaying={audioPlayer.currentlyPlaying}
               isLoading={audioPlayer.isLoading}
-              onPlay={audioPlayer.playAudio}
+              onPlay={audioPlayer.playVideo}
               size={compact ? 'sm' : 'md'}
             />
           </div>

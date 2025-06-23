@@ -1,4 +1,3 @@
-
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Music } from 'lucide-react';
 import { GridItem } from './GridItem';
@@ -19,8 +18,8 @@ interface Spin {
 interface AudioPlayer {
   currentlyPlaying: string | null;
   isLoading: string | null;
-  playAudio: (previewUrl: string, trackId: string) => void;
-  stopAudio: () => void;
+  playVideo: (embedUrl: string, trackId: string) => void;
+  stopVideo: () => void;
 }
 
 interface PlaylistContentProps {

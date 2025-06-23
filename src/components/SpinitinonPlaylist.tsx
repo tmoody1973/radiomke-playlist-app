@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Radio } from 'lucide-react';
 import { useSpinData } from '@/hooks/useSpinData';
 import { usePlaylistState } from '@/hooks/usePlaylistState';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
 import { PlaylistHeader } from './playlist/PlaylistHeader';
 import { PlaylistContent } from './playlist/PlaylistContent';
 import { LoadMoreButton } from './playlist/LoadMoreButton';
@@ -38,7 +37,7 @@ const SpinitinonPlaylist = ({
     initialEndDate 
   });
 
-  const audioPlayer = useAudioPlayer();
+  const audioPlayer = useYouTubePlayer();
 
   const effectiveStartDate = playlistState.dateSearchEnabled ? playlistState.startDate : '';
   const effectiveEndDate = playlistState.dateSearchEnabled ? playlistState.endDate : '';

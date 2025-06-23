@@ -1,9 +1,9 @@
-
 import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Play } from 'lucide-react';
 import { EnhancedAlbumArtwork } from './EnhancedAlbumArtwork';
 import { AudioPreviewButton } from './AudioPreviewButton';
+import { YouTubePreviewButton } from './YouTubePreviewButton';
 
 interface Spin {
   id: number;
@@ -20,8 +20,8 @@ interface Spin {
 interface AudioPlayer {
   currentlyPlaying: string | null;
   isLoading: string | null;
-  playAudio: (previewUrl: string, trackId: string) => void;
-  stopAudio: () => void;
+  playVideo: (embedUrl: string, trackId: string) => void;
+  stopVideo: () => void;
 }
 
 interface GridItemProps {
@@ -51,15 +51,15 @@ export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, audioPla
           song={spin.song}
         />
         
-        {/* Audio Preview Button - Always visible for testing */}
+        {/* YouTube Preview Button */}
         <div className="absolute top-2 right-2 z-10">
-          <AudioPreviewButton
+          <YouTubePreviewButton
             artist={spin.artist}
             song={spin.song}
             trackId={trackId}
             currentlyPlaying={audioPlayer.currentlyPlaying}
             isLoading={audioPlayer.isLoading}
-            onPlay={audioPlayer.playAudio}
+            onPlay={audioPlayer.playVideo}
             size="sm"
           />
         </div>
