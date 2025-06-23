@@ -33,15 +33,62 @@ export const generateEmbedUrl = (config: EmbedConfig): string => {
 
 export const generateIframeCode = (config: EmbedConfig): string => {
   const embedUrl = generateEmbedUrl(config);
+  const stationName = config.selectedStation === 'hyfin' ? 'HYFIN' : '88Nine';
   
-  return `<iframe 
-  src="${embedUrl}" 
-  width="100%" 
-  height="${config.height}px" 
-  style="border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);"
-  title="Spinitron Live Playlist"
-  id="spinitron-iframe">
-</iframe>
+  return `<!-- SEO-Friendly Radio Milwaukee Playlist Embed -->
+<div class="radio-milwaukee-embed-container">
+  <!-- Contextual content for SEO -->
+  <h3>Live Radio Playlist - ${stationName}</h3>
+  <p>Currently playing songs from Radio Milwaukee's ${stationName} station. 
+     Discover new music and see what's trending on Milwaukee radio.</p>
+  
+  <iframe 
+    src="${embedUrl}" 
+    width="100%" 
+    height="${config.height}px"
+    title="Radio Milwaukee ${stationName} Live Playlist - Currently Playing Songs"
+    name="radio-milwaukee-playlist"
+    loading="lazy"
+    allow="autoplay; encrypted-media"
+    referrerpolicy="strict-origin-when-cross-origin"
+    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+    style="border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); display: block; max-width: 100%;"
+    id="spinitron-iframe">
+    
+    <!-- Fallback content for accessibility and SEO -->
+    <div class="iframe-fallback">
+      <p><strong>Radio Milwaukee Live Playlist</strong></p>
+      <p>View the current playlist and discover what's playing on ${stationName}.</p>
+      <p><a href="${window.location.origin}" target="_blank" rel="noopener">
+        Visit Radio Milwaukee Playlist →
+      </a></p>
+      <p>Keywords: radio milwaukee, ${stationName.toLowerCase()}, live playlist, current songs, milwaukee radio, music discovery</p>
+    </div>
+  </iframe>
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "RadioStation",
+    "name": "Radio Milwaukee - ${stationName}",
+    "url": "${window.location.origin}",
+    "description": "Live playlist showing currently playing songs from Radio Milwaukee's ${stationName} station",
+    "broadcastServiceTier": "FM",
+    "parentService": {
+      "@type": "RadioChannel",
+      "name": "${stationName}",
+      "description": "Milwaukee's independent radio station"
+    },
+    "genre": ["Alternative", "Indie", "Local Music"],
+    "inLanguage": "en-US",
+    "potentialAction": {
+      "@type": "ListenAction",
+      "target": "${embedUrl}"
+    }
+  }
+  </script>
+</div>
 
 <script>
   // Auto-resize iframe based on content
@@ -53,7 +100,40 @@ export const generateIframeCode = (config: EmbedConfig): string => {
       }
     }
   });
-</script>`;
+</script>
+
+<!-- Optional: Add this CSS for better styling -->
+<style>
+.radio-milwaukee-embed-container {
+  max-width: 100%;
+  margin: 1rem 0;
+}
+.radio-milwaukee-embed-container h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+.radio-milwaukee-embed-container p {
+  margin: 0 0 1rem 0;
+  color: #6b7280;
+  line-height: 1.5;
+}
+.iframe-fallback {
+  padding: 2rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  text-align: center;
+}
+.iframe-fallback a {
+  color: #ea580c;
+  text-decoration: none;
+  font-weight: 500;
+}
+.iframe-fallback a:hover {
+  text-decoration: underline;
+}
+</style>`;
 };
 
 export const generateJavaScriptCode = (config: EmbedConfig): string => {

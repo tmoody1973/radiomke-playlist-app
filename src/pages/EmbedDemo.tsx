@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import EmbedConfiguration from '@/components/embed/EmbedConfiguration';
 import EmbedCodeTabs from '@/components/embed/EmbedCodeTabs';
 import EmbedPreview from '@/components/embed/EmbedPreview';
+import SEORecommendations from '@/components/embed/SEORecommendations';
 
 interface Station {
   id: string;
@@ -121,24 +122,29 @@ const EmbedDemo = () => {
     <div className="min-h-screen bg-background p-4">
       <div className="container mx-auto py-8 max-w-6xl">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4">Embed Your Playlist</h1>
+          <h1 className="text-4xl font-bold mb-4">SEO-Optimized Embed Generator</h1>
           <p className="text-xl text-muted-foreground">
-            Customize and embed the Spinitron playlist widget on your website
+            Create search engine friendly playlist embeds with built-in SEO features
           </p>
         </div>
 
-        {/* Instructions moved to top in two columns */}
+        {/* SEO Information Section */}
+        <div className="mb-8">
+          <SEORecommendations />
+        </div>
+
+        {/* Instructions moved to two columns */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardContent className="pt-6">
               <h3 className="text-lg font-semibold mb-2">How to Use</h3>
               <div className="text-sm text-muted-foreground space-y-2">
-                <p><strong>iFrame Method:</strong> Auto-resizing iframe that adjusts height when content changes</p>
+                <p><strong>SEO-Enhanced iFrame:</strong> Includes structured data, fallback content, and contextual information</p>
                 <p>1. Select your preferred radio station from the available options</p>
                 <p>2. Customize the settings below to match your needs</p>
-                <p>3. Copy the generated embed code and paste it into your website's HTML</p>
-                <p>4. The widget will automatically update with live playlist data</p>
-                <p><strong>Auto-resize:</strong> The iframe will automatically expand when users click "Load More"</p>
+                <p>3. Copy the generated SEO-friendly embed code</p>
+                <p>4. Follow the SEO recommendations above for best results</p>
+                <p><strong>Search Engine Benefits:</strong> Better indexing, rich snippets, and improved page relevance</p>
               </div>
             </CardContent>
           </Card>
