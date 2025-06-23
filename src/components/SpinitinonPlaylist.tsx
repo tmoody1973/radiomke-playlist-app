@@ -95,7 +95,8 @@ const SpinitinonPlaylist = ({
       count: maxItems.toString(),
       search: debouncedSearchTerm,
       start: effectiveStartDate,
-      end: effectiveEndDate
+      end: effectiveEndDate,
+      dateSearchEnabled
     });
 
     const { data, error } = await supabase.functions.invoke('spinitron-proxy', {
@@ -126,9 +127,9 @@ const SpinitinonPlaylist = ({
   const hasActiveFilters = debouncedSearchTerm || effectiveStartDate || effectiveEndDate;
 
   const { data: spins = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['spins', stationId, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate],
+    queryKey: ['spins', stationId, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate, dateSearchEnabled],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate ? 5000 : false,
+    refetchInterval: autoUpdate && !hasActiveFilters ? 5000 : false,
     staleTime: 0,
     gcTime: 0,
     refetchOnWindowFocus: true,
@@ -196,10 +197,19 @@ const SpinitinonPlaylist = ({
   };
 
   const handleDateSearchToggle = (enabled: boolean) => {
+    console.log('Date search toggled:', enabled);
     setDateSearchEnabled(enabled);
     if (!enabled) {
+      // Clear date filters when disabling date search
       setStartDate('');
       setEndDate('');
+      // Reset display count and clear cached spins to force fresh data
+      setDisplayCount(15);
+      setAllSpins([]);
+      // Trigger a refetch to get live data
+      setTimeout(() => {
+        refetch();
+      }, 100);
     }
   };
 
