@@ -1,4 +1,5 @@
 import SpinitinonPlaylist from '@/components/SpinitinonPlaylist';
+import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Code, ExternalLink, Heart, FileText } from 'lucide-react';
@@ -6,11 +7,15 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+
 const Index = () => {
   const [selectedStation, setSelectedStation] = useState('hyfin');
-  return <div className="min-h-screen bg-background p-4">
-      <div className="container mx-auto py-8">
-        <div className="text-center mb-8">
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <div className="p-4">
+        <div className="container mx-auto py-8">
           {/* Enhanced header with logo */}
           <div className="mb-6 flex flex-col items-center">
             <img src="/lovable-uploads/f79975fc-c2f8-4693-8bd1-b4b15d882845.png" alt="Radio Milwaukee Logo" className="h-20 w-auto mb-4 drop-shadow-lg" />
@@ -84,6 +89,8 @@ const Index = () => {
           </p>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Index;
