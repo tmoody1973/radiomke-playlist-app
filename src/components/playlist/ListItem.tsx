@@ -55,9 +55,7 @@ export const ListItem: React.FC<ListItemProps> = ({
     <Card className={`p-4 transition-all duration-200 ${isCurrentlyPlaying ? 'ring-2 ring-orange-500 bg-orange-50 dark:bg-orange-950' : 'hover:shadow-md'}`}>
       <div className="flex items-start gap-4">
         <EnhancedAlbumArtwork 
-          image={spin.image} 
-          artist={spin.artist} 
-          song={spin.song}
+          spin={spin}
           size={compact ? 48 : 60}
         />
         
@@ -106,7 +104,10 @@ export const ListItem: React.FC<ListItemProps> = ({
               artist={spin.artist} 
               song={spin.song}
               trackId={`${spin.id}-${index}`}
-              audioPlayer={audioPlayer}
+              isLoading={audioPlayer.isLoading === `${spin.id}-${index}`}
+              isPlaying={audioPlayer.currentlyPlaying === `${spin.id}-${index}`}
+              onPlay={(embedUrl) => audioPlayer.playVideo(embedUrl, `${spin.id}-${index}`)}
+              onStop={audioPlayer.stopVideo}
             />
           </div>
         </div>
