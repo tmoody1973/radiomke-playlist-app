@@ -2,7 +2,7 @@
 import SpinitinonPlaylist from '@/components/SpinitinonPlaylist';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Code, ExternalLink } from 'lucide-react';
+import { Code, ExternalLink, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Index = () => {
@@ -45,7 +45,9 @@ const Index = () => {
         />
         
         <div className="mt-8 text-center text-sm text-muted-foreground">
-          <p>Powered by Spinitron API • Updates every 30 seconds</p>
+          <p className="flex items-center justify-center gap-1">
+            Made with <Heart className="h-4 w-4 text-red-500 fill-current" /> by Tarik aka the Architect
+          </p>
         </div>
       </div>
     </div>
