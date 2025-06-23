@@ -1,26 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
-import { Search, Music, Radio, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { SearchFilters } from './playlist/SearchFilters';
-import { GridItem } from './playlist/GridItem';
-import { ListItem } from './playlist/ListItem';
 
-interface Spin {
-  id: number;
-  artist: string;
-  song: string;
-  start: string;
-  duration: number;
-  composer?: string;
-  label?: string;
-  release?: string;
-  image?: string;
-}
+import { Card, CardContent } from '@/components/ui/card';
+import { Radio } from 'lucide-react';
+import { useSpinData } from '@/hooks/useSpinData';
+import { usePlaylistState } from '@/hooks/usePlaylistState';
+import { PlaylistHeader } from './playlist/PlaylistHeader';
+import { PlaylistContent } from './playlist/PlaylistContent';
+import { LoadMoreButton } from './playlist/LoadMoreButton';
+import { isCurrentlyPlaying, formatTime, formatDate, getPlaylistTitle } from '@/utils/playlistHelpers';
 
 interface SpinitinonPlaylistProps {
   stationId?: string;
@@ -43,175 +29,85 @@ const SpinitinonPlaylist = ({
   endDate: initialEndDate = '',
   layout = 'list'
 }: SpinitinonPlaylistProps) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [dateSearchEnabled, setDateSearchEnabled] = useState(false);
-  const [startDate, setStartDate] = useState(initialStartDate);
-  const [endDate, setEndDate] = useState(initialEndDate);
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [allSpins, setAllSpins] = useState<Spin[]>([]);
-  const [displayCount, setDisplayCount] = useState(15);
-  const [loadingMore, setLoadingMore] = useState(false);
-
-  // Initialize date search if dates were provided via props
-  useEffect(() => {
-    if (initialStartDate || initialEndDate) {
-      setDateSearchEnabled(true);
-    }
-  }, [initialStartDate, initialEndDate]);
-
-  // Update current time every second for accurate "now playing" detection
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  // Debounce search term to avoid too many API calls
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  // Reset display count when search or date filters change
-  useEffect(() => {
-    setDisplayCount(15);
-    setAllSpins([]);
-  }, [debouncedSearchTerm, startDate, endDate, dateSearchEnabled, stationId]);
-
-  const fetchSpins = async (): Promise<Spin[]> => {
-    const effectiveStartDate = dateSearchEnabled ? startDate : '';
-    const effectiveEndDate = dateSearchEnabled ? endDate : '';
-    
-    console.log('Fetching spins with params:', {
-      endpoint: 'spins',
-      station: stationId,
-      count: maxItems.toString(),
-      search: debouncedSearchTerm,
-      start: effectiveStartDate,
-      end: effectiveEndDate,
-      dateSearchEnabled
-    });
-
-    const { data, error } = await supabase.functions.invoke('spinitron-proxy', {
-      body: {
-        endpoint: 'spins',
-        station: stationId,
-        count: maxItems.toString(),
-        search: debouncedSearchTerm,
-        start: effectiveStartDate,
-        end: effectiveEndDate,
-        use_cache: 'false'
-      }
-    });
-
-    if (error) {
-      console.error('Error fetching spins:', error);
-      throw error;
-    }
-
-    console.log('Received spins:', data.items?.length || 0, 'for station:', stationId);
-    return data.items || [];
-  };
+  const {
+    searchTerm,
+    setSearchTerm,
+    debouncedSearchTerm,
+    dateSearchEnabled,
+    setDateSearchEnabled,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    currentTime,
+    allSpins,
+    setAllSpins,
+    displayCount,
+    setDisplayCount,
+    loadingMore,
+    setLoadingMore
+  } = usePlaylistState({ 
+    spins: [], 
+    hasActiveFilters: false, 
+    initialStartDate, 
+    initialEndDate 
+  });
 
   const effectiveStartDate = dateSearchEnabled ? startDate : '';
   const effectiveEndDate = dateSearchEnabled ? endDate : '';
-
-  // Check if we have active filters
   const hasActiveFilters = debouncedSearchTerm || effectiveStartDate || effectiveEndDate;
 
-  const { data: spins = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['spins', stationId, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate, dateSearchEnabled],
-    queryFn: fetchSpins,
-    refetchInterval: autoUpdate && !hasActiveFilters ? 5000 : false,
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
+  const { data: spins = [], isLoading, error, refetch } = useSpinData({
+    stationId,
+    maxItems,
+    debouncedSearchTerm,
+    startDate: effectiveStartDate,
+    endDate: effectiveEndDate,
+    dateSearchEnabled,
+    autoUpdate,
+    hasActiveFilters
   });
 
-  // Update allSpins when new data comes in and ensure fresh data replaces old
-  useEffect(() => {
-    if (spins && spins.length > 0) {
-      // For live data (no filters), always replace the data to show latest songs
-      if (!hasActiveFilters) {
-        setAllSpins(spins);
-        setDisplayCount(15); // Reset display count for fresh live data
-      } else {
-        // For filtered data, keep the existing behavior
-        setAllSpins(spins);
-      }
-    }
-  }, [spins, hasActiveFilters]);
+  // Update state hook with actual spins data
+  const playlistState = usePlaylistState({ 
+    spins, 
+    hasActiveFilters, 
+    initialStartDate, 
+    initialEndDate 
+  });
 
-  const displayedSpins = allSpins.slice(0, displayCount);
-  const hasMoreSpins = displayCount < allSpins.length;
+  const displayedSpins = playlistState.allSpins.slice(0, playlistState.displayCount);
+  const hasMoreSpins = playlistState.displayCount < playlistState.allSpins.length;
 
   const handleLoadMore = async () => {
-    setLoadingMore(true);
+    playlistState.setLoadingMore(true);
     // Simulate loading delay for better UX
     setTimeout(() => {
-      setDisplayCount(prev => Math.min(prev + 15, allSpins.length));
-      setLoadingMore(false);
+      playlistState.setDisplayCount(prev => Math.min(prev + 15, playlistState.allSpins.length));
+      playlistState.setLoadingMore(false);
     }, 500);
   };
 
-  // Improved "now playing" detection
-  const isCurrentlyPlaying = (spin: Spin, index: number) => {
-    // Only show "now playing" for live data (no active filters)
-    if (hasActiveFilters) return false;
-    
-    const startTime = new Date(spin.start);
-    const endTime = new Date(startTime.getTime() + (spin.duration || 180) * 1000);
-    
-    // Check if current time is within the song's play window
-    const isWithinTimeWindow = currentTime >= startTime && currentTime <= endTime;
-    
-    // For live playlist, the currently playing song should be the most recent one that's within its time window
-    if (index === 0 && isWithinTimeWindow) {
-      return true;
-    }
-    
-    // Check if this song is playing now (useful for historical data that might be current)
-    return isWithinTimeWindow;
-  };
-
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
   const handleDateChange = (newStartDate: string, newEndDate: string) => {
-    setStartDate(newStartDate);
-    setEndDate(newEndDate);
+    playlistState.setStartDate(newStartDate);
+    playlistState.setEndDate(newEndDate);
   };
 
   const handleDateClear = () => {
-    setStartDate('');
-    setEndDate('');
+    playlistState.setStartDate('');
+    playlistState.setEndDate('');
   };
 
   const handleDateSearchToggle = (enabled: boolean) => {
     console.log('Date search toggled:', enabled);
-    setDateSearchEnabled(enabled);
+    playlistState.setDateSearchEnabled(enabled);
     if (!enabled) {
       // Clear date filters when disabling date search
-      setStartDate('');
-      setEndDate('');
+      playlistState.setStartDate('');
+      playlistState.setEndDate('');
       // Reset display count and clear cached spins to force fresh data
-      setDisplayCount(15);
-      setAllSpins([]);
+      playlistState.setDisplayCount(15);
+      playlistState.setAllSpins([]);
       // Trigger a refetch to get live data immediately
       setTimeout(() => {
         refetch();
@@ -220,7 +116,7 @@ const SpinitinonPlaylist = ({
   };
 
   const isEmbedMode = window.location.pathname === '/embed';
-  const hasDateFilter = dateSearchEnabled && (startDate || endDate);
+  const hasDateFilter = playlistState.dateSearchEnabled && (playlistState.startDate || playlistState.endDate);
 
   if (error) {
     return (
@@ -238,121 +134,44 @@ const SpinitinonPlaylist = ({
     );
   }
 
-  const getTitle = () => {
-    if (hasDateFilter && debouncedSearchTerm) {
-      return 'Filtered Results';
-    } else if (hasDateFilter) {
-      return 'Date Range Results';
-    } else if (debouncedSearchTerm) {
-      return 'Search Results';
-    }
-    return 'Live Playlist';
-  };
+  const title = getPlaylistTitle(hasDateFilter, playlistState.debouncedSearchTerm);
 
   return (
     <Card className={`w-full ${isEmbedMode ? 'h-full flex flex-col' : ''}`}>
-      <CardHeader className={compact ? "pb-3" : ""}>
-        <CardTitle className={`flex items-center gap-2 ${compact ? "text-lg" : ""}`}>
-          <Radio className={`${compact ? "h-4 w-4" : "h-5 w-5"}`} />
-          {getTitle()}
-          <Badge 
-            variant="secondary" 
-            className="ml-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-2 py-1 font-semibold tracking-wide shadow-sm"
-          >
-            BETA
-          </Badge>
-          {isLoading && (
-            <div className="animate-pulse">
-              <div className="h-2 w-2 bg-red-500 rounded-full"></div>
-            </div>
-          )}
-        </CardTitle>
-        
-        {showSearch && (
-          <SearchFilters
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            dateSearchEnabled={dateSearchEnabled}
-            setDateSearchEnabled={handleDateSearchToggle}
-            startDate={startDate}
-            endDate={endDate}
-            onDateChange={handleDateChange}
-            onDateClear={handleDateClear}
-            formatDate={formatDate}
-          />
-        )}
-      </CardHeader>
+      <PlaylistHeader
+        title={title}
+        compact={compact}
+        isLoading={isLoading}
+        showSearch={showSearch}
+        searchTerm={playlistState.searchTerm}
+        setSearchTerm={playlistState.setSearchTerm}
+        dateSearchEnabled={playlistState.dateSearchEnabled}
+        setDateSearchEnabled={handleDateSearchToggle}
+        startDate={playlistState.startDate}
+        endDate={playlistState.endDate}
+        onDateChange={handleDateChange}
+        onDateClear={handleDateClear}
+        formatDate={formatDate}
+      />
       
       <CardContent className={`${compact ? "pt-0" : ""} ${isEmbedMode ? 'flex-1 flex flex-col min-h-0' : ''}`}>
         <div className={isEmbedMode ? "flex-1 flex flex-col min-h-0" : ""}>
-          <ScrollArea 
-            className={
-              isEmbedMode 
-                ? "flex-1" 
-                : compact 
-                  ? "h-64" 
-                  : "h-96"
-            } 
-            type="always"
-          >
-            {displayedSpins.length === 0 ? (
-              <div className="text-center py-8">
-                <Music className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-muted-foreground">
-                  {hasActiveFilters ? 'No matching songs found' : 'No songs playing right now'}
-                </p>
-              </div>
-            ) : layout === 'grid' ? (
-              // Grid Layout
-              <div className={`grid gap-4 ${compact ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
-                {displayedSpins.map((spin, index) => (
-                  <GridItem 
-                    key={`${spin.id}-${index}`} 
-                    spin={spin} 
-                    index={index}
-                    isCurrentlyPlaying={isCurrentlyPlaying(spin, index)}
-                    formatTime={formatTime}
-                  />
-                ))}
-              </div>
-            ) : (
-              // List Layout
-              <div className="space-y-3">
-                {displayedSpins.map((spin, index) => (
-                  <ListItem
-                    key={`${spin.id}-${index}`}
-                    spin={spin}
-                    index={index}
-                    isCurrentlyPlaying={isCurrentlyPlaying(spin, index)}
-                    compact={compact}
-                    formatTime={formatTime}
-                    formatDate={formatDate}
-                  />
-                ))}
-              </div>
-            )}
-          </ScrollArea>
+          <PlaylistContent
+            displayedSpins={displayedSpins}
+            hasActiveFilters={hasActiveFilters}
+            layout={layout}
+            compact={compact}
+            isEmbedMode={isEmbedMode}
+            isCurrentlyPlaying={(spin, index) => isCurrentlyPlaying(spin, index, playlistState.currentTime, hasActiveFilters)}
+            formatTime={formatTime}
+            formatDate={formatDate}
+          />
           
-          {/* Load More Button */}
-          {hasMoreSpins && (
-            <div className="mt-4 flex justify-center">
-              <Button
-                variant="outline"
-                onClick={handleLoadMore}
-                disabled={loadingMore}
-                className="w-full sm:w-auto"
-              >
-                {loadingMore ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  'Load More'
-                )}
-              </Button>
-            </div>
-          )}
+          <LoadMoreButton
+            hasMoreSpins={hasMoreSpins}
+            loadingMore={playlistState.loadingMore}
+            onLoadMore={handleLoadMore}
+          />
         </div>
       </CardContent>
     </Card>
