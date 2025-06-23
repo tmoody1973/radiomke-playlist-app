@@ -91,7 +91,7 @@ export const useSpinData = ({
       }));
     }
 
-    // Otherwise, fetch live data from API
+    // For live data, always fetch from API and merge with recent database entries
     const effectiveStartDate = dateSearchEnabled ? startDate : '';
     const effectiveEndDate = dateSearchEnabled ? endDate : '';
     
@@ -106,7 +106,8 @@ export const useSpinData = ({
       timestamp: new Date().toISOString()
     });
 
-    const { data, error } = await supabase.functions.invoke('spinitron-proxy', {
+    // Fetch fresh data from API
+    const { data: apiData, error: apiError } = await supabase.functions.invoke('spinitron-proxy', {
       body: {
         endpoint: 'spins',
         station: stationId,
@@ -114,18 +115,95 @@ export const useSpinData = ({
         search: debouncedSearchTerm,
         start: effectiveStartDate,
         end: effectiveEndDate,
-        use_cache: 'false', // Always fetch fresh data for live updates
+        use_cache: 'false',
         _cache_bust: Date.now().toString()
       }
     });
 
-    if (error) {
-      console.error('Error fetching spins:', error);
-      throw error;
+    if (apiError) {
+      console.error('Error fetching from API:', apiError);
+      // Fallback to database if API fails
+      console.log('API failed, falling back to database cache');
+      
+      const { data: fallbackData, error: dbError } = await supabase
+        .from('songs')
+        .select('*')
+        .eq('station_id', stationId)
+        .order('start_time', { ascending: false })
+        .limit(maxItems);
+
+      if (dbError) {
+        console.error('Database fallback also failed:', dbError);
+        throw apiError; // Throw original API error
+      }
+
+      return (fallbackData || []).map(song => ({
+        id: song.spinitron_id,
+        artist: song.artist,
+        song: song.song,
+        start: song.start_time,
+        duration: song.duration || 0,
+        composer: '',
+        label: song.label || '',
+        release: song.release || '',
+        image: song.image || ''
+      }));
     }
 
-    console.log('Received live spins:', data.items?.length || 0, 'for station:', stationId, 'at', new Date().toISOString());
-    return data.items || [];
+    const apiSpins = apiData.items || [];
+    console.log('Received API spins:', apiSpins.length, 'for station:', stationId);
+
+    // Also fetch recent songs from database to ensure we don't miss any
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { data: recentDbSpins } = await supabase
+      .from('songs')
+      .select('*')
+      .eq('station_id', stationId)
+      .gte('start_time', oneHourAgo)
+      .order('start_time', { ascending: false });
+
+    // Merge API data with recent database data, removing duplicates
+    const allSpins = new Map();
+    
+    // Add API spins first (they take priority)
+    apiSpins.forEach((spin: any) => {
+      allSpins.set(spin.id, {
+        id: spin.id,
+        artist: spin.artist,
+        song: spin.song,
+        start: spin.start,
+        duration: spin.duration || 0,
+        composer: '',
+        label: spin.label || '',
+        release: spin.release || '',
+        image: spin.image || ''
+      });
+    });
+
+    // Add recent database spins that aren't already in API results
+    (recentDbSpins || []).forEach(dbSpin => {
+      if (!allSpins.has(dbSpin.spinitron_id)) {
+        allSpins.set(dbSpin.spinitron_id, {
+          id: dbSpin.spinitron_id,
+          artist: dbSpin.artist,
+          song: dbSpin.song,
+          start: dbSpin.start_time,
+          duration: dbSpin.duration || 0,
+          composer: '',
+          label: dbSpin.label || '',
+          release: dbSpin.release || '',
+          image: dbSpin.image || ''
+        });
+      }
+    });
+
+    // Convert back to array and sort by start time (most recent first)
+    const mergedSpins = Array.from(allSpins.values()).sort((a, b) => 
+      new Date(b.start).getTime() - new Date(a.start).getTime()
+    );
+
+    console.log('Merged spins total:', mergedSpins.length, 'for station:', stationId);
+    return mergedSpins.slice(0, maxItems);
   };
 
   const effectiveStartDate = dateSearchEnabled ? startDate : '';
@@ -134,13 +212,17 @@ export const useSpinData = ({
   return useQuery({
     queryKey: ['spins', stationId, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate, dateSearchEnabled, hasActiveFilters],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate && !hasActiveFilters ? 5000 : false, // Reduced from 10 seconds to 5 seconds for faster updates
-    staleTime: hasActiveFilters ? 30000 : 0, // Live data is immediately stale
-    gcTime: hasActiveFilters ? 300000 : 30000, // Reduced cache time for live data
+    refetchInterval: autoUpdate && !hasActiveFilters ? 3000 : false, // Faster updates (3 seconds) to catch missed songs
+    staleTime: hasActiveFilters ? 30000 : 0,
+    gcTime: hasActiveFilters ? 300000 : 10000, // Shorter cache time for live data
     refetchOnWindowFocus: !hasActiveFilters,
     refetchOnMount: true,
     refetchIntervalInBackground: autoUpdate && !hasActiveFilters,
-    // Force network requests for live data
-    networkMode: hasActiveFilters ? 'online' : 'always',
+    networkMode: 'always', // Always try to fetch, even if offline
+    retry: (failureCount, error) => {
+      // Retry API failures up to 2 times, then fall back to database
+      if (failureCount < 2) return true;
+      return false;
+    },
   });
 };
