@@ -28,7 +28,7 @@ export const useSpotifyData = (artist: string, song: string) => {
       setLoading(true);
       
       try {
-        // Check if we have cached data (you could implement local storage caching here)
+        // Check if we have cached data
         const cacheKey = `${artist}-${song}`.toLowerCase().replace(/[^a-z0-9]/g, '');
         const cached = localStorage.getItem(`spotify-${cacheKey}`);
         
@@ -44,6 +44,8 @@ export const useSpotifyData = (artist: string, song: string) => {
           }
         }
 
+        console.log(`Fetching Spotify data for: ${artist} - ${song}`);
+
         // Fetch from Spotify API
         const { data, error } = await supabase.functions.invoke('spotify-search', {
           body: { artist, song }
@@ -51,8 +53,10 @@ export const useSpotifyData = (artist: string, song: string) => {
 
         if (error) {
           console.error('Error fetching Spotify data:', error);
+          // Don't throw error, just set to null so UI doesn't break
           setSpotifyData(null);
         } else if (data?.found) {
+          console.log('Spotify data found:', data);
           const newSpotifyData: SpotifyData = {
             albumName: data.albumName,
             albumArt: data.albumArt,
@@ -73,6 +77,7 @@ export const useSpotifyData = (artist: string, song: string) => {
           };
           localStorage.setItem(`spotify-${cacheKey}`, JSON.stringify(cacheData));
         } else {
+          console.log('No Spotify data found for:', artist, '-', song);
           setSpotifyData(null);
         }
       } catch (error) {

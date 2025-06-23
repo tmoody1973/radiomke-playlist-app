@@ -30,8 +30,10 @@ serve(async (req) => {
 
   try {
     const { artist, song } = await req.json();
+    console.log(`Searching for: "${song}" by "${artist}"`);
 
     if (!artist || !song) {
+      console.error('Missing artist or song parameter');
       return new Response(
         JSON.stringify({ error: 'Artist and song are required' }),
         { 
@@ -47,15 +49,19 @@ serve(async (req) => {
     if (!clientId || !clientSecret) {
       console.error('Missing Spotify credentials');
       return new Response(
-        JSON.stringify({ error: 'Spotify credentials not configured' }),
+        JSON.stringify({ 
+          found: false, 
+          error: 'Spotify credentials not configured' 
+        }),
         { 
-          status: 500, 
+          status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
     // Get Spotify access token
+    console.log('Getting Spotify access token...');
     const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
       headers: {
@@ -66,11 +72,14 @@ serve(async (req) => {
     });
 
     if (!tokenResponse.ok) {
-      console.error('Failed to get Spotify token:', tokenResponse.status);
+      console.error('Failed to get Spotify token:', await tokenResponse.text());
       return new Response(
-        JSON.stringify({ error: 'Failed to authenticate with Spotify' }),
+        JSON.stringify({ 
+          found: false, 
+          error: 'Failed to authenticate with Spotify' 
+        }),
         { 
-          status: 500, 
+          status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
@@ -78,9 +87,12 @@ serve(async (req) => {
 
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
+    console.log('Got Spotify access token');
 
     // Search for the track
     const searchQuery = encodeURIComponent(`track:"${song}" artist:"${artist}"`);
+    console.log('Search query:', searchQuery);
+    
     const searchResponse = await fetch(
       `https://api.spotify.com/v1/search?q=${searchQuery}&type=track&limit=1`,
       {
@@ -91,19 +103,24 @@ serve(async (req) => {
     );
 
     if (!searchResponse.ok) {
-      console.error('Spotify search failed:', searchResponse.status);
+      console.error('Spotify search failed:', await searchResponse.text());
       return new Response(
-        JSON.stringify({ error: 'Failed to search Spotify' }),
+        JSON.stringify({ 
+          found: false, 
+          error: 'Failed to search Spotify' 
+        }),
         { 
-          status: 500, 
+          status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
     const searchData: SpotifySearchResponse = await searchResponse.json();
+    console.log('Search results:', searchData.tracks.items.length, 'tracks found');
     
     if (searchData.tracks.items.length === 0) {
+      console.log('No tracks found for query');
       return new Response(
         JSON.stringify({ found: false }),
         { 
@@ -115,6 +132,9 @@ serve(async (req) => {
     const track = searchData.tracks.items[0];
     const albumArt = track.album.images.find(img => img.height >= 300)?.url || 
                     track.album.images[0]?.url || null;
+
+    console.log('Track found:', track.name, 'by', track.artists[0]?.name);
+    console.log('Preview URL available:', !!track.preview_url);
 
     return new Response(
       JSON.stringify({
@@ -134,11 +154,12 @@ serve(async (req) => {
     console.error('Spotify search error:', error);
     return new Response(
       JSON.stringify({ 
+        found: false,
         error: 'Internal server error',
         message: error.message 
       }),
       { 
-        status: 500, 
+        status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
