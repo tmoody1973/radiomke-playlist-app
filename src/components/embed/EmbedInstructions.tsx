@@ -16,6 +16,17 @@ const EmbedInstructions = () => {
           <p>5. The widget will automatically update with live playlist data</p>
           <p><strong>Auto-resize:</strong> The iframe will automatically expand when users click "Load More"</p>
         </div>
+        
+        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">📏 Height Recommendations</h4>
+          <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+            <p><strong>600px:</strong> Shows 7-8 songs (compact, good for sidebars)</p>
+            <p><strong>700px:</strong> Shows 9-10 songs (balanced height)</p>
+            <p><strong>800px:</strong> Shows 11-13 songs (recommended for main content)</p>
+            <p><strong>1200px:</strong> Shows all 15 songs without scrolling (very tall)</p>
+            <p className="text-xs mt-2 opacity-80">💡 Most websites work best with 700-800px height</p>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
