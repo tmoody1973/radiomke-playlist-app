@@ -43,7 +43,20 @@ const SpinitinonPlaylist = ({
 
   const effectiveStartDate = playlistState.dateSearchEnabled ? playlistState.startDate : '';
   const effectiveEndDate = playlistState.dateSearchEnabled ? playlistState.endDate : '';
-  const hasActiveFilters = Boolean(playlistState.debouncedSearchTerm || effectiveStartDate || effectiveEndDate);
+  
+  // Calculate hasActiveFilters more accurately
+  const hasActiveFilters = Boolean(
+    playlistState.debouncedSearchTerm.trim() || 
+    (playlistState.dateSearchEnabled && (effectiveStartDate || effectiveEndDate))
+  );
+
+  console.log('Active filters check:', {
+    searchTerm: playlistState.debouncedSearchTerm,
+    dateSearchEnabled: playlistState.dateSearchEnabled,
+    startDate: effectiveStartDate,
+    endDate: effectiveEndDate,
+    hasActiveFilters
+  });
 
   const { data: spins = [], isLoading, error, refetch } = useSpinData({
     stationId,

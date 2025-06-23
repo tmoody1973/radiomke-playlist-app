@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -36,10 +35,66 @@ export const useSpinData = ({
   hasActiveFilters
 }: UseSpinDataProps) => {
   const fetchSpins = async (): Promise<Spin[]> => {
+    // If we have active filters (search term or date filters), search the database
+    if (hasActiveFilters) {
+      console.log('Searching database with filters:', {
+        station: stationId,
+        search: debouncedSearchTerm,
+        startDate: dateSearchEnabled ? startDate : '',
+        endDate: dateSearchEnabled ? endDate : '',
+        maxItems
+      });
+
+      let query = supabase
+        .from('songs')
+        .select('*')
+        .eq('station_id', stationId)
+        .order('start_time', { ascending: false })
+        .limit(maxItems);
+
+      // Add search filter if there's a search term
+      if (debouncedSearchTerm) {
+        query = query.or(`artist.ilike.%${debouncedSearchTerm}%,song.ilike.%${debouncedSearchTerm}%`);
+      }
+
+      // Add date filters if enabled
+      if (dateSearchEnabled) {
+        if (startDate) {
+          query = query.gte('start_time', startDate);
+        }
+        if (endDate) {
+          query = query.lte('start_time', endDate);
+        }
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Database search error:', error);
+        throw error;
+      }
+
+      console.log('Database search results:', data?.length || 0, 'songs found');
+
+      // Transform database results to match API format
+      return (data || []).map(song => ({
+        id: song.spinitron_id,
+        artist: song.artist,
+        song: song.song,
+        start: song.start_time,
+        duration: song.duration || 0,
+        composer: '',
+        label: song.label || '',
+        release: song.release || '',
+        image: song.image || ''
+      }));
+    }
+
+    // Otherwise, fetch live data from API
     const effectiveStartDate = dateSearchEnabled ? startDate : '';
     const effectiveEndDate = dateSearchEnabled ? endDate : '';
     
-    console.log('Fetching spins with params:', {
+    console.log('Fetching live spins with params:', {
       endpoint: 'spins',
       station: stationId,
       count: maxItems.toString(),
@@ -58,8 +113,8 @@ export const useSpinData = ({
         search: debouncedSearchTerm,
         start: effectiveStartDate,
         end: effectiveEndDate,
-        use_cache: hasActiveFilters ? 'true' : 'false', // Use cache for searches, fresh data for live
-        _cache_bust: Date.now().toString() // Force cache busting
+        use_cache: hasActiveFilters ? 'true' : 'false',
+        _cache_bust: Date.now().toString()
       }
     });
 
@@ -68,7 +123,7 @@ export const useSpinData = ({
       throw error;
     }
 
-    console.log('Received spins:', data.items?.length || 0, 'for station:', stationId, 'at', new Date().toISOString());
+    console.log('Received live spins:', data.items?.length || 0, 'for station:', stationId, 'at', new Date().toISOString());
     return data.items || [];
   };
 
@@ -76,13 +131,13 @@ export const useSpinData = ({
   const effectiveEndDate = dateSearchEnabled ? endDate : '';
 
   return useQuery({
-    queryKey: ['spins', stationId, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate, dateSearchEnabled],
+    queryKey: ['spins', stationId, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate, dateSearchEnabled, hasActiveFilters],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate && !hasActiveFilters ? 10000 : false, // Refetch every 10 seconds for live data
-    staleTime: hasActiveFilters ? 30000 : 0, // Cache search results for 30s, fresh data for live
-    gcTime: hasActiveFilters ? 300000 : 0, // Keep search results for 5 minutes, no cache for live
-    refetchOnWindowFocus: !hasActiveFilters, // Only refetch on focus for live data
+    refetchInterval: autoUpdate && !hasActiveFilters ? 10000 : false,
+    staleTime: hasActiveFilters ? 30000 : 0,
+    gcTime: hasActiveFilters ? 300000 : 0,
+    refetchOnWindowFocus: !hasActiveFilters,
     refetchOnMount: true,
-    refetchIntervalInBackground: autoUpdate && !hasActiveFilters, // Continue updating in background
+    refetchIntervalInBackground: autoUpdate && !hasActiveFilters,
   });
 };
