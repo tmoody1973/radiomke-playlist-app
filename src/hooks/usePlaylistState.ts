@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useCallback } from 'react';
 
 interface Spin {
   id: number;
@@ -61,19 +62,15 @@ export const usePlaylistState = ({ spins, hasActiveFilters, initialStartDate, in
     setAllSpins([]);
   }, [debouncedSearchTerm, startDate, endDate, dateSearchEnabled]);
 
-  // Update allSpins when new data comes in and ensure fresh data replaces old
-  useEffect(() => {
-    if (spins && spins.length > 0) {
-      // For live data (no filters), always replace the data to show latest songs
-      if (!hasActiveFilters) {
-        setAllSpins(spins);
-        setDisplayCount(15); // Reset display count for fresh live data
-      } else {
-        // For filtered data, keep the existing behavior
-        setAllSpins(spins);
-      }
-    }
-  }, [spins, hasActiveFilters]);
+  // Memoized callback for setting all spins
+  const setAllSpinsCallback = useCallback((newSpins: Spin[]) => {
+    setAllSpins(newSpins);
+  }, []);
+
+  // Memoized callback for setting display count
+  const setDisplayCountCallback = useCallback((count: number | ((prev: number) => number)) => {
+    setDisplayCount(count);
+  }, []);
 
   return {
     searchTerm,
@@ -87,9 +84,9 @@ export const usePlaylistState = ({ spins, hasActiveFilters, initialStartDate, in
     setEndDate,
     currentTime,
     allSpins,
-    setAllSpins,
+    setAllSpins: setAllSpinsCallback,
     displayCount,
-    setDisplayCount,
+    setDisplayCount: setDisplayCountCallback,
     loadingMore,
     setLoadingMore
   };

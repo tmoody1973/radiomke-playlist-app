@@ -55,22 +55,34 @@ const SpinitinonPlaylist = ({
     hasActiveFilters
   });
 
-  // Update playlist state when new data comes in
+  // Update playlist state when new data comes in - using a key-based approach for better tracking
   React.useEffect(() => {
     if (spins && spins.length > 0) {
-      console.log('Updating playlist with', spins.length, 'spins, hasActiveFilters:', hasActiveFilters);
-      // Always update with fresh data
-      playlistState.setAllSpins(spins);
+      console.log('🔄 Updating playlist with', spins.length, 'spins, hasActiveFilters:', hasActiveFilters, 'timestamp:', new Date().toISOString());
+      
+      // Always update with fresh data, ensuring component re-renders
+      playlistState.setAllSpins([...spins]); // Create new array reference to trigger re-render
+      
       // Reset display count for live data to show latest songs
       if (!hasActiveFilters) {
         playlistState.setDisplayCount(15);
       }
     } else if (!isLoading && !hasActiveFilters) {
       // If no spins and not loading and no filters, clear the state
-      console.log('Clearing playlist state - no spins received');
+      console.log('🧹 Clearing playlist state - no spins received');
       playlistState.setAllSpins([]);
     }
-  }, [spins, hasActiveFilters, isLoading]);
+  }, [spins, hasActiveFilters, isLoading, playlistState.setAllSpins, playlistState.setDisplayCount]);
+
+  // Force a re-render when live data comes in by tracking the latest song
+  const latestSong = React.useMemo(() => {
+    if (!hasActiveFilters && playlistState.allSpins.length > 0) {
+      const latest = playlistState.allSpins[0];
+      console.log('🎵 Latest song:', latest?.artist, '-', latest?.song, 'at', latest?.start);
+      return latest;
+    }
+    return null;
+  }, [playlistState.allSpins, hasActiveFilters]);
 
   const displayedSpins = playlistState.allSpins.slice(0, playlistState.displayCount);
   const hasMoreSpins = playlistState.displayCount < playlistState.allSpins.length;
