@@ -128,11 +128,6 @@ const EmbedDemo = () => {
           </p>
         </div>
 
-        {/* SEO Information Section */}
-        <div className="mb-8">
-          <SEORecommendations />
-        </div>
-
         {/* Instructions moved to two columns */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           <Card>
@@ -143,7 +138,7 @@ const EmbedDemo = () => {
                 <p>1. Select your preferred radio station from the available options</p>
                 <p>2. Customize the settings below to match your needs</p>
                 <p>3. Copy the generated SEO-friendly embed code</p>
-                <p>4. Follow the SEO recommendations above for best results</p>
+                <p>4. Follow the SEO recommendations below for best results</p>
                 <p><strong>Search Engine Benefits:</strong> Better indexing, rich snippets, and improved page relevance</p>
               </div>
             </CardContent>
@@ -163,7 +158,7 @@ const EmbedDemo = () => {
           </Card>
         </div>
         
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-8 mb-8">
           {/* Configuration Panel */}
           <Card>
             <CardHeader>
@@ -209,6 +204,11 @@ const EmbedDemo = () => {
 
           {/* Preview Panel */}
           <EmbedPreview config={embedConfig} />
+        </div>
+
+        {/* SEO Information Section - moved below embed code */}
+        <div className="mb-8">
+          <SEORecommendations />
         </div>
       </div>
     </div>
