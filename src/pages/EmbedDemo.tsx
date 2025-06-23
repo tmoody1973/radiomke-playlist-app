@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -9,7 +8,6 @@ import { supabase } from '@/integrations/supabase/client';
 import EmbedConfiguration from '@/components/embed/EmbedConfiguration';
 import EmbedCodeTabs from '@/components/embed/EmbedCodeTabs';
 import EmbedPreview from '@/components/embed/EmbedPreview';
-import EmbedInstructions from '@/components/embed/EmbedInstructions';
 
 interface Station {
   id: string;
@@ -128,6 +126,38 @@ const EmbedDemo = () => {
             Customize and embed the Spinitron playlist widget on your website
           </p>
         </div>
+
+        {/* Instructions moved to top in two columns */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <Card>
+            <CardContent className="pt-6">
+              <h3 className="text-lg font-semibold mb-2">How to Use</h3>
+              <div className="text-sm text-muted-foreground space-y-2">
+                <p><strong>iFrame Method:</strong> Auto-resizing iframe that adjusts height when content changes</p>
+                <p><strong>JavaScript Method:</strong> Better for SEO and customization - content is rendered directly on your page</p>
+                <p>1. Select your preferred radio station from the available options</p>
+                <p>2. Customize the settings below to match your needs</p>
+                <p>3. Choose between iFrame or JavaScript embed method</p>
+                <p>4. Copy the generated embed code and paste it into your website's HTML</p>
+                <p>5. The widget will automatically update with live playlist data</p>
+                <p><strong>Auto-resize:</strong> The iframe will automatically expand when users click "Load More"</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <h3 className="text-lg font-semibold mb-2">📏 Height Recommendations</h3>
+              <div className="text-sm text-muted-foreground space-y-2">
+                <p><strong>600px:</strong> Shows 7-8 songs (compact, good for sidebars)</p>
+                <p><strong>700px:</strong> Shows 9-10 songs (balanced height)</p>
+                <p><strong>800px:</strong> Shows 11-13 songs (recommended for main content)</p>
+                <p><strong>1200px:</strong> Shows all 15 songs without scrolling (very tall)</p>
+                <p className="text-sm mt-3 text-blue-600 dark:text-blue-400">💡 Most websites work best with 700-800px height</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
         
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Configuration Panel */}
@@ -175,10 +205,6 @@ const EmbedDemo = () => {
 
           {/* Preview Panel */}
           <EmbedPreview config={embedConfig} />
-        </div>
-
-        <div className="mt-8 text-center">
-          <EmbedInstructions />
         </div>
       </div>
     </div>
