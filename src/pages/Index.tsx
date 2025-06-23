@@ -4,8 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Code, ExternalLink, Heart, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
 const Index = () => {
+  const [selectedStation, setSelectedStation] = useState('hyfin');
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="container mx-auto py-8">
@@ -24,6 +29,33 @@ const Index = () => {
               <h2 className="text-2xl font-semibold mb-4">Playlist App</h2>
             </div>
           </div>
+          
+          {/* Station Selector */}
+          <Card className="max-w-md mx-auto mb-6 border-orange-200 shadow-md">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <Label className="text-lg font-semibold mb-4 block">Select Station</Label>
+                <RadioGroup 
+                  value={selectedStation} 
+                  onValueChange={setSelectedStation}
+                  className="flex justify-center gap-8"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="hyfin" id="hyfin" />
+                    <Label htmlFor="hyfin" className="font-medium cursor-pointer">
+                      HYFIN
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="88nine" id="88nine" />
+                    <Label htmlFor="88nine" className="font-medium cursor-pointer">
+                      88Nine
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </CardContent>
+          </Card>
           
           <p className="text-xl text-muted-foreground mb-6 max-w-2xl mx-auto">
             Experience Milwaukee's independent radio with live playlist updates, 
@@ -60,6 +92,7 @@ const Index = () => {
         </div>
         
         <SpinitinonPlaylist 
+          stationId={selectedStation}
           autoUpdate={true}
           showSearch={true}
           maxItems={50}
