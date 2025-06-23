@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -136,12 +135,19 @@ const SpinitinonPlaylist = ({
     refetchOnMount: true,
   });
 
-  // Update allSpins when new data comes in
+  // Update allSpins when new data comes in and ensure fresh data replaces old
   useEffect(() => {
     if (spins && spins.length > 0) {
-      setAllSpins(spins);
+      // For live data (no filters), always replace the data to show latest songs
+      if (!hasActiveFilters) {
+        setAllSpins(spins);
+        setDisplayCount(15); // Reset display count for fresh live data
+      } else {
+        // For filtered data, keep the existing behavior
+        setAllSpins(spins);
+      }
     }
-  }, [spins]);
+  }, [spins, hasActiveFilters]);
 
   const displayedSpins = allSpins.slice(0, displayCount);
   const hasMoreSpins = displayCount < allSpins.length;
@@ -206,7 +212,7 @@ const SpinitinonPlaylist = ({
       // Reset display count and clear cached spins to force fresh data
       setDisplayCount(15);
       setAllSpins([]);
-      // Trigger a refetch to get live data
+      // Trigger a refetch to get live data immediately
       setTimeout(() => {
         refetch();
       }, 100);
