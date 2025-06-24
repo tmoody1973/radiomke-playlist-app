@@ -1,3 +1,4 @@
+
 import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Play } from 'lucide-react';
@@ -20,6 +21,13 @@ interface Spin {
 interface AudioPlayer {
   currentlyPlaying: string | null;
   isLoading: string | null;
+  playAudio: (previewUrl: string, trackId: string) => void;
+  stopAudio: () => void;
+}
+
+interface YouTubePlayer {
+  currentlyPlaying: string | null;
+  isLoading: string | null;
   playVideo: (embedUrl: string, trackId: string) => void;
   stopVideo: () => void;
 }
@@ -30,9 +38,17 @@ interface GridItemProps {
   isCurrentlyPlaying: boolean;
   formatTime: (dateString: string) => string;
   audioPlayer: AudioPlayer;
+  youtubePlayer: YouTubePlayer;
 }
 
-export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, audioPlayer }: GridItemProps) => {
+export const GridItem = ({ 
+  spin, 
+  index, 
+  isCurrentlyPlaying, 
+  formatTime, 
+  audioPlayer, 
+  youtubePlayer 
+}: GridItemProps) => {
   const trackId = `${spin.artist}-${spin.song}-${spin.id}`;
 
   return (
@@ -51,15 +67,24 @@ export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, audioPla
           song={spin.song}
         />
         
-        {/* YouTube Preview Button */}
-        <div className="absolute top-2 right-2 z-10">
-          <YouTubePreviewButton
+        {/* Preview Buttons - Priority: Spotify first, then YouTube */}
+        <div className="absolute top-2 right-2 z-10 flex gap-1">
+          <AudioPreviewButton
             artist={spin.artist}
             song={spin.song}
             trackId={trackId}
             currentlyPlaying={audioPlayer.currentlyPlaying}
             isLoading={audioPlayer.isLoading}
-            onPlay={audioPlayer.playVideo}
+            onPlay={audioPlayer.playAudio}
+            size="sm"
+          />
+          <YouTubePreviewButton
+            artist={spin.artist}
+            song={spin.song}
+            trackId={trackId}
+            currentlyPlaying={youtubePlayer.currentlyPlaying}
+            isLoading={youtubePlayer.isLoading}
+            onPlay={youtubePlayer.playVideo}
             size="sm"
           />
         </div>

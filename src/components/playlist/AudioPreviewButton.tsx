@@ -24,11 +24,14 @@ export const AudioPreviewButton = ({
 }: AudioPreviewButtonProps) => {
   const { spotifyData, loading } = useSpotifyData(artist, song);
 
-  // Debug logging
-  console.log(`AudioPreviewButton for ${artist} - ${song}:`, {
+  // Enhanced debugging
+  console.log(`🎵 AudioPreviewButton for ${artist} - ${song}:`, {
     loading,
-    spotifyData,
-    hasPreviewUrl: !!spotifyData?.previewUrl
+    hasSpotifyData: !!spotifyData,
+    hasPreviewUrl: !!spotifyData?.previewUrl,
+    trackId,
+    currentlyPlaying,
+    isLoading
   });
 
   // Show loading state while fetching Spotify data
@@ -37,7 +40,7 @@ export const AudioPreviewButton = ({
       <Button
         variant="ghost"
         size="icon"
-        className={`${size === 'sm' ? 'h-6 w-6' : 'h-8 w-8'} rounded-full bg-black/20 text-white`}
+        className={`${size === 'sm' ? 'h-6 w-6' : 'h-8 w-8'} rounded-full bg-green-600/80 text-white`}
         disabled
       >
         <Loader2 className={`${size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} animate-spin`} />
@@ -45,9 +48,9 @@ export const AudioPreviewButton = ({
     );
   }
 
-  // If no Spotify data or no preview URL, don't show button
+  // Only show button if we have a Spotify preview URL
   if (!spotifyData?.previewUrl) {
-    console.log(`No preview available for ${artist} - ${song}`);
+    console.log(`❌ No Spotify preview available for ${artist} - ${song}`);
     return null;
   }
 
@@ -56,7 +59,7 @@ export const AudioPreviewButton = ({
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log(`Playing preview for ${artist} - ${song}`, spotifyData.previewUrl);
+    console.log(`🎵 Playing Spotify preview for ${artist} - ${song}`, spotifyData.previewUrl);
     onPlay(spotifyData.previewUrl!, trackId);
   };
 
@@ -70,7 +73,7 @@ export const AudioPreviewButton = ({
       size="icon"
       className={`${buttonSize} rounded-full bg-green-600 hover:bg-green-700 text-white transition-all shadow-md border border-green-500`}
       disabled={isThisTrackLoading}
-      title={`Preview ${song} by ${artist}`}
+      title={`Preview ${song} by ${artist} on Spotify`}
     >
       {isThisTrackLoading ? (
         <Loader2 className={`${iconSize} animate-spin`} />
