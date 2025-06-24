@@ -23,37 +23,24 @@ const Embed = () => {
 
   return (
     <div 
-      className="embed-container w-full h-screen"
+      className={`embed-container w-full h-screen ${theme === 'dark' ? 'dark' : ''}`}
       style={{ 
         height: height !== 'auto' ? `${height}px` : '100vh',
-        overflow: 'hidden',
-        backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-        color: theme === 'dark' ? '#ffffff' : '#1f2937'
+        overflow: 'hidden'
       }}
     >
-      <div 
-        className="h-full p-2 sm:p-4 flex flex-col"
-        style={{
-          backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-          color: theme === 'dark' ? '#ffffff' : '#1f2937'
-        }}
-      >
+      <div className={`h-full p-2 sm:p-4 flex flex-col ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
         <div className="flex-1 min-h-0">
-          <div style={{ 
-            backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-            color: theme === 'dark' ? '#ffffff' : '#1f2937'
-          }}>
-            <SpinitinonPlaylist 
-              stationId={stationId}
-              autoUpdate={autoUpdate}
-              showSearch={showSearch}
-              maxItems={maxItems}
-              compact={compact}
-              startDate={startDate}
-              endDate={endDate}
-              layout={layout}
-            />
-          </div>
+          <SpinitinonPlaylist 
+            stationId={stationId}
+            autoUpdate={autoUpdate}
+            showSearch={showSearch}
+            maxItems={maxItems}
+            compact={compact}
+            startDate={startDate}
+            endDate={endDate}
+            layout={layout}
+          />
         </div>
       </div>
     </div>
