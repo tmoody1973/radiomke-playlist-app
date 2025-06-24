@@ -1,34 +1,15 @@
-import React, { useState, useMemo } from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCustomEventMutations } from '@/hooks/useCustomEvents';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface CustomEvent {
-  id: string;
-  artist_name: string;
-  event_title: string;
-  venue_name?: string;
-  venue_city?: string;
-  venue_state?: string;
-  event_date: string;
-  event_time?: string;
-  ticket_url?: string;
-  price_min?: number;
-  price_max?: number;
-  description?: string;
-  is_active: boolean;
-  station_ids: string[];
-}
+import { CustomEvent } from '@/types/customEvent';
+import { CustomEventForm } from './CustomEventForm';
+import { CustomEventsList } from './CustomEventsList';
 
 export const CustomEventsAdmin = () => {
   const { toast } = useToast();
@@ -36,7 +17,6 @@ export const CustomEventsAdmin = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [artistSearchTerm, setArtistSearchTerm] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [formData, setFormData] = useState<Partial<CustomEvent>>({
     artist_name: '',
     event_title: '',
@@ -67,58 +47,23 @@ export const CustomEventsAdmin = () => {
     },
   });
 
-  // Fetch unique artist names from the songs table
-  const { data: artistNames, isLoading: artistsLoading } = useQuery({
-    queryKey: ['artist-names'],
-    queryFn: async () => {
-      console.log('🎵 Fetching artists from songs table...');
-      const { data, error } = await supabase
-        .from('songs')
-        .select('artist')
-        .order('artist', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching artists:', error);
-        throw error;
-      }
-      
-      console.log('🎵 Raw artist data:', data?.slice(0, 10)); // Log first 10 entries
-      
-      // Get unique artist names
-      const uniqueArtists = [...new Set(data.map(item => item.artist))].filter(Boolean).sort();
-      
-      console.log('🎵 Total unique artists found:', uniqueArtists.length);
-      console.log('🎵 First 20 artists:', uniqueArtists.slice(0, 20));
-      
-      // Check if Prince is in the list
-      const princeVariations = uniqueArtists.filter(artist => 
-        artist.toLowerCase().includes('prince')
-      );
-      console.log('🎵 Prince variations found:', princeVariations);
-      
-      return uniqueArtists;
-    },
-  });
-
-  // Filter artists based on search term
-  const filteredArtists = useMemo(() => {
-    if (!artistNames || !artistSearchTerm.trim()) return [];
-    
-    return artistNames.filter(artist =>
-      artist.toLowerCase().includes(artistSearchTerm.toLowerCase())
-    ).slice(0, 10); // Limit to 10 suggestions
-  }, [artistNames, artistSearchTerm]);
-
-  const handleArtistInputChange = (value: string) => {
-    setArtistSearchTerm(value);
-    setFormData({ ...formData, artist_name: value });
-    setShowSuggestions(value.length > 0);
-  };
-
-  const handleArtistSelect = (artistName: string) => {
-    setArtistSearchTerm(artistName);
-    setFormData({ ...formData, artist_name: artistName });
-    setShowSuggestions(false);
+  const resetForm = () => {
+    setFormData({
+      artist_name: '',
+      event_title: '',
+      venue_name: '',
+      venue_city: '',
+      venue_state: '',
+      event_date: '',
+      event_time: '',
+      ticket_url: '',
+      price_min: undefined,
+      price_max: undefined,
+      description: '',
+      is_active: true,
+      station_ids: []
+    });
+    setArtistSearchTerm('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -150,21 +95,7 @@ export const CustomEventsAdmin = () => {
         setIsCreating(false);
       }
       
-      setFormData({
-        artist_name: '',
-        event_title: '',
-        venue_name: '',
-        venue_city: '',
-        venue_state: '',
-        event_date: '',
-        event_time: '',
-        ticket_url: '',
-        price_min: undefined,
-        price_max: undefined,
-        description: '',
-        is_active: true,
-        station_ids: []
-      });
+      resetForm();
     } catch (error) {
       toast({
         title: "Error",
@@ -176,6 +107,7 @@ export const CustomEventsAdmin = () => {
 
   const handleEdit = (event: CustomEvent) => {
     setFormData(event);
+    setArtistSearchTerm(event.artist_name);
     setEditingId(event.id);
     setIsCreating(true);
   };
@@ -201,21 +133,7 @@ export const CustomEventsAdmin = () => {
   const handleCancel = () => {
     setIsCreating(false);
     setEditingId(null);
-    setFormData({
-      artist_name: '',
-      event_title: '',
-      venue_name: '',
-      venue_city: '',
-      venue_state: '',
-      event_date: '',
-      event_time: '',
-      ticket_url: '',
-      price_min: undefined,
-      price_max: undefined,
-      description: '',
-      is_active: true,
-      station_ids: []
-    });
+    resetForm();
   };
 
   if (isLoading) {
@@ -238,206 +156,23 @@ export const CustomEventsAdmin = () => {
         </CardHeader>
         <CardContent>
           {isCreating && (
-            <form onSubmit={handleSubmit} className="space-y-4 mb-6 p-4 border border-gray-200 rounded-lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="relative">
-                  <Label htmlFor="artist_name">Artist Name *</Label>
-                  <Input
-                    id="artist_name"
-                    value={artistSearchTerm}
-                    onChange={(e) => handleArtistInputChange(e.target.value)}
-                    onFocus={() => setShowSuggestions(artistSearchTerm.length > 0)}
-                    placeholder={artistsLoading ? "Loading artists..." : "Type to search artists..."}
-                    required
-                  />
-                  
-                  {/* Artist suggestions dropdown */}
-                  {showSuggestions && filteredArtists.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 z-50 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto mt-1">
-                      {filteredArtists.map((artist) => (
-                        <button
-                          key={artist}
-                          type="button"
-                          className="w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 text-gray-900 border-none bg-transparent cursor-pointer"
-                          onClick={() => handleArtistSelect(artist)}
-                        >
-                          {artist}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {artistNames && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Found {artistNames.length} artists in database
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="event_title">Event Title *</Label>
-                  <Input
-                    id="event_title"
-                    value={formData.event_title}
-                    onChange={(e) => setFormData({ ...formData, event_title: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="venue_name">Venue Name</Label>
-                  <Input
-                    id="venue_name"
-                    value={formData.venue_name}
-                    onChange={(e) => setFormData({ ...formData, venue_name: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="venue_city">City</Label>
-                  <Input
-                    id="venue_city"
-                    value={formData.venue_city}
-                    onChange={(e) => setFormData({ ...formData, venue_city: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="venue_state">State</Label>
-                  <Input
-                    id="venue_state"
-                    value={formData.venue_state}
-                    onChange={(e) => setFormData({ ...formData, venue_state: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="event_date">Event Date *</Label>
-                  <Input
-                    id="event_date"
-                    type="date"
-                    value={formData.event_date}
-                    onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="event_time">Event Time</Label>
-                  <Input
-                    id="event_time"
-                    type="time"
-                    value={formData.event_time}
-                    onChange={(e) => setFormData({ ...formData, event_time: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="ticket_url">Ticket URL</Label>
-                  <Input
-                    id="ticket_url"
-                    type="url"
-                    value={formData.ticket_url}
-                    onChange={(e) => setFormData({ ...formData, ticket_url: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="price_min">Min Price ($)</Label>
-                  <Input
-                    id="price_min"
-                    type="number"
-                    step="0.01"
-                    value={formData.price_min || ''}
-                    onChange={(e) => setFormData({ ...formData, price_min: e.target.value ? parseFloat(e.target.value) : undefined })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="price_max">Max Price ($)</Label>
-                  <Input
-                    id="price_max"
-                    type="number"
-                    step="0.01"
-                    value={formData.price_max || ''}
-                    onChange={(e) => setFormData({ ...formData, price_max: e.target.value ? parseFloat(e.target.value) : undefined })}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is_active"
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                />
-                <Label htmlFor="is_active">Active</Label>
-              </div>
-
-              <div className="flex gap-2">
-                <Button type="submit" disabled={createEvent.isPending || updateEvent.isPending}>
-                  <Save className="h-4 w-4 mr-2" />
-                  {editingId ? 'Update' : 'Create'} Event
-                </Button>
-                <Button type="button" variant="outline" onClick={handleCancel}>
-                  <X className="h-4 w-4 mr-2" />
-                  Cancel
-                </Button>
-              </div>
-            </form>
+            <CustomEventForm
+              formData={formData}
+              setFormData={setFormData}
+              onSubmit={handleSubmit}
+              onCancel={handleCancel}
+              isLoading={createEvent.isPending || updateEvent.isPending}
+              editingId={editingId}
+              artistSearchTerm={artistSearchTerm}
+              setArtistSearchTerm={setArtistSearchTerm}
+            />
           )}
 
-          {/* Events List */}
-          <div className="space-y-4">
-            {events?.map((event) => (
-              <div key={event.id} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold">{event.event_title}</h3>
-                      <Badge variant={event.is_active ? "default" : "secondary"}>
-                        {event.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-1">
-                      <strong>Artist:</strong> {event.artist_name}
-                    </p>
-                    {event.venue_name && (
-                      <p className="text-sm text-gray-600 mb-1">
-                        <strong>Venue:</strong> {event.venue_name}
-                        {event.venue_city && `, ${event.venue_city}`}
-                        {event.venue_state && `, ${event.venue_state}`}
-                      </p>
-                    )}
-                    <p className="text-sm text-gray-600 mb-1">
-                      <strong>Date:</strong> {event.event_date}
-                      {event.event_time && ` at ${event.event_time}`}
-                    </p>
-                    {(event.price_min || event.price_max) && (
-                      <p className="text-sm text-gray-600 mb-1">
-                        <strong>Price:</strong> ${event.price_min || 0} - ${event.price_max || 'N/A'}
-                      </p>
-                    )}
-                    {event.description && (
-                      <p className="text-sm text-gray-600 mt-2">{event.description}</p>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => handleEdit(event)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleDelete(event.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-            {events?.length === 0 && (
-              <p className="text-center text-gray-500 py-8">No custom events found</p>
-            )}
-          </div>
+          <CustomEventsList
+            events={events}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
         </CardContent>
       </Card>
     </div>
