@@ -126,7 +126,7 @@ export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistE
                       {event.name}
                     </h4>
                     {event.isCustom && (
-                      <Star className="h-4 w-4 text-purple-600 fill-purple-200" title="Custom Event" />
+                      <Star className="h-4 w-4 text-purple-600 fill-purple-200" />
                     )}
                   </div>
                   
