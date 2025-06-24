@@ -37,6 +37,15 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   const embedUrl = generateEmbedUrl(config);
   const stationName = config.selectedStation === 'hyfin' ? 'HYFIN' : '88Nine';
   
+  // Generate theme-aware colors
+  const isDark = config.theme === 'dark';
+  const colors = {
+    headingColor: isDark ? '#f9fafb' : '#1f2937',
+    textColor: isDark ? '#d1d5db' : '#6b7280',
+    linkColor: isDark ? '#fb923c' : '#ea580c',
+    fallbackBg: isDark ? '#374151' : '#f9fafb'
+  };
+  
   return `<!-- SEO-Friendly Radio Milwaukee Playlist Embed -->
 <div class="radio-milwaukee-embed-container">
   <!-- Contextual content for SEO -->
@@ -104,7 +113,7 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   });
 </script>
 
-<!-- Optional: Add this CSS for better styling -->
+<!-- Theme-aware CSS for better styling -->
 <style>
 .radio-milwaukee-embed-container {
   max-width: 100%;
@@ -114,21 +123,21 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   margin: 0 0 0.5rem 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1f2937;
+  color: ${colors.headingColor};
 }
 .radio-milwaukee-embed-container p {
   margin: 0 0 1rem 0;
-  color: #6b7280;
+  color: ${colors.textColor};
   line-height: 1.5;
 }
 .iframe-fallback {
   padding: 2rem;
-  background: #f9fafb;
+  background: ${colors.fallbackBg};
   border-radius: 8px;
   text-align: center;
 }
 .iframe-fallback a {
-  color: #ea580c;
+  color: ${colors.linkColor};
   text-decoration: none;
   font-weight: 500;
 }
