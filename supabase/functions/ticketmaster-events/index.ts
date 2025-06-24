@@ -44,7 +44,7 @@ serve(async (req) => {
     // Sort by date to get upcoming events first
     searchUrl.searchParams.set('sort', 'date,asc')
     searchUrl.searchParams.set('apikey', apiKey)
-    searchUrl.searchParams.set('size', '10')
+    searchUrl.searchParams.set('size', '20') // Get more results to filter from
 
     console.log(`Searching Ticketmaster for artist: ${artistName}`)
     console.log(`Search URL: ${searchUrl.toString()}`)
@@ -65,15 +65,50 @@ serve(async (req) => {
     const data = await response.json()
     let events = data._embedded?.events || []
     
-    // Filter events to be more artist-specific by checking if the artist name appears in the event name
-    const artistWords = artistName.toLowerCase().split(' ').filter(word => word.length > 2)
+    // More precise artist matching logic
+    const cleanArtistName = artistName.toLowerCase().trim()
     events = events.filter(event => {
       const eventName = event.name.toLowerCase()
-      // Check if any significant word from the artist name appears in the event name
-      return artistWords.some(word => eventName.includes(word))
+      
+      // Check if the event has attractions (performers)
+      const attractions = event._embedded?.attractions || []
+      
+      // First, check if the artist name matches any of the attractions
+      const matchesAttraction = attractions.some(attraction => {
+        const attractionName = attraction.name.toLowerCase()
+        return attractionName === cleanArtistName || 
+               attractionName.includes(cleanArtistName) ||
+               cleanArtistName.includes(attractionName)
+      })
+      
+      if (matchesAttraction) {
+        return true
+      }
+      
+      // If no attractions match, check if the artist name appears at the beginning of the event title
+      // or is surrounded by common separators (this helps avoid partial word matches)
+      const artistInTitle = (
+        eventName.startsWith(cleanArtistName + ' ') ||
+        eventName.startsWith(cleanArtistName + ':') ||
+        eventName.startsWith(cleanArtistName + '-') ||
+        eventName.includes(' ' + cleanArtistName + ' ') ||
+        eventName.includes(' ' + cleanArtistName + ':') ||
+        eventName.includes(' ' + cleanArtistName + '-') ||
+        eventName.includes('(' + cleanArtistName + ')') ||
+        eventName.endsWith(' ' + cleanArtistName) ||
+        eventName === cleanArtistName
+      )
+      
+      return artistInTitle
     })
     
+    // Limit to top 10 results
+    events = events.slice(0, 10)
+    
     console.log(`Found ${events.length} filtered events for artist: ${artistName}`)
+    if (events.length > 0) {
+      console.log('Sample event names:', events.slice(0, 3).map(e => e.name))
+    }
     
     return new Response(
       JSON.stringify({ events }),
