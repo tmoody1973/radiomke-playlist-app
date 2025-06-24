@@ -212,9 +212,13 @@ export const CustomEventsAdmin = () => {
                     <SelectTrigger>
                       <SelectValue placeholder={artistsLoading ? "Loading artists..." : "Select an artist"} />
                     </SelectTrigger>
-                    <SelectContent className="max-h-[200px] overflow-y-auto bg-white border border-gray-200 shadow-lg z-50">
+                    <SelectContent className="max-h-[200px] overflow-y-auto bg-white border border-gray-300 shadow-lg z-50">
                       {artistNames?.map((artist) => (
-                        <SelectItem key={artist} value={artist}>
+                        <SelectItem 
+                          key={artist} 
+                          value={artist}
+                          className="text-gray-900 hover:bg-gray-100 focus:bg-gray-100 cursor-pointer"
+                        >
                           {artist}
                         </SelectItem>
                       ))}
