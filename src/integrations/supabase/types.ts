@@ -146,6 +146,63 @@ export type Database = {
         }
         Relationships: []
       }
+      ticketmaster_events_cache: {
+        Row: {
+          artist_name: string
+          created_at: string
+          event_data: Json | null
+          event_date: string
+          event_id: string
+          event_name: string
+          event_time: string | null
+          id: string
+          is_active: boolean
+          price_max: number | null
+          price_min: number | null
+          ticket_url: string | null
+          updated_at: string
+          venue_city: string | null
+          venue_name: string | null
+          venue_state: string | null
+        }
+        Insert: {
+          artist_name: string
+          created_at?: string
+          event_data?: Json | null
+          event_date: string
+          event_id: string
+          event_name: string
+          event_time?: string | null
+          id?: string
+          is_active?: boolean
+          price_max?: number | null
+          price_min?: number | null
+          ticket_url?: string | null
+          updated_at?: string
+          venue_city?: string | null
+          venue_name?: string | null
+          venue_state?: string | null
+        }
+        Update: {
+          artist_name?: string
+          created_at?: string
+          event_data?: Json | null
+          event_date?: string
+          event_id?: string
+          event_name?: string
+          event_time?: string | null
+          id?: string
+          is_active?: boolean
+          price_max?: number | null
+          price_min?: number | null
+          ticket_url?: string | null
+          updated_at?: string
+          venue_city?: string | null
+          venue_name?: string | null
+          venue_state?: string | null
+        }
+        Relationships: []
+      }
       youtube_cache: {
         Row: {
           artist: string

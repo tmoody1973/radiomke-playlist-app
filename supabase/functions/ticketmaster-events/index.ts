@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,6 +25,66 @@ serve(async (req) => {
       )
     }
 
+    // Initialize Supabase client for caching
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    // First, check if we have cached events for this artist
+    const { data: cachedEvents, error: cacheError } = await supabase
+      .from('ticketmaster_events_cache')
+      .select('*')
+      .eq('artist_name', artistName)
+      .eq('is_active', true)
+      .gte('event_date', new Date().toISOString().split('T')[0])
+      .order('event_date', { ascending: true })
+
+    if (cacheError) {
+      console.error('Cache lookup error:', cacheError)
+    }
+
+    // If we have recent cached events (less than 7 days old), return them
+    if (cachedEvents && cachedEvents.length > 0) {
+      const recentCache = cachedEvents.filter(event => {
+        const cacheAge = Date.now() - new Date(event.updated_at).getTime()
+        return cacheAge < (7 * 24 * 60 * 60 * 1000) // 7 days
+      })
+
+      if (recentCache.length > 0) {
+        console.log(`Returning ${recentCache.length} cached events for artist: ${artistName}`)
+        // Convert cached events to match Ticketmaster format
+        const formattedEvents = recentCache.map(event => ({
+          id: event.event_id,
+          name: event.event_name,
+          dates: {
+            start: {
+              localDate: event.event_date,
+              localTime: event.event_time
+            }
+          },
+          _embedded: {
+            venues: event.venue_name ? [{
+              name: event.venue_name,
+              city: { name: event.venue_city || '' },
+              state: { name: event.venue_state || '', stateCode: event.venue_state || '' }
+            }] : []
+          },
+          url: event.ticket_url || '',
+          priceRanges: (event.price_min || event.price_max) ? [{
+            min: event.price_min || 0,
+            max: event.price_max || 999,
+            currency: 'USD'
+          }] : []
+        }))
+
+        return new Response(
+          JSON.stringify({ events: formattedEvents }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    }
+
+    // If no recent cache, fetch from Ticketmaster API
     const apiKey = Deno.env.get('TICKETMASTER_API_KEY')
     if (!apiKey) {
       console.error('TICKETMASTER_API_KEY not found in environment')
@@ -37,22 +98,52 @@ serve(async (req) => {
     }
 
     const searchUrl = new URL('https://app.ticketmaster.com/discovery/v2/events.json')
-    // Use the artist name directly as the keyword for better artist-specific results
     searchUrl.searchParams.set('keyword', artistName.trim())
     searchUrl.searchParams.set('city', 'Chicago,Milwaukee,Madison')
     searchUrl.searchParams.set('classificationName', 'music')
-    // Sort by date to get upcoming events first
     searchUrl.searchParams.set('sort', 'date,asc')
     searchUrl.searchParams.set('apikey', apiKey)
-    searchUrl.searchParams.set('size', '20') // Get more results to filter from
+    searchUrl.searchParams.set('size', '20')
 
-    console.log(`Searching Ticketmaster for artist: ${artistName}`)
-    console.log(`Search URL: ${searchUrl.toString()}`)
+    console.log(`Fetching fresh events from Ticketmaster for artist: ${artistName}`)
     
     const response = await fetch(searchUrl.toString())
     
     if (!response.ok) {
       console.error(`Ticketmaster API error: ${response.status} ${response.statusText}`)
+      // If API fails, return cached events even if they're older
+      if (cachedEvents && cachedEvents.length > 0) {
+        console.log(`API failed, returning ${cachedEvents.length} older cached events`)
+        const formattedEvents = cachedEvents.map(event => ({
+          id: event.event_id,
+          name: event.event_name,
+          dates: {
+            start: {
+              localDate: event.event_date,
+              localTime: event.event_time
+            }
+          },
+          _embedded: {
+            venues: event.venue_name ? [{
+              name: event.venue_name,
+              city: { name: event.venue_city || '' },
+              state: { name: event.venue_state || '', stateCode: event.venue_state || '' }
+            }] : []
+          },
+          url: event.ticket_url || '',
+          priceRanges: (event.price_min || event.price_max) ? [{
+            min: event.price_min || 0,
+            max: event.price_max || 999,
+            currency: 'USD'
+          }] : []
+        }))
+
+        return new Response(
+          JSON.stringify({ events: formattedEvents }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
       return new Response(
         JSON.stringify({ error: 'Failed to fetch events from Ticketmaster' }),
         { 
@@ -65,15 +156,12 @@ serve(async (req) => {
     const data = await response.json()
     let events = data._embedded?.events || []
     
-    // More precise artist matching logic
+    // Filter events for the artist
     const cleanArtistName = artistName.toLowerCase().trim()
     events = events.filter(event => {
       const eventName = event.name.toLowerCase()
-      
-      // Check if the event has attractions (performers)
       const attractions = event._embedded?.attractions || []
       
-      // First, check if the artist name matches any of the attractions
       const matchesAttraction = attractions.some(attraction => {
         const attractionName = attraction.name.toLowerCase()
         return attractionName === cleanArtistName || 
@@ -81,12 +169,8 @@ serve(async (req) => {
                cleanArtistName.includes(attractionName)
       })
       
-      if (matchesAttraction) {
-        return true
-      }
+      if (matchesAttraction) return true
       
-      // If no attractions match, check if the artist name appears at the beginning of the event title
-      // or is surrounded by common separators (this helps avoid partial word matches)
       const artistInTitle = (
         eventName.startsWith(cleanArtistName + ' ') ||
         eventName.startsWith(cleanArtistName + ':') ||
@@ -102,8 +186,51 @@ serve(async (req) => {
       return artistInTitle
     })
     
-    // Limit to top 10 results
     events = events.slice(0, 10)
+
+    // Cache the new events in the database
+    if (events.length > 0) {
+      console.log(`Caching ${events.length} events for artist: ${artistName}`)
+      
+      // First, deactivate old cached events for this artist
+      await supabase
+        .from('ticketmaster_events_cache')
+        .update({ is_active: false })
+        .eq('artist_name', artistName)
+
+      // Insert new events into cache
+      const eventsToCache = events.map(event => {
+        const venue = event._embedded?.venues?.[0]
+        const priceRange = event.priceRanges?.[0]
+        
+        return {
+          artist_name: artistName,
+          event_id: event.id,
+          event_name: event.name,
+          event_date: event.dates.start.localDate,
+          event_time: event.dates.start.localTime || null,
+          venue_name: venue?.name || null,
+          venue_city: venue?.city?.name || null,
+          venue_state: venue?.state?.stateCode || null,
+          ticket_url: event.url || null,
+          price_min: priceRange?.min || null,
+          price_max: priceRange?.max || null,
+          event_data: event, // Store full event data as JSON
+          is_active: true
+        }
+      })
+
+      const { error: insertError } = await supabase
+        .from('ticketmaster_events_cache')
+        .insert(eventsToCache)
+
+      if (insertError) {
+        console.error('Error caching events:', insertError)
+        // Continue anyway, just log the error
+      } else {
+        console.log(`Successfully cached ${eventsToCache.length} events for ${artistName}`)
+      }
+    }
     
     console.log(`Found ${events.length} filtered events for artist: ${artistName}`)
     if (events.length > 0) {
