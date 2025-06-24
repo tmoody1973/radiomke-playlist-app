@@ -38,7 +38,7 @@ serve(async (req) => {
 
     const searchUrl = new URL('https://app.ticketmaster.com/discovery/v2/events.json')
     searchUrl.searchParams.set('keyword', artistName)
-    searchUrl.searchParams.set('city', 'Chicago,Milwaukee')
+    searchUrl.searchParams.set('city', 'Chicago,Milwaukee,Madison')
     searchUrl.searchParams.set('classificationName', 'music')
     searchUrl.searchParams.set('apikey', apiKey)
     searchUrl.searchParams.set('size', '5')
