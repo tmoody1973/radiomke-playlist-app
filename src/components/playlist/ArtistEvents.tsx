@@ -11,6 +11,9 @@ interface ArtistEventsProps {
 }
 
 export const ArtistEvents = ({ artistName, compact = false }: ArtistEventsProps) => {
+  // Add debugging to ensure we're using the artist name
+  console.log(`🎫 ArtistEvents component searching for artist: "${artistName}"`);
+  
   const { data: events, isLoading, error } = useTicketmasterEvents(artistName);
 
   if (isLoading) {
@@ -19,7 +22,7 @@ export const ArtistEvents = ({ artistName, compact = false }: ArtistEventsProps)
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
             <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-            <span className="text-slate-700 font-medium">Finding upcoming shows...</span>
+            <span className="text-slate-700 font-medium">Finding upcoming shows for {artistName}...</span>
           </div>
         </CardContent>
       </Card>
@@ -49,7 +52,7 @@ export const ArtistEvents = ({ artistName, compact = false }: ArtistEventsProps)
       <CardHeader className="pb-3">
         <CardTitle className={`${compact ? 'text-sm' : 'text-base'} text-slate-800 flex items-center gap-2 font-semibold`}>
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-          <span>🎵 {artistName} Live</span>
+          <span>🎵 {artistName} Live Shows</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-3">

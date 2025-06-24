@@ -37,13 +37,17 @@ serve(async (req) => {
     }
 
     const searchUrl = new URL('https://app.ticketmaster.com/discovery/v2/events.json')
-    searchUrl.searchParams.set('keyword', artistName)
+    // Use the artist name directly as the keyword for better artist-specific results
+    searchUrl.searchParams.set('keyword', artistName.trim())
     searchUrl.searchParams.set('city', 'Chicago,Milwaukee,Madison')
     searchUrl.searchParams.set('classificationName', 'music')
+    // Sort by date to get upcoming events first
+    searchUrl.searchParams.set('sort', 'date,asc')
     searchUrl.searchParams.set('apikey', apiKey)
-    searchUrl.searchParams.set('size', '5')
+    searchUrl.searchParams.set('size', '10')
 
-    console.log(`Searching Ticketmaster for: ${artistName}`)
+    console.log(`Searching Ticketmaster for artist: ${artistName}`)
+    console.log(`Search URL: ${searchUrl.toString()}`)
     
     const response = await fetch(searchUrl.toString())
     
@@ -59,9 +63,17 @@ serve(async (req) => {
     }
 
     const data = await response.json()
-    const events = data._embedded?.events || []
+    let events = data._embedded?.events || []
     
-    console.log(`Found ${events.length} events for ${artistName}`)
+    // Filter events to be more artist-specific by checking if the artist name appears in the event name
+    const artistWords = artistName.toLowerCase().split(' ').filter(word => word.length > 2)
+    events = events.filter(event => {
+      const eventName = event.name.toLowerCase()
+      // Check if any significant word from the artist name appears in the event name
+      return artistWords.some(word => eventName.includes(word))
+    })
+    
+    console.log(`Found ${events.length} filtered events for artist: ${artistName}`)
     
     return new Response(
       JSON.stringify({ events }),
