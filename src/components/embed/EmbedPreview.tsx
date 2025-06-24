@@ -30,12 +30,20 @@ const EmbedPreview = ({ config }: EmbedPreviewProps) => {
         <CardTitle>Live Preview</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="border rounded-lg overflow-hidden">
+        <div 
+          className="border rounded-lg overflow-hidden"
+          style={{
+            backgroundColor: config.theme === 'dark' ? '#1f2937' : '#ffffff'
+          }}
+        >
           <iframe
             src={embedUrl}
             width="100%"
             height={`${config.height}px`}
-            style={{ border: 'none' }}
+            style={{ 
+              border: 'none',
+              backgroundColor: config.theme === 'dark' ? '#1f2937' : '#ffffff'
+            }}
             title="Playlist Preview"
           />
         </div>
