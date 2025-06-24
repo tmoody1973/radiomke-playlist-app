@@ -53,6 +53,8 @@ const EmbedDemo = () => {
             setStartDate={embedState.setStartDate}
             endDate={embedState.endDate}
             setEndDate={embedState.setEndDate}
+            customColors={embedState.customColors}
+            setCustomColors={embedState.setCustomColors}
             embedConfig={embedState.embedConfig}
           />
 
