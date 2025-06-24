@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +35,8 @@ export const CustomEventsAdmin = () => {
   const { createEvent, updateEvent, deleteEvent } = useCustomEventMutations();
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [artistSearchTerm, setArtistSearchTerm] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [formData, setFormData] = useState<Partial<CustomEvent>>({
     artist_name: '',
     event_title: '',
@@ -97,6 +99,27 @@ export const CustomEventsAdmin = () => {
       return uniqueArtists;
     },
   });
+
+  // Filter artists based on search term
+  const filteredArtists = useMemo(() => {
+    if (!artistNames || !artistSearchTerm.trim()) return [];
+    
+    return artistNames.filter(artist =>
+      artist.toLowerCase().includes(artistSearchTerm.toLowerCase())
+    ).slice(0, 10); // Limit to 10 suggestions
+  }, [artistNames, artistSearchTerm]);
+
+  const handleArtistInputChange = (value: string) => {
+    setArtistSearchTerm(value);
+    setFormData({ ...formData, artist_name: value });
+    setShowSuggestions(value.length > 0);
+  };
+
+  const handleArtistSelect = (artistName: string) => {
+    setArtistSearchTerm(artistName);
+    setFormData({ ...formData, artist_name: artistName });
+    setShowSuggestions(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,28 +240,33 @@ export const CustomEventsAdmin = () => {
           {isCreating && (
             <form onSubmit={handleSubmit} className="space-y-4 mb-6 p-4 border border-gray-200 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div className="relative">
                   <Label htmlFor="artist_name">Artist Name *</Label>
-                  <Select
-                    value={formData.artist_name}
-                    onValueChange={(value) => setFormData({ ...formData, artist_name: value })}
+                  <Input
+                    id="artist_name"
+                    value={artistSearchTerm}
+                    onChange={(e) => handleArtistInputChange(e.target.value)}
+                    onFocus={() => setShowSuggestions(artistSearchTerm.length > 0)}
+                    placeholder={artistsLoading ? "Loading artists..." : "Type to search artists..."}
                     required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={artistsLoading ? "Loading artists..." : "Select an artist"} />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[200px] overflow-y-auto bg-white border border-gray-300 shadow-lg z-50">
-                      {artistNames?.map((artist) => (
-                        <SelectItem 
-                          key={artist} 
-                          value={artist}
-                          className="text-gray-900 hover:bg-gray-100 focus:bg-gray-100 cursor-pointer"
+                  />
+                  
+                  {/* Artist suggestions dropdown */}
+                  {showSuggestions && filteredArtists.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 z-50 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto mt-1">
+                      {filteredArtists.map((artist) => (
+                        <button
+                          key={artist}
+                          type="button"
+                          className="w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 text-gray-900 border-none bg-transparent cursor-pointer"
+                          onClick={() => handleArtistSelect(artist)}
                         >
                           {artist}
-                        </SelectItem>
+                        </button>
                       ))}
-                    </SelectContent>
-                  </Select>
+                    </div>
+                  )}
+                  
                   {artistNames && (
                     <p className="text-xs text-gray-500 mt-1">
                       Found {artistNames.length} artists in database
