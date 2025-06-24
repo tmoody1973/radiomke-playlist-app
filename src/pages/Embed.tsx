@@ -29,7 +29,7 @@ const Embed = () => {
         overflow: 'hidden'
       }}
     >
-      <div className="h-full bg-background p-2 sm:p-4 flex flex-col">
+      <div className={`h-full p-2 sm:p-4 flex flex-col ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
         <div className="flex-1 min-h-0">
           <SpinitinonPlaylist 
             stationId={stationId}
