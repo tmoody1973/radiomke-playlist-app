@@ -22,13 +22,6 @@ interface Spin {
 interface AudioPlayer {
   currentlyPlaying: string | null;
   isLoading: string | null;
-  playAudio: (previewUrl: string, trackId: string) => void;
-  stopAudio: () => void;
-}
-
-interface YouTubePlayer {
-  currentlyPlaying: string | null;
-  isLoading: string | null;
   playVideo: (embedUrl: string, trackId: string) => void;
   stopVideo: () => void;
 }
@@ -41,7 +34,6 @@ interface ListItemProps {
   formatTime: (dateString: string) => string;
   formatDate: (dateString: string) => string;
   audioPlayer: AudioPlayer;
-  youtubePlayer: YouTubePlayer;
 }
 
 export const ListItem = ({ 
@@ -51,16 +43,15 @@ export const ListItem = ({
   compact, 
   formatTime, 
   formatDate,
-  audioPlayer,
-  youtubePlayer
+  audioPlayer
 }: ListItemProps) => {
   const trackId = `${spin.artist}-${spin.song}-${spin.id}`;
 
+  // Debug logging for list item rendering
   console.log(`🎵 Rendering ListItem for ${spin.artist} - ${spin.song}`, {
     trackId,
     spinId: spin.id,
-    hasAudioPlayer: !!audioPlayer,
-    hasYouTubePlayer: !!youtubePlayer
+    audioPlayer: !!audioPlayer
   });
 
   return (
@@ -83,29 +74,19 @@ export const ListItem = ({
             />
           </AspectRatio>
           
-          {/* Preview Buttons Overlay - Priority: Spotify first, then YouTube */}
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
-            {/* Spotify Preview Button (Higher Priority) */}
-            <AudioPreviewButton
-              artist={spin.artist}
-              song={spin.song}
-              trackId={trackId}
-              currentlyPlaying={audioPlayer.currentlyPlaying}
-              isLoading={audioPlayer.isLoading}
-              onPlay={audioPlayer.playAudio}
-              size={compact ? 'sm' : 'md'}
-            />
-            
-            {/* YouTube Preview Button (Lower Priority - only show if no Spotify) */}
-            <YouTubePreviewButton
-              artist={spin.artist}
-              song={spin.song}
-              trackId={trackId}
-              currentlyPlaying={youtubePlayer.currentlyPlaying}
-              isLoading={youtubePlayer.isLoading}
-              onPlay={youtubePlayer.playVideo}
-              size={compact ? 'sm' : 'md'}
-            />
+          {/* YouTube Preview Button Overlay */}
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-md">
+            <div className="debug-youtube-button">
+              <YouTubePreviewButton
+                artist={spin.artist}
+                song={spin.song}
+                trackId={trackId}
+                currentlyPlaying={audioPlayer.currentlyPlaying}
+                isLoading={audioPlayer.isLoading}
+                onPlay={audioPlayer.playVideo}
+                size={compact ? 'sm' : 'md'}
+              />
+            </div>
           </div>
         </div>
 

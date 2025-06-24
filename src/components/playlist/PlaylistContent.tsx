@@ -1,4 +1,3 @@
-
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Music } from 'lucide-react';
 import { GridItem } from './GridItem';
@@ -19,13 +18,6 @@ interface Spin {
 interface AudioPlayer {
   currentlyPlaying: string | null;
   isLoading: string | null;
-  playAudio: (previewUrl: string, trackId: string) => void;
-  stopAudio: () => void;
-}
-
-interface YouTubePlayer {
-  currentlyPlaying: string | null;
-  isLoading: string | null;
   playVideo: (embedUrl: string, trackId: string) => void;
   stopVideo: () => void;
 }
@@ -40,7 +32,6 @@ interface PlaylistContentProps {
   formatTime: (dateString: string) => string;
   formatDate: (dateString: string) => string;
   audioPlayer: AudioPlayer;
-  youtubePlayer: YouTubePlayer;
 }
 
 export const PlaylistContent = ({
@@ -52,8 +43,7 @@ export const PlaylistContent = ({
   isCurrentlyPlaying,
   formatTime,
   formatDate,
-  audioPlayer,
-  youtubePlayer
+  audioPlayer
 }: PlaylistContentProps) => {
   return (
     <ScrollArea 
@@ -84,7 +74,6 @@ export const PlaylistContent = ({
               isCurrentlyPlaying={isCurrentlyPlaying(spin, index)}
               formatTime={formatTime}
               audioPlayer={audioPlayer}
-              youtubePlayer={youtubePlayer}
             />
           ))}
         </div>
@@ -101,7 +90,6 @@ export const PlaylistContent = ({
               formatTime={formatTime}
               formatDate={formatDate}
               audioPlayer={audioPlayer}
-              youtubePlayer={youtubePlayer}
             />
           ))}
         </div>
