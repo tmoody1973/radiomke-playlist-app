@@ -26,10 +26,17 @@ const Embed = () => {
       className={`embed-container w-full h-screen ${theme === 'dark' ? 'dark' : ''}`}
       style={{ 
         height: height !== 'auto' ? `${height}px` : '100vh',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff'
       }}
     >
-      <div className={`h-full p-2 sm:p-4 flex flex-col ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
+      <div 
+        className={`h-full p-2 sm:p-4 flex flex-col`}
+        style={{
+          backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
+          color: theme === 'dark' ? '#ffffff' : '#1f2937'
+        }}
+      >
         <div className="flex-1 min-h-0">
           <SpinitinonPlaylist 
             stationId={stationId}
