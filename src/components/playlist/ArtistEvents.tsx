@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, ExternalLink, Loader2, Star } from 'lucide-react';
@@ -14,7 +13,7 @@ interface ArtistEventsProps {
 
 export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistEventsProps) => {
   // Add debugging to ensure we're using the artist name
-  console.log(`🎫 ArtistEvents component searching for artist: "${artistName}"`);
+  console.log(`🎫 ArtistEvents component for: "${artistName}" with stationId: "${stationId}"`);
   
   const { data: ticketmasterEvents, isLoading: ticketmasterLoading, error: ticketmasterError } = useTicketmasterEvents(artistName);
   const { data: customEvents, isLoading: customLoading, error: customError } = useCustomEvents(artistName, stationId);
@@ -22,11 +21,15 @@ export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistE
   const isLoading = ticketmasterLoading || customLoading;
   const hasError = ticketmasterError && customError;
   
+  console.log(`🎫 Custom events data for ${artistName}:`, customEvents);
+  console.log(`🎫 Ticketmaster events data for ${artistName}:`, ticketmasterEvents);
+  
   // Combine and sort events by date
   const allEvents = [];
   
   // Add custom events with a flag
   if (customEvents) {
+    console.log(`🎫 Adding ${customEvents.length} custom events for ${artistName}`);
     customEvents.forEach(event => {
       allEvents.push({
         ...event,
@@ -52,6 +55,7 @@ export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistE
   
   // Add Ticketmaster events
   if (ticketmasterEvents) {
+    console.log(`🎫 Adding ${ticketmasterEvents.length} Ticketmaster events for ${artistName}`);
     ticketmasterEvents.forEach(event => {
       allEvents.push({
         ...event,
@@ -64,6 +68,8 @@ export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistE
   
   // Sort by date
   allEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  console.log(`🎫 Total combined events for ${artistName}: ${allEvents.length}`);
 
   if (isLoading) {
     return (

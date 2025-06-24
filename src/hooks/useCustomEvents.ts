@@ -25,8 +25,20 @@ export const useCustomEvents = (artistName: string, stationId?: string) => {
   const fetchCustomEvents = async (): Promise<CustomEvent[]> => {
     if (!artistName.trim()) return [];
 
-    console.log(`🎫 Fetching custom events for: ${artistName}`);
+    console.log(`🎫 Fetching custom events for: "${artistName}" with stationId: "${stationId}"`);
     
+    // First, let's check what events exist for this artist without filters
+    const { data: allArtistEvents, error: debugError } = await supabase
+      .from('custom_events')
+      .select('*')
+      .eq('artist_name', artistName);
+    
+    console.log(`🎫 All events for ${artistName} (no filters):`, allArtistEvents);
+    
+    if (debugError) {
+      console.error('🎫 Debug query error:', debugError);
+    }
+
     let query = supabase
       .from('custom_events')
       .select('*')
@@ -35,17 +47,25 @@ export const useCustomEvents = (artistName: string, stationId?: string) => {
       .gte('event_date', new Date().toISOString().split('T')[0]) // Only future events
       .order('event_date', { ascending: true });
 
+    console.log(`🎫 Today's date for filtering: ${new Date().toISOString().split('T')[0]}`);
+
     // If stationId is provided, filter by station
     if (stationId) {
+      console.log(`🎫 Filtering by stationId: ${stationId}`);
       query = query.or(`station_ids.cs.{${stationId}},station_ids.eq.{}`);
+    } else {
+      console.log(`🎫 No stationId provided, showing all station events`);
     }
 
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching custom events:', error);
+      console.error('🎫 Error fetching custom events:', error);
       throw new Error('Failed to fetch custom events');
     }
+
+    console.log(`🎫 Filtered events for ${artistName}:`, data);
+    console.log(`🎫 Number of events found: ${data?.length || 0}`);
 
     return data || [];
   };
