@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useSpinData } from '@/hooks/useSpinData';
 import { usePlaylistState } from '@/hooks/usePlaylistState';
@@ -63,7 +62,8 @@ export const usePlaylistData = ({
         songsCount: spins.length,
         hasActiveFilters,
         lastSong: spins[0]?.artist + ' - ' + spins[0]?.song,
-        updateTime: new Date(dataUpdatedAt).toISOString()
+        updateTime: new Date(dataUpdatedAt).toISOString(),
+        currentDisplayCount: playlistState.displayCount
       });
       
       lastUpdateRef.current = dataUpdatedAt;
@@ -71,16 +71,21 @@ export const usePlaylistData = ({
       // Always update with fresh data, ensuring component re-renders
       playlistState.setAllSpins([...spins]); // Create new array reference to trigger re-render
       
-      // Reset display count for live data to show latest songs
-      if (!hasActiveFilters) {
+      // Only reset display count for live data if it's currently at the default (15)
+      // This preserves "Load More" state when new live data comes in
+      if (!hasActiveFilters && playlistState.displayCount === 15) {
+        console.log('🔄 Keeping display count at 15 for fresh live data');
         playlistState.setDisplayCount(15);
+      } else if (!hasActiveFilters && playlistState.displayCount > 15) {
+        console.log('🔄 Preserving display count', playlistState.displayCount, 'for load more state');
+        // Don't reset - user has clicked "Load More" so keep their current view
       }
     } else if (!isLoading && !hasActiveFilters && spins.length === 0) {
       // If no spins and not loading and no filters, clear the state
       console.log(`🧹 Clearing playlist state for station ${stationId} - no spins received`);
       playlistState.setAllSpins([]);
     }
-  }, [spins, hasActiveFilters, isLoading, dataUpdatedAt, playlistState.setAllSpins, playlistState.setDisplayCount, stationId]);
+  }, [spins, hasActiveFilters, isLoading, dataUpdatedAt, playlistState.setAllSpins, playlistState.setDisplayCount, playlistState.displayCount, stationId]);
 
   return {
     playlistState,
