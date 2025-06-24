@@ -1,6 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { generateEmbedUrl } from './EmbedCodeGenerator';
+import { useEffect, useState } from 'react';
 
 interface EmbedConfig {
   selectedStation: string;
@@ -22,7 +23,13 @@ interface EmbedPreviewProps {
 }
 
 const EmbedPreview = ({ config }: EmbedPreviewProps) => {
+  const [key, setKey] = useState(0);
   const embedUrl = generateEmbedUrl(config);
+
+  // Force iframe to reload when theme changes
+  useEffect(() => {
+    setKey(prev => prev + 1);
+  }, [config.theme, config.layout, config.height]);
 
   return (
     <Card>
@@ -38,6 +45,7 @@ const EmbedPreview = ({ config }: EmbedPreviewProps) => {
           }}
         >
           <iframe
+            key={key}
             src={embedUrl}
             width="100%"
             height={`${config.height}px`}
