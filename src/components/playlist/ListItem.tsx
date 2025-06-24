@@ -1,3 +1,4 @@
+
 import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Clock } from 'lucide-react';
@@ -17,6 +18,7 @@ interface Spin {
   label?: string;
   release?: string;
   image?: string;
+  station_id?: string;
 }
 
 interface AudioPlayer {
@@ -34,6 +36,7 @@ interface ListItemProps {
   formatTime: (dateString: string) => string;
   formatDate: (dateString: string) => string;
   audioPlayer: AudioPlayer;
+  stationId?: string;
 }
 
 export const ListItem = ({ 
@@ -43,7 +46,8 @@ export const ListItem = ({
   compact, 
   formatTime, 
   formatDate,
-  audioPlayer
+  audioPlayer,
+  stationId
 }: ListItemProps) => {
   const trackId = `${spin.artist}-${spin.song}-${spin.id}`;
 
@@ -121,8 +125,12 @@ export const ListItem = ({
         </div>
       </div>
       
-      {/* Artist Events */}
-      <ArtistEvents artistName={spin.artist} compact={compact} />
+      {/* Artist Events - pass the stationId */}
+      <ArtistEvents 
+        artistName={spin.artist} 
+        compact={compact} 
+        stationId={stationId || spin.station_id}
+      />
     </div>
   );
 };

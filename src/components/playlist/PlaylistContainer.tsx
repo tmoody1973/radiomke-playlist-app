@@ -132,6 +132,7 @@ export const PlaylistContainer = ({
             formatTime={formatTime}
             formatDate={formatDate}
             audioPlayer={audioPlayer}
+            stationId={stationId}
           />
           
           <LoadMoreButton

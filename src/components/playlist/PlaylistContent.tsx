@@ -33,6 +33,7 @@ interface PlaylistContentProps {
   formatTime: (dateString: string) => string;
   formatDate: (dateString: string) => string;
   audioPlayer: AudioPlayer;
+  stationId?: string;
 }
 
 export const PlaylistContent = ({
@@ -44,7 +45,8 @@ export const PlaylistContent = ({
   isCurrentlyPlaying,
   formatTime,
   formatDate,
-  audioPlayer
+  audioPlayer,
+  stationId
 }: PlaylistContentProps) => {
   // Ensure displayedSpins is always an array
   const safeDisplayedSpins = displayedSpins || [];
@@ -94,6 +96,7 @@ export const PlaylistContent = ({
               formatTime={formatTime}
               formatDate={formatDate}
               audioPlayer={audioPlayer}
+              stationId={stationId}
             />
           ))}
         </div>

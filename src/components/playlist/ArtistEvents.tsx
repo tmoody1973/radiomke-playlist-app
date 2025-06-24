@@ -1,20 +1,69 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, ExternalLink, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, ExternalLink, Loader2, Star } from 'lucide-react';
 import { useTicketmasterEvents } from '@/hooks/useTicketmasterEvents';
+import { useCustomEvents } from '@/hooks/useCustomEvents';
 import { formatDate } from '@/utils/playlistHelpers';
 
 interface ArtistEventsProps {
   artistName: string;
   compact?: boolean;
+  stationId?: string;
 }
 
-export const ArtistEvents = ({ artistName, compact = false }: ArtistEventsProps) => {
+export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistEventsProps) => {
   // Add debugging to ensure we're using the artist name
   console.log(`🎫 ArtistEvents component searching for artist: "${artistName}"`);
   
-  const { data: events, isLoading, error } = useTicketmasterEvents(artistName);
+  const { data: ticketmasterEvents, isLoading: ticketmasterLoading, error: ticketmasterError } = useTicketmasterEvents(artistName);
+  const { data: customEvents, isLoading: customLoading, error: customError } = useCustomEvents(artistName, stationId);
+
+  const isLoading = ticketmasterLoading || customLoading;
+  const hasError = ticketmasterError && customError;
+  
+  // Combine and sort events by date
+  const allEvents = [];
+  
+  // Add custom events with a flag
+  if (customEvents) {
+    customEvents.forEach(event => {
+      allEvents.push({
+        ...event,
+        isCustom: true,
+        date: event.event_date,
+        time: event.event_time,
+        name: event.event_title,
+        url: event.ticket_url || '#',
+        _embedded: {
+          venues: event.venue_name ? [{
+            name: event.venue_name,
+            city: { name: event.venue_city || '' },
+            state: { stateCode: event.venue_state || '' }
+          }] : []
+        },
+        priceRanges: (event.price_min || event.price_max) ? [{
+          min: event.price_min || 0,
+          max: event.price_max || 999
+        }] : []
+      });
+    });
+  }
+  
+  // Add Ticketmaster events
+  if (ticketmasterEvents) {
+    ticketmasterEvents.forEach(event => {
+      allEvents.push({
+        ...event,
+        isCustom: false,
+        date: event.dates.start.localDate,
+        time: event.dates.start.localTime
+      });
+    });
+  }
+  
+  // Sort by date
+  allEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   if (isLoading) {
     return (
@@ -29,7 +78,7 @@ export const ArtistEvents = ({ artistName, compact = false }: ArtistEventsProps)
     );
   }
 
-  if (error || !events || events.length === 0) {
+  if (hasError || !allEvents || allEvents.length === 0) {
     return null; // Don't show anything if no events or error
   }
 
@@ -56,27 +105,36 @@ export const ArtistEvents = ({ artistName, compact = false }: ArtistEventsProps)
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
-        {events.slice(0, 3).map((event, index) => {
+        {allEvents.slice(0, 3).map((event, index) => {
           const venue = event._embedded?.venues?.[0];
           const priceRange = event.priceRanges?.[0];
           
           return (
-            <div key={event.id} className="group relative bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50 hover:bg-white hover:shadow-lg transition-all duration-300 hover:scale-[1.01]">
+            <div key={event.isCustom ? event.id : event.id} className="group relative bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50 hover:bg-white hover:shadow-lg transition-all duration-300 hover:scale-[1.01]">
               {/* Gradient accent bar */}
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 rounded-t-xl"></div>
+              <div className={`absolute top-0 left-0 w-full h-1 rounded-t-xl ${
+                event.isCustom 
+                  ? 'bg-gradient-to-r from-purple-400 via-pink-500 to-red-600' 
+                  : 'bg-gradient-to-r from-green-400 via-blue-500 to-purple-600'
+              }`}></div>
               
               <div className="flex justify-between items-start gap-4">
                 <div className="flex-1 min-w-0 space-y-2">
-                  {/* Event name */}
-                  <h4 className={`font-semibold text-slate-900 leading-tight ${compact ? 'text-sm' : 'text-base'} group-hover:text-slate-700 transition-colors`}>
-                    {event.name}
-                  </h4>
+                  {/* Event name with custom event indicator */}
+                  <div className="flex items-center gap-2">
+                    <h4 className={`font-semibold text-slate-900 leading-tight ${compact ? 'text-sm' : 'text-base'} group-hover:text-slate-700 transition-colors`}>
+                      {event.name}
+                    </h4>
+                    {event.isCustom && (
+                      <Star className="h-4 w-4 text-purple-600 fill-purple-200" title="Custom Event" />
+                    )}
+                  </div>
                   
                   {/* Date and time */}
                   <div className="flex items-center gap-2 text-slate-600">
                     <Calendar className="h-4 w-4 text-green-600" />
                     <span className={`${compact ? 'text-xs' : 'text-sm'} font-medium`}>
-                      {formatEventDate(event.dates.start.localDate, event.dates.start.localTime)}
+                      {formatEventDate(event.date, event.time)}
                     </span>
                   </div>
                   
@@ -99,13 +157,21 @@ export const ArtistEvents = ({ artistName, compact = false }: ArtistEventsProps)
                       </span>
                     </div>
                   )}
+                  
+                  {/* Custom event description */}
+                  {event.isCustom && event.description && (
+                    <p className={`text-slate-600 ${compact ? 'text-xs' : 'text-sm'} italic`}>
+                      {event.description}
+                    </p>
+                  )}
                 </div>
                 
                 {/* Ticket button */}
                 <Button
                   size={compact ? "sm" : "default"}
                   className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
-                  onClick={() => window.open(event.url, '_blank')}
+                  onClick={() => event.url && event.url !== '#' ? window.open(event.url, '_blank') : null}
+                  disabled={!event.url || event.url === '#'}
                 >
                   <ExternalLink className={`${compact ? 'h-3 w-3' : 'h-4 w-4'} mr-2`} />
                   {compact ? 'Tix' : 'Get Tickets'}
@@ -116,10 +182,10 @@ export const ArtistEvents = ({ artistName, compact = false }: ArtistEventsProps)
         })}
         
         {/* Show more indicator */}
-        {events.length > 3 && (
+        {allEvents.length > 3 && (
           <div className="text-center pt-2">
             <span className="text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-              + {events.length - 3} more shows available
+              + {allEvents.length - 3} more shows available
             </span>
           </div>
         )}

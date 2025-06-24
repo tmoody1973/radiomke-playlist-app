@@ -9,6 +9,63 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      custom_events: {
+        Row: {
+          artist_name: string
+          created_at: string
+          description: string | null
+          event_date: string
+          event_time: string | null
+          event_title: string
+          id: string
+          is_active: boolean
+          price_max: number | null
+          price_min: number | null
+          station_ids: string[] | null
+          ticket_url: string | null
+          updated_at: string
+          venue_city: string | null
+          venue_name: string | null
+          venue_state: string | null
+        }
+        Insert: {
+          artist_name: string
+          created_at?: string
+          description?: string | null
+          event_date: string
+          event_time?: string | null
+          event_title: string
+          id?: string
+          is_active?: boolean
+          price_max?: number | null
+          price_min?: number | null
+          station_ids?: string[] | null
+          ticket_url?: string | null
+          updated_at?: string
+          venue_city?: string | null
+          venue_name?: string | null
+          venue_state?: string | null
+        }
+        Update: {
+          artist_name?: string
+          created_at?: string
+          description?: string | null
+          event_date?: string
+          event_time?: string | null
+          event_title?: string
+          id?: string
+          is_active?: boolean
+          price_max?: number | null
+          price_min?: number | null
+          station_ids?: string[] | null
+          ticket_url?: string | null
+          updated_at?: string
+          venue_city?: string | null
+          venue_name?: string | null
+          venue_state?: string | null
+        }
+        Relationships: []
+      }
       songs: {
         Row: {
           artist: string
