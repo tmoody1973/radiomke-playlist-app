@@ -1,5 +1,5 @@
 
-import React from 'React';
+import React from 'react';
 import { usePlaylistData } from '@/hooks/usePlaylistData';
 import { PlaylistContent } from './PlaylistContent';
 import { PlaylistDebugInfo } from './PlaylistDebugInfo';
@@ -52,10 +52,9 @@ export const PlaylistContainer = ({
         layout={layout}
       />
       <PlaylistDebugInfo 
-        spins={playlistData.spins}
-        isLoading={playlistData.isLoading}
         hasActiveFilters={playlistData.hasActiveFilters}
-        stationId={stationId}
+        dataUpdatedAt={playlistData.dataUpdatedAt}
+        onManualRefresh={() => playlistData.refetch()}
       />
     </div>
   );
