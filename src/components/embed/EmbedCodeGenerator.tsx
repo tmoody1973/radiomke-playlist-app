@@ -1,3 +1,4 @@
+
 interface EmbedConfig {
   selectedStation: string;
   autoUpdate: boolean;
@@ -22,7 +23,8 @@ export const generateEmbedUrl = (config: EmbedConfig): string => {
   if (config.unlimitedSongs) params.append('maxItems', 'unlimited');
   if (config.compact) params.append('compact', 'true');
   if (config.height !== 'auto') params.append('height', config.height);
-  if (config.theme !== 'light') params.append('theme', config.theme);
+  // Always include theme parameter to ensure proper theming
+  params.append('theme', config.theme);
   if (config.layout !== 'list') params.append('layout', config.layout);
   if (config.enableDateSearch && config.startDate) params.append('startDate', config.startDate.toISOString());
   if (config.enableDateSearch && config.endDate) params.append('endDate', config.endDate.toISOString());
