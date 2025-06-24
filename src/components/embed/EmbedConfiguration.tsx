@@ -8,10 +8,19 @@ import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import ThemeCustomizer from './ThemeCustomizer';
 
 interface Station {
   id: string;
   name: string;
+}
+
+interface CustomColors {
+  backgroundColor: string;
+  textColor: string;
+  headingColor: string;
+  linkColor: string;
+  borderColor: string;
 }
 
 interface EmbedConfigurationProps {
@@ -40,6 +49,8 @@ interface EmbedConfigurationProps {
   setStartDate: (value: Date | undefined) => void;
   endDate?: Date;
   setEndDate: (value: Date | undefined) => void;
+  customColors?: CustomColors;
+  setCustomColors: (colors: CustomColors | undefined) => void;
 }
 
 const EmbedConfiguration = ({
@@ -68,6 +79,8 @@ const EmbedConfiguration = ({
   setStartDate,
   endDate,
   setEndDate,
+  customColors,
+  setCustomColors,
 }: EmbedConfigurationProps) => {
   return (
     <div className="space-y-6">
@@ -280,6 +293,12 @@ const EmbedConfiguration = ({
           </div>
         </div>
       )}
+
+      {/* Theme Customizer Section */}
+      <ThemeCustomizer
+        customColors={customColors}
+        onColorsChange={setCustomColors}
+      />
     </div>
   );
 };

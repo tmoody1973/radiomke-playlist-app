@@ -7,6 +7,14 @@ interface Station {
   name: string;
 }
 
+interface CustomColors {
+  backgroundColor: string;
+  textColor: string;
+  headingColor: string;
+  linkColor: string;
+  borderColor: string;
+}
+
 export const useEmbedDemoState = () => {
   const [stations, setStations] = useState<Station[]>([]);
   const [selectedStation, setSelectedStation] = useState('hyfin');
@@ -21,6 +29,7 @@ export const useEmbedDemoState = () => {
   const [enableDateSearch, setEnableDateSearch] = useState(false);
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
+  const [customColors, setCustomColors] = useState<CustomColors>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,6 +77,7 @@ export const useEmbedDemoState = () => {
     enableDateSearch,
     startDate,
     endDate,
+    customColors,
   };
 
   return {
@@ -96,6 +106,8 @@ export const useEmbedDemoState = () => {
     setStartDate,
     endDate,
     setEndDate,
+    customColors,
+    setCustomColors,
     loading,
     error,
     embedConfig,

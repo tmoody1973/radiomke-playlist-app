@@ -12,6 +12,13 @@ interface EmbedConfig {
   enableDateSearch: boolean;
   startDate?: Date;
   endDate?: Date;
+  customColors?: {
+    backgroundColor: string;
+    textColor: string;
+    headingColor: string;
+    linkColor: string;
+    borderColor: string;
+  };
 }
 
 export const generateEmbedUrl = (config: EmbedConfig): string => {
@@ -37,13 +44,15 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   const embedUrl = generateEmbedUrl(config);
   const stationName = config.selectedStation === 'hyfin' ? 'HYFIN' : '88Nine';
   
-  // Generate theme-aware colors
+  // Generate theme-aware colors with custom color support
   const isDark = config.theme === 'dark';
-  const colors = {
+  const colors = config.customColors || {
     headingColor: isDark ? '#f9fafb' : '#1f2937',
     textColor: isDark ? '#d1d5db' : '#6b7280',
     linkColor: isDark ? '#fb923c' : '#ea580c',
-    fallbackBg: isDark ? '#374151' : '#f9fafb'
+    fallbackBg: isDark ? '#374151' : '#f9fafb',
+    backgroundColor: isDark ? '#1f2937' : '#ffffff',
+    borderColor: isDark ? '#374151' : '#e5e7eb'
   };
   
   return `<!-- SEO-Friendly Radio Milwaukee Playlist Embed -->
@@ -63,7 +72,7 @@ export const generateIframeCode = (config: EmbedConfig): string => {
     allow="autoplay; encrypted-media"
     referrerpolicy="strict-origin-when-cross-origin"
     sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-    style="border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); display: block; max-width: 100%;"
+    style="border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); display: block; max-width: 100%; background-color: ${colors.backgroundColor};"
     id="spinitron-iframe">
     
     <!-- Fallback content for accessibility and SEO -->
@@ -113,11 +122,14 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   });
 </script>
 
-<!-- Theme-aware CSS for better styling -->
+<!-- Custom Theme CSS -->
 <style>
 .radio-milwaukee-embed-container {
   max-width: 100%;
   margin: 1rem 0;
+  background-color: ${colors.backgroundColor};
+  border-radius: 8px;
+  padding: 1rem;
 }
 .radio-milwaukee-embed-container h3 {
   margin: 0 0 0.5rem 0;
@@ -132,7 +144,8 @@ export const generateIframeCode = (config: EmbedConfig): string => {
 }
 .iframe-fallback {
   padding: 2rem;
-  background: ${colors.fallbackBg};
+  background: ${colors.backgroundColor};
+  border: 1px solid ${colors.borderColor};
   border-radius: 8px;
   text-align: center;
 }
