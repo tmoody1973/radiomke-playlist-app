@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCustomEventMutations } from '@/hooks/useCustomEvents';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -62,6 +63,23 @@ export const CustomEventsAdmin = () => {
 
       if (error) throw error;
       return data as CustomEvent[];
+    },
+  });
+
+  // Fetch unique artist names from the songs table
+  const { data: artistNames, isLoading: artistsLoading } = useQuery({
+    queryKey: ['artist-names'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('songs')
+        .select('artist')
+        .order('artist', { ascending: true });
+
+      if (error) throw error;
+      
+      // Get unique artist names
+      const uniqueArtists = [...new Set(data.map(item => item.artist))].filter(Boolean).sort();
+      return uniqueArtists;
     },
   });
 
@@ -186,12 +204,22 @@ export const CustomEventsAdmin = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="artist_name">Artist Name *</Label>
-                  <Input
-                    id="artist_name"
+                  <Select
                     value={formData.artist_name}
-                    onChange={(e) => setFormData({ ...formData, artist_name: e.target.value })}
+                    onValueChange={(value) => setFormData({ ...formData, artist_name: value })}
                     required
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={artistsLoading ? "Loading artists..." : "Select an artist"} />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[200px] overflow-y-auto bg-white border border-gray-200 shadow-lg z-50">
+                      {artistNames?.map((artist) => (
+                        <SelectItem key={artist} value={artist}>
+                          {artist}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="event_title">Event Title *</Label>
