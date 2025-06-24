@@ -1,3 +1,4 @@
+
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Music } from 'lucide-react';
 import { GridItem } from './GridItem';
@@ -23,7 +24,7 @@ interface AudioPlayer {
 }
 
 interface PlaylistContentProps {
-  displayedSpins: Spin[];
+  displayedSpins?: Spin[];
   hasActiveFilters: boolean;
   layout: 'list' | 'grid';
   compact: boolean;
@@ -35,7 +36,7 @@ interface PlaylistContentProps {
 }
 
 export const PlaylistContent = ({
-  displayedSpins,
+  displayedSpins = [],
   hasActiveFilters,
   layout,
   compact,
@@ -45,6 +46,9 @@ export const PlaylistContent = ({
   formatDate,
   audioPlayer
 }: PlaylistContentProps) => {
+  // Ensure displayedSpins is always an array
+  const safeDisplayedSpins = displayedSpins || [];
+
   return (
     <ScrollArea 
       className={
@@ -56,7 +60,7 @@ export const PlaylistContent = ({
       } 
       type="always"
     >
-      {displayedSpins.length === 0 ? (
+      {safeDisplayedSpins.length === 0 ? (
         <div className="text-center py-8">
           <Music className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           <p className="text-muted-foreground">
@@ -66,7 +70,7 @@ export const PlaylistContent = ({
       ) : layout === 'grid' ? (
         // Grid Layout
         <div className={`grid gap-4 ${compact ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
-          {displayedSpins.map((spin, index) => (
+          {safeDisplayedSpins.map((spin, index) => (
             <GridItem 
               key={`${spin.id}-${index}`} 
               spin={spin} 
@@ -80,7 +84,7 @@ export const PlaylistContent = ({
       ) : (
         // List Layout
         <div className="space-y-3">
-          {displayedSpins.map((spin, index) => (
+          {safeDisplayedSpins.map((spin, index) => (
             <ListItem
               key={`${spin.id}-${index}`}
               spin={spin}
