@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -70,15 +69,31 @@ export const CustomEventsAdmin = () => {
   const { data: artistNames, isLoading: artistsLoading } = useQuery({
     queryKey: ['artist-names'],
     queryFn: async () => {
+      console.log('🎵 Fetching artists from songs table...');
       const { data, error } = await supabase
         .from('songs')
         .select('artist')
         .order('artist', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching artists:', error);
+        throw error;
+      }
+      
+      console.log('🎵 Raw artist data:', data?.slice(0, 10)); // Log first 10 entries
       
       // Get unique artist names
       const uniqueArtists = [...new Set(data.map(item => item.artist))].filter(Boolean).sort();
+      
+      console.log('🎵 Total unique artists found:', uniqueArtists.length);
+      console.log('🎵 First 20 artists:', uniqueArtists.slice(0, 20));
+      
+      // Check if Prince is in the list
+      const princeVariations = uniqueArtists.filter(artist => 
+        artist.toLowerCase().includes('prince')
+      );
+      console.log('🎵 Prince variations found:', princeVariations);
+      
       return uniqueArtists;
     },
   });
@@ -224,6 +239,11 @@ export const CustomEventsAdmin = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {artistNames && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Found {artistNames.length} artists in database
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="event_title">Event Title *</Label>
