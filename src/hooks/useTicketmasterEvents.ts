@@ -1,5 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TicketmasterEvent {
   id: string;
@@ -30,30 +31,22 @@ interface TicketmasterEvent {
   }>;
 }
 
-interface TicketmasterResponse {
-  _embedded?: {
-    events?: TicketmasterEvent[];
-  };
-}
-
 export const useTicketmasterEvents = (artistName: string, enabled: boolean = true) => {
   const fetchEvents = async (): Promise<TicketmasterEvent[]> => {
     if (!artistName.trim()) return [];
 
-    // Note: In production, the API key should be stored in Supabase secrets
-    // For now, using a public demo key - replace with your actual key
-    const API_KEY = 'YOUR_TICKETMASTER_API_KEY'; // This should come from Supabase secrets
+    console.log(`🎫 Fetching Ticketmaster events for: ${artistName}`);
     
-    const response = await fetch(
-      `https://app.ticketmaster.com/discovery/v2/events.json?keyword=${encodeURIComponent(artistName)}&city=Chicago,Milwaukee&classificationName=music&apikey=${API_KEY}&size=5`
-    );
+    const { data, error } = await supabase.functions.invoke('ticketmaster-events', {
+      body: { artistName }
+    });
 
-    if (!response.ok) {
+    if (error) {
+      console.error('Error fetching Ticketmaster events:', error);
       throw new Error('Failed to fetch Ticketmaster events');
     }
 
-    const data: TicketmasterResponse = await response.json();
-    return data._embedded?.events || [];
+    return data?.events || [];
   };
 
   return useQuery({
