@@ -1,6 +1,5 @@
 
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
 
 interface LoadMoreButtonProps {
   hasMoreSpins: boolean;
@@ -19,14 +18,7 @@ export const LoadMoreButton = ({ hasMoreSpins, loadingMore, onLoadMore }: LoadMo
         disabled={loadingMore}
         className="w-full sm:w-auto"
       >
-        {loadingMore ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Loading...
-          </>
-        ) : (
-          'Load More'
-        )}
+        {loadingMore ? 'Loading...' : 'Load More'}
       </Button>
     </div>
   );

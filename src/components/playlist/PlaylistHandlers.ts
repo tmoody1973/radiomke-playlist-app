@@ -30,13 +30,11 @@ export const createPlaylistHandlers = (
     }
   };
 
-  const handleLoadMore = async () => {
-    playlistState.setLoadingMore(true);
-    // Simulate loading delay for better UX
-    setTimeout(() => {
-      playlistState.setDisplayCount((prev: number) => Math.min(prev + 15, playlistState.allSpins.length));
-      playlistState.setLoadingMore(false);
-    }, 500);
+  const handleLoadMore = () => {
+    console.log('🔄 Load more clicked, current display count:', playlistState.displayCount, 'total spins:', playlistState.allSpins.length);
+    const newCount = Math.min(playlistState.displayCount + 15, playlistState.allSpins.length);
+    console.log('🔄 Setting new display count to:', newCount);
+    playlistState.setDisplayCount(newCount);
   };
 
   const handleManualRefresh = () => {

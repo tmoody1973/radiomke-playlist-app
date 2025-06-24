@@ -58,18 +58,29 @@ export const usePlaylistState = ({ spins, hasActiveFilters, initialStartDate, in
 
   // Reset display count when search or date filters change
   useEffect(() => {
+    console.log('🔄 Filters changed, resetting display count to 15');
     setDisplayCount(15);
     setAllSpins([]);
   }, [debouncedSearchTerm, startDate, endDate, dateSearchEnabled]);
 
   // Memoized callback for setting all spins
   const setAllSpinsCallback = useCallback((newSpins: Spin[]) => {
+    console.log('🔄 Setting all spins:', newSpins.length);
     setAllSpins(newSpins);
   }, []);
 
   // Memoized callback for setting display count
   const setDisplayCountCallback = useCallback((count: number | ((prev: number) => number)) => {
-    setDisplayCount(count);
+    if (typeof count === 'function') {
+      setDisplayCount(prev => {
+        const newCount = count(prev);
+        console.log('🔄 Display count updated from', prev, 'to', newCount);
+        return newCount;
+      });
+    } else {
+      console.log('🔄 Display count set to:', count);
+      setDisplayCount(count);
+    }
   }, []);
 
   return {
