@@ -33,7 +33,8 @@ const EmbedPreview = ({ config }: EmbedPreviewProps) => {
         <div 
           className="border rounded-lg overflow-hidden"
           style={{
-            backgroundColor: config.theme === 'dark' ? '#1f2937' : '#ffffff'
+            backgroundColor: '#f8f9fa',
+            isolation: 'isolate'
           }}
         >
           <iframe
@@ -42,10 +43,16 @@ const EmbedPreview = ({ config }: EmbedPreviewProps) => {
             height={`${config.height}px`}
             style={{ 
               border: 'none',
-              backgroundColor: config.theme === 'dark' ? '#1f2937' : '#ffffff'
+              display: 'block',
+              backgroundColor: 'transparent'
             }}
             title="Playlist Preview"
+            sandbox="allow-scripts allow-same-origin"
+            loading="lazy"
           />
+        </div>
+        <div className="mt-2 text-sm text-muted-foreground">
+          Theme: {config.theme} | Height: {config.height}px | Layout: {config.layout}
         </div>
       </CardContent>
     </Card>
