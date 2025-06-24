@@ -23,7 +23,7 @@ const Embed = () => {
 
   return (
     <div 
-      className={`embed-container w-full h-screen ${theme === 'dark' ? 'dark' : ''}`}
+      className={`embed-container w-full h-screen ${theme === 'dark' ? 'dark' : 'light'}`}
       style={{ 
         height: height !== 'auto' ? `${height}px` : '100vh',
         overflow: 'hidden',
@@ -31,7 +31,7 @@ const Embed = () => {
       }}
     >
       <div 
-        className={`h-full p-2 sm:p-4 flex flex-col`}
+        className={`h-full p-2 sm:p-4 flex flex-col ${theme === 'light' ? 'bg-white text-gray-900' : 'bg-gray-800 text-white'}`}
         style={{
           backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
           color: theme === 'dark' ? '#ffffff' : '#1f2937'
