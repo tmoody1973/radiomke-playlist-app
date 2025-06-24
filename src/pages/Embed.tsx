@@ -23,7 +23,7 @@ const Embed = () => {
 
   return (
     <div 
-      className={`embed-container w-full h-screen ${theme === 'dark' ? 'dark' : ''}`}
+      className={`embed-container w-full h-screen ${theme === 'dark' ? 'dark bg-gray-900' : 'bg-white'}`}
       style={{ 
         height: height !== 'auto' ? `${height}px` : '100vh',
         overflow: 'hidden'
