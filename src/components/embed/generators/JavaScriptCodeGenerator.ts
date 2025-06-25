@@ -127,14 +127,6 @@ export const generateJavaScriptCode = (config: EmbedConfig): string => {
         padding: 32px;
         color: \${config.theme === 'dark' ? '#f87171' : '#dc2626'};
       }
-      .spinitron-footer {
-        text-align: center;
-        padding: 12px 16px;
-        border-top: 1px solid \${config.theme === 'dark' ? '#374151' : '#e5e7eb'};
-        font-size: 12px;
-        color: \${config.theme === 'dark' ? '#9ca3af' : '#6b7280'};
-        background-color: \${config.theme === 'dark' ? '#111827' : '#f9fafb'};
-      }
     \`;
     
     var style = document.createElement('style');
@@ -187,9 +179,6 @@ export const generateJavaScriptCode = (config: EmbedConfig): string => {
           html += '</div>';
         });
         html += '</div>';
-        
-        // Add footer
-        html += '<div class="spinitron-footer">Made with ❤️ by Tarik aka the Architect</div>';
         
         container.innerHTML = html;
       })
