@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useTicketmasterEvents } from '@/hooks/useTicketmasterEvents';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ interface ArtistEventsProps {
 }
 
 export const ArtistEvents = ({ artistName, compact = false, stationId, tracking }: ArtistEventsProps) => {
-  const { events, isLoading, error } = useTicketmasterEvents(artistName);
+  const { data: events = [], isLoading, error } = useTicketmasterEvents(artistName);
 
   React.useEffect(() => {
     if (events.length > 0 && tracking) {
@@ -46,20 +47,20 @@ export const ArtistEvents = ({ artistName, compact = false, stationId, tracking 
               <div className={`font-medium truncate ${compact ? 'text-xs' : 'text-sm'}`}>
                 {event.name}
               </div>
-              {event.venue && (
+              {event._embedded?.venues?.[0] && (
                 <div className={`flex items-center gap-1 text-muted-foreground ${compact ? 'text-xs' : 'text-sm'}`}>
                   <MapPin className="w-3 h-3" />
-                  <span className="truncate">{event.venue}</span>
+                  <span className="truncate">{event._embedded.venues[0].name}</span>
                 </div>
               )}
               <div className={`flex items-center gap-1 text-muted-foreground ${compact ? 'text-xs' : 'text-sm'}`}>
                 <Calendar className="w-3 h-3" />
-                <span>{new Date(event.date).toLocaleDateString()}</span>
+                <span>{new Date(event.dates.start.localDate).toLocaleDateString()}</span>
               </div>
-              {event.priceRange && (
+              {event.priceRanges?.[0] && (
                 <div className={`flex items-center gap-1 text-muted-foreground ${compact ? 'text-xs' : 'text-sm'}`}>
                   <DollarSign className="w-3 h-3" />
-                  <span>{event.priceRange}</span>
+                  <span>${event.priceRanges[0].min} - ${event.priceRanges[0].max}</span>
                 </div>
               )}
             </div>
