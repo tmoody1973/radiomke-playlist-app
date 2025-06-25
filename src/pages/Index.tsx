@@ -2,7 +2,7 @@ import SpinitinonPlaylist from '@/components/SpinitinonPlaylist';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Code, ExternalLink, Heart, FileText, List, Grid } from 'lucide-react';
+import { Code, ExternalLink, Heart, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 
 const Index = () => {
   const [selectedStation, setSelectedStation] = useState('hyfin');
-  const [layout, setLayout] = useState<'list' | 'grid'>('list');
 
   return (
     <div className="min-h-screen bg-background">
@@ -25,54 +24,28 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Station and Layout Selector */}
-          <div className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto mb-6">
-            <Card className="flex-1 border-orange-200 shadow-md">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <Label className="text-lg font-semibold mb-4 block">Select Station</Label>
-                  <RadioGroup value={selectedStation} onValueChange={setSelectedStation} className="flex justify-center gap-8">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="hyfin" id="hyfin" />
-                      <Label htmlFor="hyfin" className="font-medium cursor-pointer">
-                        HYFIN
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="88nine" id="88nine" />
-                      <Label htmlFor="88nine" className="font-medium cursor-pointer">
-                        88Nine
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="flex-1 border-blue-200 shadow-md">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <Label className="text-lg font-semibold mb-4 block">Layout</Label>
-                  <RadioGroup value={layout} onValueChange={(value: 'list' | 'grid') => setLayout(value)} className="flex justify-center gap-8">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="list" id="list" />
-                      <Label htmlFor="list" className="font-medium cursor-pointer flex items-center gap-1">
-                        <List className="h-4 w-4" />
-                        List
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="grid" id="grid" />
-                      <Label htmlFor="grid" className="font-medium cursor-pointer flex items-center gap-1">
-                        <Grid className="h-4 w-4" />
-                        Grid
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Station Selector */}
+          <Card className="max-w-md mx-auto mb-6 border-orange-200 shadow-md">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <Label className="text-lg font-semibold mb-4 block">Select Station</Label>
+                <RadioGroup value={selectedStation} onValueChange={setSelectedStation} className="flex justify-center gap-8">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="hyfin" id="hyfin" />
+                    <Label htmlFor="hyfin" className="font-medium cursor-pointer">
+                      HYFIN
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="88nine" id="88nine" />
+                    <Label htmlFor="88nine" className="font-medium cursor-pointer">
+                      88Nine
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </CardContent>
+          </Card>
           
           <p className="text-xl text-muted-foreground mb-6 max-w-2xl mx-auto">
             Experience Milwaukee's independent radio with live playlist updates, 
@@ -108,13 +81,7 @@ const Index = () => {
           </Card>
         </div>
         
-        <SpinitinonPlaylist 
-          stationId={selectedStation} 
-          autoUpdate={true} 
-          showSearch={true} 
-          maxItems={50} 
-          layout={layout}
-        />
+        <SpinitinonPlaylist stationId={selectedStation} autoUpdate={true} showSearch={true} maxItems={50} />
         
         <div className="mt-8 text-center text-sm text-muted-foreground">
           <p className="flex items-center justify-center gap-1">
