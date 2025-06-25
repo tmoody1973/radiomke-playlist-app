@@ -31,9 +31,8 @@ const EmbedPreview = ({ config }: EmbedPreviewProps) => {
     setKey(prev => prev + 1);
   }, [config.theme, config.layout, config.height]);
 
-  // Calculate proper iframe height with extra padding for Load More button
-  const baseHeight = parseInt(config.height) || 600;
-  const iframeHeight = baseHeight + 100; // Add extra space for Load More button
+  // Use the exact height from config - no additional padding
+  const iframeHeight = parseInt(config.height) || 600;
 
   return (
     <Card className="h-full flex flex-col bg-slate-900 border-slate-700">

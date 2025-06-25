@@ -41,9 +41,8 @@ export const generateIframeCode = (config: EmbedConfig): string => {
     inputText: isDark ? '#f8fafc' : '#1f2937' // Dark text for light theme inputs
   };
   
-  // Calculate iframe height with extra space for Load More button
-  const baseHeight = parseInt(config.height) || 600;
-  const iframeHeight = baseHeight + 100;
+  // Use the exact height from config - no additional padding
+  const iframeHeight = parseInt(config.height) || 600;
   
   return `<!-- SEO-Friendly Radio Milwaukee Playlist Embed -->
 <div class="radio-milwaukee-embed-container">
@@ -107,7 +106,7 @@ export const generateIframeCode = (config: EmbedConfig): string => {
     if (event.data.type === 'spinitron-resize') {
       const iframe = document.getElementById('spinitron-iframe');
       if (iframe) {
-        const newHeight = Math.max(event.data.height, ${baseHeight});
+        const newHeight = Math.max(event.data.height, ${iframeHeight});
         iframe.style.height = newHeight + 'px';
         iframe.style.overflow = 'visible';
       }
