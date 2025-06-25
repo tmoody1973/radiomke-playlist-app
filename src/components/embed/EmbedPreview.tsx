@@ -31,6 +31,9 @@ const EmbedPreview = ({ config }: EmbedPreviewProps) => {
     setKey(prev => prev + 1);
   }, [config.theme, config.layout, config.height]);
 
+  // Calculate proper iframe height - ensure it's at least the configured height
+  const iframeHeight = Math.max(parseInt(config.height) || 600, 600);
+
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
@@ -38,23 +41,22 @@ const EmbedPreview = ({ config }: EmbedPreviewProps) => {
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0">
         <div 
-          className="border rounded-lg overflow-hidden flex-1 flex flex-col"
+          className="border rounded-lg overflow-hidden flex-1"
           style={{
             backgroundColor: '#f8f9fa',
-            isolation: 'isolate',
-            minHeight: '500px'
+            minHeight: `${iframeHeight}px`,
+            maxHeight: `${iframeHeight}px`
           }}
         >
           <iframe
             key={key}
             src={embedUrl}
             width="100%"
-            height="100%"
+            height={`${iframeHeight}px`}
             style={{ 
               border: 'none',
               display: 'block',
-              backgroundColor: 'transparent',
-              flex: '1'
+              backgroundColor: 'transparent'
             }}
             title="Playlist Preview"
             sandbox="allow-scripts allow-same-origin"
