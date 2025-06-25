@@ -30,6 +30,7 @@ interface PlaylistContentProps {
   layout: 'list' | 'grid';
   compact: boolean;
   isEmbedMode: boolean;
+  showSearch: boolean;
   isCurrentlyPlaying: (spin: Spin, index: number) => boolean;
   formatTime: (dateString: string) => string;
   formatDate: (dateString: string) => string;
@@ -38,6 +39,7 @@ interface PlaylistContentProps {
   hasMoreSpins: boolean;
   loadingMore: boolean;
   onLoadMore: () => void;
+  playlistState: any;
 }
 
 export const PlaylistContent = ({
@@ -46,6 +48,7 @@ export const PlaylistContent = ({
   layout,
   compact,
   isEmbedMode,
+  showSearch,
   isCurrentlyPlaying,
   formatTime,
   formatDate,
@@ -53,7 +56,8 @@ export const PlaylistContent = ({
   stationId,
   hasMoreSpins,
   loadingMore,
-  onLoadMore
+  onLoadMore,
+  playlistState
 }: PlaylistContentProps) => {
   const safeDisplayedSpins = displayedSpins || [];
 
