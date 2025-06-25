@@ -23,14 +23,26 @@ const Embed = () => {
 
   // Apply theme and styling to match homepage
   useEffect(() => {
+    // Remove any existing theme classes first
+    document.documentElement.classList.remove('dark', 'light');
+    document.body.classList.remove('dark', 'light');
+    
+    // Apply the correct theme
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
+    } else {
+      document.documentElement.classList.add('light');
+      document.body.classList.add('light');
+    }
+    
     document.documentElement.setAttribute('data-theme', theme);
-    document.documentElement.className = theme;
     
     // Match homepage styling with orange accent colors
     const bgColor = theme === 'dark' ? '#0f172a' : '#ffffff';
     const textColor = theme === 'dark' ? '#f8fafc' : '#1e293b';
     
-    document.body.className = `embed-container w-full m-0 p-0 ${theme === 'dark' ? 'dark' : ''}`;
+    document.body.className = `embed-container w-full m-0 p-0 ${theme === 'dark' ? 'dark' : 'light'}`;
     document.body.style.cssText = `
       height: ${height !== 'auto' ? `${height}px` : '100vh'};
       overflow: visible !important;
@@ -88,7 +100,7 @@ const Embed = () => {
   }, [theme, height]);
 
   return (
-    <div className={`min-h-full flex flex-col ${theme === 'dark' ? 'bg-slate-900 text-slate-100' : 'bg-white text-slate-900'}`}
+    <div className={`min-h-full flex flex-col ${theme === 'dark' ? 'dark bg-slate-900 text-slate-100' : 'light bg-white text-slate-900'}`}
          style={{ overflow: 'visible' }}>
       <div className="flex-1" style={{ overflow: 'visible' }}>
         <SpinitinonPlaylist 
