@@ -52,7 +52,7 @@ export const PlaylistContent = ({
   const safeDisplayedSpins = displayedSpins || [];
 
   return (
-    <div className={isEmbedMode ? "flex-1 min-h-0" : ""}>
+    <div className={isEmbedMode ? "flex-1 min-h-0 overflow-hidden" : ""}>
       <ScrollArea 
         className={
           isEmbedMode 

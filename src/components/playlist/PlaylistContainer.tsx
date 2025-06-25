@@ -134,13 +134,11 @@ export const PlaylistContainer = ({
           stationId={stationId}
         />
         
-        {!isEmbedMode && (
-          <LoadMoreButton
-            hasMoreSpins={hasMoreSpins}
-            loadingMore={playlistState.loadingMore}
-            onLoadMore={handlers.handleLoadMore}
-          />
-        )}
+        <LoadMoreButton
+          hasMoreSpins={hasMoreSpins}
+          loadingMore={playlistState.loadingMore}
+          onLoadMore={handlers.handleLoadMore}
+        />
       </CardContent>
     </Card>
   );
