@@ -14,7 +14,7 @@ const Embed = () => {
   const maxItems = maxItemsParam === 'unlimited' ? 1000 : parseInt(maxItemsParam);
   const compact = searchParams.get('compact') === 'true';
   const height = searchParams.get('height') || 'auto';
-  const theme = searchParams.get('theme') || 'light'; // Default to light to match homepage
+  const theme = searchParams.get('theme') || 'light';
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
   
@@ -23,24 +23,31 @@ const Embed = () => {
 
   // Apply theme and styling to match homepage
   useEffect(() => {
-    // Remove all theme-related classes first
-    document.documentElement.classList.remove('dark', 'light');
-    document.body.classList.remove('dark', 'light');
+    console.log('Embed theme effect triggered:', theme);
     
-    // Apply the correct theme classes
+    // Clear all existing theme classes
+    document.documentElement.className = document.documentElement.className
+      .replace(/\b(dark|light)\b/g, '');
+    document.body.className = document.body.className
+      .replace(/\b(dark|light)\b/g, '');
+    
+    // Apply theme to html element
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
       document.body.classList.add('dark');
+    } else {
+      // For light theme, explicitly ensure no dark class
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
     }
-    // For light mode, we explicitly don't add 'dark' class to ensure Tailwind uses light mode
     
     document.documentElement.setAttribute('data-theme', theme);
     
-    // Match homepage styling with orange accent colors
+    // Apply styles
     const bgColor = theme === 'dark' ? '#0f172a' : '#ffffff';
     const textColor = theme === 'dark' ? '#f8fafc' : '#1e293b';
     
-    document.body.className = `embed-container w-full m-0 p-0`;
+    document.body.className = `embed-container w-full m-0 p-0 ${theme}`;
     document.body.style.cssText = `
       height: ${height !== 'auto' ? `${height}px` : '100vh'};
       overflow: visible !important;
@@ -60,7 +67,6 @@ const Embed = () => {
 
     // Send height updates to parent frame for dynamic resizing
     const sendHeightUpdate = () => {
-      // If height is specified, use that exact height for external embeds
       if (height !== 'auto') {
         const specifiedHeight = parseInt(height);
         if (window.parent !== window) {
@@ -72,7 +78,6 @@ const Embed = () => {
         return;
       }
       
-      // For auto height, calculate based on actual content
       const contentHeight = Math.max(
         document.body.scrollHeight,
         document.body.offsetHeight,
@@ -97,10 +102,12 @@ const Embed = () => {
     return () => observer.disconnect();
   }, [theme, height]);
 
-  // Create dynamic classes based on theme to force re-render
-  const containerClasses = theme === 'dark' 
-    ? 'min-h-full flex flex-col dark bg-slate-900 text-slate-100'
-    : 'min-h-full flex flex-col bg-white text-slate-900';
+  // Force theme classes based on current theme
+  const containerClasses = `min-h-full flex flex-col ${
+    theme === 'dark' 
+      ? 'dark bg-slate-900 text-slate-100' 
+      : 'bg-white text-slate-900'
+  }`;
 
   return (
     <div className={containerClasses} style={{ overflow: 'visible' }}>

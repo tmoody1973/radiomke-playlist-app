@@ -24,14 +24,13 @@ interface EmbedPreviewProps {
 
 const EmbedPreview = ({ config }: EmbedPreviewProps) => {
   const [key, setKey] = useState(0);
-  const embedUrl = generateEmbedUrl(config);
-
-  // Force iframe to reload when theme changes
+  
+  // Force iframe to reload when any config changes, especially theme
   useEffect(() => {
     setKey(prev => prev + 1);
-  }, [config.theme, config.layout, config.height]);
+  }, [config.theme, config.layout, config.height, config.selectedStation, config.compact]);
 
-  // Use the exact height from config - no additional padding
+  const embedUrl = generateEmbedUrl(config);
   const iframeHeight = parseInt(config.height) || 600;
 
   return (
@@ -50,20 +49,20 @@ const EmbedPreview = ({ config }: EmbedPreviewProps) => {
           }}
         >
           <iframe
-            key={key}
+            key={`embed-${key}-${config.theme}`}
             src={embedUrl}
             width="100%"
             height={`${iframeHeight}px`}
             style={{ 
               border: 'none',
               display: 'block',
-              backgroundColor: '#1e293b',
+              backgroundColor: config.theme === 'dark' ? '#1e293b' : '#ffffff',
               overflow: 'visible',
               borderRadius: '6px'
             }}
             title="Playlist Preview"
             sandbox="allow-scripts allow-same-origin"
-            loading="lazy"
+            loading="eager"
             scrolling="yes"
           />
         </div>
