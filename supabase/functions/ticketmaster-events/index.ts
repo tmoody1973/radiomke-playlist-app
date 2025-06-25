@@ -241,11 +241,42 @@ serve(async (req) => {
       return artistInTitle
     })
     
+    // Additional filtering for caching - only cache events that are EXACT matches
+    const eventsToCache = events.filter(event => {
+      const eventName = event.name.toLowerCase()
+      const attractions = event._embedded?.attractions || []
+      
+      // For caching, be even more strict - require exact artist name match
+      const hasExactAttractionMatch = attractions.some(attraction => {
+        const attractionName = attraction.name.toLowerCase()
+        return attractionName === cleanArtistName
+      })
+      
+      // Or exact match in event title
+      const hasExactTitleMatch = (
+        eventName === cleanArtistName ||
+        eventName.startsWith(cleanArtistName + ' ') ||
+        eventName.startsWith(cleanArtistName + ':') ||
+        eventName.startsWith(cleanArtistName + ' -') ||
+        eventName.endsWith(' ' + cleanArtistName) ||
+        eventName.includes('(' + cleanArtistName + ')')
+      )
+      
+      const shouldCache = hasExactAttractionMatch || hasExactTitleMatch
+      if (shouldCache) {
+        console.log(`🗄️ Will cache exact match: ${event.name}`)
+      } else {
+        console.log(`⚠️ Filtered out for caching (not exact match): ${event.name}`)
+      }
+      
+      return shouldCache
+    })
+    
     events = events.slice(0, 10)
 
-    // Cache the new events in the database
-    if (events.length > 0) {
-      console.log(`Caching ${events.length} events for artist: ${artistName}`)
+    // Cache only the exact matches
+    if (eventsToCache.length > 0) {
+      console.log(`Caching ${eventsToCache.length} exact-match events for artist: ${artistName}`)
       
       // First, deactivate old cached events for this artist
       await supabase
@@ -254,7 +285,7 @@ serve(async (req) => {
         .eq('artist_name', artistName)
 
       // Insert new events into cache
-      const eventsToCache = events.map(event => {
+      const cacheData = eventsToCache.map(event => {
         const venue = event._embedded?.venues?.[0]
         const priceRange = event.priceRanges?.[0]
         
@@ -277,16 +308,16 @@ serve(async (req) => {
 
       const { error: insertError } = await supabase
         .from('ticketmaster_events_cache')
-        .insert(eventsToCache)
+        .insert(cacheData)
 
       if (insertError) {
         console.error('Error caching events:', insertError)
       } else {
-        console.log(`Successfully cached ${eventsToCache.length} events for ${artistName}`)
+        console.log(`Successfully cached ${cacheData.length} exact-match events for ${artistName}`)
       }
     } else {
-      // Even if no events found, cache that fact to avoid repeated API calls
-      console.log(`No events found for ${artistName}, caching negative result`)
+      // Even if no exact matches found, cache that fact to avoid repeated API calls
+      console.log(`No exact matches found for ${artistName}, caching negative result`)
       
       // Deactivate old cached events
       await supabase
