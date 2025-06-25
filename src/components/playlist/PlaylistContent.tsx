@@ -51,10 +51,10 @@ export const PlaylistContent = ({
   // Ensure displayedSpins is always an array
   const safeDisplayedSpins = displayedSpins || [];
 
-  // Use the same ScrollArea approach for both embed and regular mode
+  // Use consistent ScrollArea height for both embed and regular mode
   const getScrollAreaHeight = () => {
     if (isEmbedMode) {
-      return "h-[calc(100vh-180px)]"; // Leave more space for the Load More button in embed mode
+      return "h-[calc(100vh-220px)]"; // Leave space for header and Load More button
     }
     return compact ? "h-64" : "h-96";
   };
