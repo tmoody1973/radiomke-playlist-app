@@ -27,11 +27,12 @@ const Embed = () => {
     document.documentElement.classList.remove('dark', 'light');
     document.body.classList.remove('dark', 'light');
     
-    // Apply the correct theme
+    // Apply the correct theme to html element for Tailwind dark mode
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
       document.body.classList.add('dark');
     } else {
+      // For light mode, we don't add 'dark' class to html, ensuring Tailwind uses light mode
       document.documentElement.classList.add('light');
       document.body.classList.add('light');
     }
@@ -100,7 +101,7 @@ const Embed = () => {
   }, [theme, height]);
 
   return (
-    <div className={`min-h-full flex flex-col ${theme === 'dark' ? 'dark bg-slate-900 text-slate-100' : 'light bg-white text-slate-900'}`}
+    <div className={`min-h-full flex flex-col ${theme === 'dark' ? 'dark bg-slate-900 text-slate-100' : 'bg-white text-slate-900'}`}
          style={{ overflow: 'visible' }}>
       <div className="flex-1" style={{ overflow: 'visible' }}>
         <SpinitinonPlaylist 
