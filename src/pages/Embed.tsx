@@ -50,6 +50,19 @@ const Embed = () => {
 
     // Send height updates to parent frame for dynamic resizing
     const sendHeightUpdate = () => {
+      // If height is specified, use that exact height for external embeds
+      if (height !== 'auto') {
+        const specifiedHeight = parseInt(height);
+        if (window.parent !== window) {
+          window.parent.postMessage({
+            type: 'spinitron-resize',
+            height: specifiedHeight
+          }, '*');
+        }
+        return;
+      }
+      
+      // For auto height, calculate based on actual content
       const contentHeight = Math.max(
         document.body.scrollHeight,
         document.body.offsetHeight,
@@ -61,7 +74,7 @@ const Embed = () => {
       if (window.parent !== window) {
         window.parent.postMessage({
           type: 'spinitron-resize',
-          height: contentHeight // Removed the +100 padding since Load More is now inside
+          height: contentHeight
         }, '*');
       }
     };
