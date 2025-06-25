@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Radio } from 'lucide-react';
@@ -14,7 +13,7 @@ import { isCurrentlyPlaying, formatTime, formatDate, getPlaylistTitle } from '@/
 interface PlaylistContainerProps {
   stationId: string;
   autoUpdate: boolean;
-  showSearch: boolean;
+  showSearch: boolean;  
   maxItems: number;
   compact: boolean;
   startDate: string;
@@ -64,21 +63,15 @@ export const PlaylistContainer = ({
 
   const displayedSpins = playlistState.allSpins.slice(0, playlistState.displayCount);
   
-  // Improved logic for hasMoreSpins
-  const hasMoreSpins = React.useMemo(() => {
-    const totalSpins = playlistState.allSpins.length;
-    const displayCount = playlistState.displayCount;
-    const hasMore = displayCount < totalSpins;
-    
-    console.log(`🔄 HasMoreSpins check for station ${stationId}:`, {
-      totalSpins,
-      displayCount,
-      hasMore,
-      isLoading: playlistState.loadingMore
-    });
-    
-    return hasMore;
-  }, [playlistState.allSpins.length, playlistState.displayCount, stationId, playlistState.loadingMore]);
+  // Simplified logic for hasMoreSpins - just check if there are more spins to display
+  const hasMoreSpins = playlistState.displayCount < playlistState.allSpins.length;
+
+  console.log(`🔄 HasMoreSpins check for station ${stationId}:`, {
+    totalSpins: playlistState.allSpins.length,
+    displayCount: playlistState.displayCount,
+    hasMore: hasMoreSpins,
+    isLoading: playlistState.loadingMore
+  });
 
   console.log(`🎵 Displayed spins for station ${stationId}:`, displayedSpins.length, 'out of', playlistState.allSpins.length);
 

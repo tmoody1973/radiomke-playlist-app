@@ -1,4 +1,3 @@
-
 export const createPlaylistHandlers = (
   playlistState: any,
   refetch: () => void
@@ -33,21 +32,28 @@ export const createPlaylistHandlers = (
   const handleLoadMore = () => {
     console.log('🔄 Load more clicked, current display count:', playlistState.displayCount, 'total spins:', playlistState.allSpins.length);
     
-    // Don't do anything if already loading or no more spins
-    if (playlistState.loadingMore || playlistState.displayCount >= playlistState.allSpins.length) {
+    // Early return if already loading
+    if (playlistState.loadingMore) {
+      console.log('Already loading, ignoring click');
+      return;
+    }
+    
+    // Early return if no more spins to load
+    if (playlistState.displayCount >= playlistState.allSpins.length) {
+      console.log('No more spins to load');
       return;
     }
     
     // Set loading state
     playlistState.setLoadingMore(true);
     
-    // Calculate new count after a short delay to show loading state
+    // Update display count with a small delay for UX
     setTimeout(() => {
       const newCount = Math.min(playlistState.displayCount + 15, playlistState.allSpins.length);
-      console.log('🔄 Setting new display count to:', newCount);
+      console.log('🔄 Updating display count from', playlistState.displayCount, 'to', newCount);
       playlistState.setDisplayCount(newCount);
       playlistState.setLoadingMore(false);
-    }, 300);
+    }, 200);
   };
 
   const handleManualRefresh = () => {

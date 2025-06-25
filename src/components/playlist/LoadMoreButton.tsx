@@ -10,15 +10,17 @@ interface LoadMoreButtonProps {
 export const LoadMoreButton = ({ hasMoreSpins, loadingMore, onLoadMore }: LoadMoreButtonProps) => {
   const isEmbedMode = window.location.pathname === '/embed';
 
-  // Show button if there are more spins OR if we're currently loading
-  if (!hasMoreSpins && !loadingMore) return null;
+  // Don't show button if no more spins and not loading
+  if (!hasMoreSpins && !loadingMore) {
+    return null;
+  }
 
   return (
     <div className={`flex justify-center ${isEmbedMode ? 'p-4 bg-transparent border-t border-gray-200' : 'mt-4'}`}>
       <Button
         variant="outline"
         onClick={onLoadMore}
-        disabled={loadingMore || !hasMoreSpins}
+        disabled={loadingMore}
         className={`w-full sm:w-auto transition-all duration-200 ${
           isEmbedMode 
             ? 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 disabled:bg-gray-100 disabled:text-gray-400' 
