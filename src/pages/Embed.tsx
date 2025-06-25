@@ -61,7 +61,7 @@ const Embed = () => {
       if (window.parent !== window) {
         window.parent.postMessage({
           type: 'spinitron-resize',
-          height: contentHeight + 100 // Add padding for Load More button
+          height: contentHeight // Removed the +100 padding since Load More is now inside
         }, '*');
       }
     };
