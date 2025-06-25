@@ -27,17 +27,17 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   const embedUrl = generateEmbedUrl(config);
   const stationName = config.selectedStation === 'hyfin' ? 'HYFIN' : '88Nine';
   
-  // Generate theme-aware colors matching the dark slate theme
+  // Generate theme-aware colors with improved contrast
   const isDark = config.theme === 'dark';
   const colors = {
     backgroundColor: isDark ? '#0f172a' : '#ffffff',
-    textColor: isDark ? '#cbd5e1' : '#374151',
+    textColor: isDark ? '#cbd5e1' : '#1e293b',
     headingColor: isDark ? '#f8fafc' : '#1e293b',
-    linkColor: '#ea580c', // Orange accent
+    linkColor: '#3b82f6', // Updated to blue to match reference
     borderColor: isDark ? '#475569' : '#e2e8f0',
     cardBg: isDark ? '#1e293b' : '#f8fafc',
     inputBg: isDark ? '#334155' : '#ffffff',
-    inputBorder: isDark ? '#64748b' : '#d1d5db'
+    inputBorder: isDark ? '#64748b' : '#cbd5e1'
   };
   
   // Calculate iframe height with extra space for Load More button
@@ -62,7 +62,7 @@ export const generateIframeCode = (config: EmbedConfig): string => {
     referrerpolicy="strict-origin-when-cross-origin"
     sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
     scrolling="yes"
-    style="border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); display: block; max-width: 100%; background-color: ${colors.backgroundColor}; overflow: visible !important;"
+    style="border: none; border-radius: 12px; box-shadow: ${isDark ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' : '0 1px 3px 0 rgba(0, 0, 0, 0.1)'}; display: block; max-width: 100%; background-color: ${colors.backgroundColor}; overflow: visible !important;"
     id="spinitron-iframe">
     
     <!-- Fallback content for accessibility and SEO -->
@@ -114,17 +114,18 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   });
 </script>
 
-<!-- Custom Theme CSS matching dark slate theme -->
+<!-- Custom Theme CSS with improved light theme contrast -->
 <style>
 .radio-milwaukee-embed-container {
   max-width: 100%;
   margin: 1rem 0;
   background-color: ${colors.cardBg};
   border: 1px solid ${colors.borderColor};
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 1rem;
   overflow: visible !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  box-shadow: ${isDark ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' : '0 1px 3px 0 rgba(0, 0, 0, 0.1)'};
 }
 
 .radio-milwaukee-embed-container h3 {
@@ -132,10 +133,6 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   font-size: 1.25rem;
   font-weight: 600;
   color: ${colors.headingColor};
-  background: linear-gradient(to right, #ea580c, #fb923c);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .radio-milwaukee-embed-container p {
@@ -167,7 +164,6 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   overflow: visible !important;
   border: 1px solid ${colors.borderColor};
   background-color: ${colors.backgroundColor} !important;
-  box-shadow: ${isDark ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' : '0 4px 6px -1px rgba(249, 115, 22, 0.1)'};
 }
 </style>`;
 };

@@ -6,18 +6,20 @@
   function generateCSS(config) {
     const isDark = config.theme === 'dark';
     
-    // Dark theme colors matching the preview
+    // Updated color scheme matching the reference design
     const colors = {
       background: isDark ? '#0f172a' : '#ffffff',
-      cardBg: isDark ? '#1e293b' : '#ffffff',
-      text: isDark ? '#f8fafc' : '#374151',
-      textMuted: isDark ? '#cbd5e1' : '#6b7280',
-      border: isDark ? '#475569' : '#e5e7eb',
+      cardBg: isDark ? '#1e293b' : '#f8fafc',
+      text: isDark ? '#f8fafc' : '#1e293b',
+      textMuted: isDark ? '#cbd5e1' : '#64748b',
+      border: isDark ? '#475569' : '#e2e8f0',
       inputBg: isDark ? '#334155' : '#ffffff',
-      inputBorder: isDark ? '#64748b' : '#d1d5db',
-      inputText: isDark ? '#f8fafc' : '#374151',
-      hover: isDark ? '#334155' : '#f9fafb',
-      accent: '#ea580c'
+      inputBorder: isDark ? '#64748b' : '#cbd5e1',
+      inputText: isDark ? '#f8fafc' : '#1e293b',
+      inputPlaceholder: isDark ? '#94a3b8' : '#94a3b8',
+      hover: isDark ? '#334155' : '#f1f5f9',
+      accent: '#3b82f6', // Updated to blue accent to match reference
+      accentHover: isDark ? '#2563eb' : '#1d4ed8'
     };
     
     return `
@@ -26,10 +28,12 @@
         line-height: 1.6;
         color: ${colors.text};
         background-color: ${colors.background};
-        border-radius: 8px;
+        border-radius: 12px;
         overflow: hidden;
+        border: 1px solid ${colors.border};
         ${config.height !== 'auto' ? `height: ${config.height}px; overflow-y: auto;` : ''}
         min-height: 400px;
+        box-shadow: ${isDark ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' : '0 1px 3px 0 rgba(0, 0, 0, 0.1)'};
       }
       
       .spinitron-widget * {
@@ -46,22 +50,23 @@
         width: 100%;
         padding: 12px 16px;
         border: 1px solid ${colors.inputBorder};
-        border-radius: 6px;
+        border-radius: 8px;
         background-color: ${colors.inputBg};
         color: ${colors.inputText};
         font-size: 14px;
         transition: all 0.2s ease;
+        box-shadow: ${isDark ? 'none' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'};
       }
       
       .spinitron-search input::placeholder {
-        color: ${colors.textMuted};
-        opacity: 0.8;
+        color: ${colors.inputPlaceholder};
+        opacity: 1;
       }
       
       .spinitron-search input:focus {
         outline: none;
         border-color: ${colors.accent};
-        box-shadow: 0 0 0 2px ${colors.accent}20;
+        box-shadow: 0 0 0 3px ${colors.accent}20;
       }
       
       .spinitron-playlist {
@@ -70,10 +75,11 @@
       }
       
       .spinitron-song {
-        ${config.layout === 'list' ? 'border-bottom: 1px solid ' + colors.border + ';' : 'border: 1px solid ' + colors.border + '; border-radius: 6px; background-color: ' + colors.cardBg + ';'}
+        ${config.layout === 'list' ? 'border-bottom: 1px solid ' + colors.border + ';' : 'border: 1px solid ' + colors.border + '; border-radius: 8px; background-color: ' + colors.cardBg + ';'}
         padding: ${config.compact ? '12px 16px' : '16px'};
         ${config.layout === 'grid' ? 'text-align: center;' : ''}
         transition: all 0.2s ease;
+        background-color: ${config.layout === 'list' ? colors.background : colors.cardBg};
       }
       
       .spinitron-song:hover {
@@ -106,7 +112,7 @@
         width: ${config.compact ? '40px' : '60px'};
         height: ${config.compact ? '40px' : '60px'};
         object-fit: cover;
-        border-radius: 4px;
+        border-radius: 6px;
         ${config.layout === 'list' ? 'float: left; margin-right: 12px;' : 'margin: 0 auto 8px; display: block;'}
       }
       
@@ -122,7 +128,7 @@
         color: white;
         border: none;
         padding: 10px 20px;
-        border-radius: 6px;
+        border-radius: 8px;
         cursor: pointer;
         font-size: 14px;
         font-weight: 500;
@@ -130,7 +136,7 @@
       }
       
       .spinitron-load-more button:hover {
-        background-color: ${isDark ? '#dc2626' : '#c2410c'};
+        background-color: ${colors.accentHover};
         transform: translateY(-1px);
       }
       
@@ -154,7 +160,7 @@
         background-color: ${colors.background};
       }
       
-      /* Ensure proper scrolling */
+      /* Scrollbar styling */
       .spinitron-widget::-webkit-scrollbar {
         width: 6px;
       }
