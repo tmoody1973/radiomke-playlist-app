@@ -53,55 +53,58 @@ export const PlaylistContent = ({
   // Ensure displayedSpins is always an array
   const safeDisplayedSpins = displayedSpins || [];
 
-  // Use consistent ScrollArea height - in embed mode, account for Load More button space
+  // Adjust height based on mode and whether there are more spins to load
   const getScrollAreaHeight = () => {
     if (isEmbedMode) {
-      return hasMoreSpins ? "h-[calc(100vh-200px)]" : "h-[calc(100vh-160px)]";
+      // Leave more space at bottom for Load More button
+      return hasMoreSpins ? "h-[calc(100vh-180px)]" : "h-[calc(100vh-140px)]";
     }
     return compact ? "h-64" : "h-96";
   };
 
   return (
-    <ScrollArea className={getScrollAreaHeight()}>
-      {safeDisplayedSpins.length === 0 ? (
-        <div className="text-center py-8">
-          <Music className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-          <p className="text-muted-foreground">
-            {hasActiveFilters ? 'No matching songs found' : 'No songs playing right now'}
-          </p>
-        </div>
-      ) : layout === 'grid' ? (
-        // Grid Layout
-        <div className={`grid gap-4 p-4 ${compact ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
-          {safeDisplayedSpins.map((spin, index) => (
-            <GridItem 
-              key={`${spin.id}-${index}`} 
-              spin={spin} 
-              index={index}
-              isCurrentlyPlaying={isCurrentlyPlaying(spin, index)}
-              formatTime={formatTime}
-              audioPlayer={audioPlayer}
-            />
-          ))}
-        </div>
-      ) : (
-        // List Layout
-        <div className="space-y-3">
-          {safeDisplayedSpins.map((spin, index) => (
-            <ListItem
-              key={`${spin.id}-${index}`}
-              spin={spin}
-              index={index}
-              isCurrentlyPlaying={isCurrentlyPlaying(spin, index)}
-              compact={compact}
-              formatTime={formatTime}
-              formatDate={formatDate}
-              audioPlayer={audioPlayer}
-              stationId={stationId}
-            />
-          ))}
-        </div>
-      )}
-    </ScrollArea>
+    <div className={isEmbedMode ? 'flex-1 flex flex-col min-h-0' : ''}>
+      <ScrollArea className={getScrollAreaHeight()}>
+        {safeDisplayedSpins.length === 0 ? (
+          <div className="text-center py-8">
+            <Music className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+            <p className="text-muted-foreground">
+              {hasActiveFilters ? 'No matching songs found' : 'No songs playing right now'}
+            </p>
+          </div>
+        ) : layout === 'grid' ? (
+          // Grid Layout
+          <div className={`grid gap-4 p-4 ${compact ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
+            {safeDisplayedSpins.map((spin, index) => (
+              <GridItem 
+                key={`${spin.id}-${index}`} 
+                spin={spin} 
+                index={index}
+                isCurrentlyPlaying={isCurrentlyPlaying(spin, index)}
+                formatTime={formatTime}
+                audioPlayer={audioPlayer}
+              />
+            ))}
+          </div>
+        ) : (
+          // List Layout
+          <div className="space-y-3">
+            {safeDisplayedSpins.map((spin, index) => (
+              <ListItem
+                key={`${spin.id}-${index}`}
+                spin={spin}
+                index={index}
+                isCurrentlyPlaying={isCurrentlyPlaying(spin, index)}
+                compact={compact}
+                formatTime={formatTime}
+                formatDate={formatDate}
+                audioPlayer={audioPlayer}
+                stationId={stationId}
+              />
+            ))}
+          </div>
+        )}
+      </ScrollArea>
+    </div>
   );
 };
