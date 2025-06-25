@@ -89,7 +89,7 @@ export const ArtistEvents = ({
 
   if (isLoading) {
     return (
-      <Card className={`${compact ? 'text-xs' : 'text-sm'} border-slate-200 bg-gradient-to-r from-blue-50 to-indigo-50`}>
+      <Card className={`${compact ? 'text-xs' : 'text-sm'} border-blue-200 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 shadow-lg`}>
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
             <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
@@ -119,65 +119,70 @@ export const ArtistEvents = ({
   };
 
   return (
-    <Card className={`${compact ? 'text-xs' : 'text-sm'} border-slate-200 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 shadow-sm hover:shadow-md transition-shadow duration-200`}>
-      <CardHeader className="pb-3">
-        <CardTitle className={`${compact ? 'text-sm' : 'text-base'} text-slate-800 flex items-center gap-2 font-semibold`}>
-          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+    <Card className={`${compact ? 'text-xs' : 'text-sm'} border-l-4 border-l-purple-500 border-slate-200 bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]`}>
+      <CardHeader className="pb-3 bg-gradient-to-r from-purple-100/50 to-pink-100/50 rounded-t-lg">
+        <CardTitle className={`${compact ? 'text-sm' : 'text-base'} text-slate-800 flex items-center gap-2 font-bold`}>
+          <div className="w-3 h-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse"></div>
           <span>🎵 {artistName} Live Shows</span>
           {isCurrentlyPlaying && (
-            <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">Now Playing</span>
+            <span className="text-xs bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 rounded-full font-semibold shadow-sm">
+              Now Playing
+            </span>
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-0 space-y-3">
+      <CardContent className="pt-0 space-y-4">
         {allEvents.slice(0, 3).map((event, index) => {
           const venue = event._embedded?.venues?.[0];
           const priceRange = event.priceRanges?.[0];
           
           return (
-            <div key={event.isCustom ? event.id : event.id} className="group relative bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50 hover:bg-white hover:shadow-lg transition-all duration-300 hover:scale-[1.01]">
-              {/* Gradient accent bar */}
-              <div className={`absolute top-0 left-0 w-full h-1 rounded-t-xl ${
+            <div key={event.isCustom ? event.id : event.id} className="group relative bg-white/90 backdrop-blur-sm rounded-xl p-4 border-2 border-slate-200/60 hover:border-purple-300 hover:bg-white hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform">
+              {/* Enhanced gradient accent bar */}
+              <div className={`absolute top-0 left-0 w-full h-2 rounded-t-xl ${
                 event.isCustom 
-                  ? 'bg-gradient-to-r from-purple-400 via-pink-500 to-red-600' 
-                  : 'bg-gradient-to-r from-green-400 via-blue-500 to-purple-600'
-              }`}></div>
+                  ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-red-500' 
+                  : 'bg-gradient-to-r from-green-500 via-blue-500 to-purple-500'
+              } shadow-sm`}></div>
               
-              <div className="flex justify-between items-start gap-4">
-                <div className="flex-1 min-w-0 space-y-2">
-                  {/* Event name with custom event indicator */}
-                  <div className="flex items-center gap-2">
-                    <h4 className={`font-semibold text-slate-900 leading-tight ${compact ? 'text-sm' : 'text-base'} group-hover:text-slate-700 transition-colors`}>
+              <div className="flex justify-between items-start gap-4 mt-1">
+                <div className="flex-1 min-w-0 space-y-3">
+                  {/* Event name with enhanced custom event indicator */}
+                  <div className="flex items-center gap-3">
+                    <h4 className={`font-bold text-slate-900 leading-tight ${compact ? 'text-sm' : 'text-base'} group-hover:text-purple-800 transition-colors`}>
                       {event.name}
                     </h4>
                     {event.isCustom && (
-                      <Star className="h-4 w-4 text-purple-600 fill-purple-200" />
+                      <div className="flex items-center gap-1 bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-semibold">
+                        <Star className="h-3 w-3 fill-purple-500" />
+                        <span>Exclusive</span>
+                      </div>
                     )}
                   </div>
                   
-                  {/* Date and time */}
-                  <div className="flex items-center gap-2 text-slate-600">
-                    <Calendar className="h-4 w-4 text-green-600" />
-                    <span className={`${compact ? 'text-xs' : 'text-sm'} font-medium`}>
+                  {/* Date and time with enhanced styling */}
+                  <div className="flex items-center gap-2 text-slate-700 bg-slate-50 rounded-lg px-3 py-2">
+                    <Calendar className="h-4 w-4 text-purple-600" />
+                    <span className={`${compact ? 'text-xs' : 'text-sm'} font-semibold`}>
                       {formatEventDate(event.date, event.time)}
                     </span>
                   </div>
                   
-                  {/* Venue */}
+                  {/* Venue with enhanced styling */}
                   {venue && (
-                    <div className="flex items-center gap-2 text-slate-600">
-                      <MapPin className="h-4 w-4 text-blue-600" />
+                    <div className="flex items-center gap-2 text-slate-700 bg-slate-50 rounded-lg px-3 py-2">
+                      <MapPin className="h-4 w-4 text-pink-600" />
                       <span className={`${compact ? 'text-xs' : 'text-sm'} truncate`}>
-                        <span className="font-medium">{venue.name}</span>
-                        <span className="text-slate-500"> • {venue.city.name}, {venue.state.stateCode}</span>
+                        <span className="font-semibold">{venue.name}</span>
+                        <span className="text-slate-500 font-medium"> • {venue.city.name}, {venue.state.stateCode}</span>
                       </span>
                     </div>
                   )}
                   
-                  {/* Price range */}
+                  {/* Price range with enhanced styling */}
                   {priceRange && (
-                    <div className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 rounded-full">
-                      <span className={`${compact ? 'text-xs' : 'text-sm'} font-semibold`}>
+                    <div className="inline-flex items-center px-3 py-2 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 rounded-lg border border-green-200">
+                      <span className={`${compact ? 'text-xs' : 'text-sm'} font-bold`}>
                         ${priceRange.min} - ${priceRange.max}
                       </span>
                     </div>
@@ -185,31 +190,31 @@ export const ArtistEvents = ({
                   
                   {/* Custom event description */}
                   {event.isCustom && event.description && (
-                    <p className={`text-slate-600 ${compact ? 'text-xs' : 'text-sm'} italic`}>
+                    <p className={`text-slate-600 ${compact ? 'text-xs' : 'text-sm'} italic bg-purple-50 p-2 rounded-lg border-l-2 border-purple-300`}>
                       {event.description}
                     </p>
                   )}
                 </div>
                 
-                {/* Ticket button */}
+                {/* Enhanced ticket button */}
                 <Button
                   size={compact ? "sm" : "default"}
-                  className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
+                  className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:via-pink-700 hover:to-red-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 font-bold transform hover:scale-105"
                   onClick={() => event.url && event.url !== '#' ? window.open(event.url, '_blank') : null}
                   disabled={!event.url || event.url === '#'}
                 >
                   <ExternalLink className={`${compact ? 'h-3 w-3' : 'h-4 w-4'} mr-2`} />
-                  {compact ? 'Tix' : 'Get Tickets'}
+                  {compact ? 'Tickets' : 'Get Tickets'}
                 </Button>
               </div>
             </div>
           );
         })}
         
-        {/* Show more indicator */}
+        {/* Enhanced show more indicator */}
         {allEvents.length > 3 && (
-          <div className="text-center pt-2">
-            <span className="text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+          <div className="text-center pt-3">
+            <span className="text-xs text-slate-600 bg-gradient-to-r from-slate-100 to-slate-200 px-4 py-2 rounded-full font-semibold border border-slate-300">
               + {allEvents.length - 3} more shows available
             </span>
           </div>
