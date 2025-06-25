@@ -61,8 +61,10 @@ export const ListItem = ({
   return (
     <div className="space-y-2">
       <div 
-        className={`p-3 border rounded-lg transition-colors hover:bg-accent/50 ${
-          isCurrentlyPlaying ? 'bg-primary/5 border-primary/20' : 'bg-card'
+        className={`p-3 transition-colors hover:bg-accent/50 ${
+          isCurrentlyPlaying 
+            ? 'bg-primary/5 border-t border-b border-primary/20' 
+            : 'bg-card border-t border-b border-border/30 dark:border-border'
         }`}
       >
         <div className="flex gap-3">
