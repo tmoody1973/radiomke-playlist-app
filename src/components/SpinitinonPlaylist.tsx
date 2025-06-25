@@ -26,7 +26,7 @@ const SpinitinonPlaylist = ({
   endDate = '',
   layout = 'list'
 }: SpinitinonPlaylistProps) => {
-  console.log(`🎵 SpinitinonPlaylist rendering for station: ${stationId}`);
+  console.log(`🎵 SpinitinonPlaylist rendering for station: ${stationId}, showSearch: ${showSearch}`);
 
   const { playlistState, spins, isLoading, error, refetch, hasActiveFilters } = usePlaylistData({
     stationId,
@@ -68,6 +68,7 @@ const SpinitinonPlaylist = ({
       layout={layout}
       compact={compact}
       stationId={stationId}
+      showSearch={showSearch}
       isCurrentlyPlaying={isCurrentlyPlaying}
       formatTime={formatTime}
       formatDate={formatDate}
@@ -75,6 +76,7 @@ const SpinitinonPlaylist = ({
       hasMoreSpins={hasMoreSpins}
       loadingMore={playlistState.loadingMore}
       onLoadMore={handlers.handleLoadMore}
+      playlistState={playlistState}
     />
   );
 };

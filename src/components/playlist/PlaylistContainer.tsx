@@ -1,3 +1,4 @@
+
 import { PlaylistContent } from './PlaylistContent';
 
 interface PlaylistContainerProps {
@@ -6,6 +7,7 @@ interface PlaylistContainerProps {
   layout: 'list' | 'grid';
   compact: boolean;
   stationId?: string;
+  showSearch: boolean;
   isCurrentlyPlaying: (spin: any, index: number) => boolean;
   formatTime: (dateString: string) => string;
   formatDate: (dateString: string) => string;
@@ -13,6 +15,7 @@ interface PlaylistContainerProps {
   hasMoreSpins: boolean;
   loadingMore: boolean;
   onLoadMore: () => void;
+  playlistState: any;
 }
 
 export const PlaylistContainer = ({
@@ -21,13 +24,15 @@ export const PlaylistContainer = ({
   layout,
   compact,
   stationId,
+  showSearch,
   isCurrentlyPlaying,
   formatTime,
   formatDate,
   audioPlayer,
   hasMoreSpins,
   loadingMore,
-  onLoadMore
+  onLoadMore,
+  playlistState
 }: PlaylistContainerProps) => {
   const isEmbedMode = window.location.pathname === '/embed';
 
@@ -39,6 +44,7 @@ export const PlaylistContainer = ({
         layout={layout}
         compact={compact}
         isEmbedMode={isEmbedMode}
+        showSearch={showSearch}
         isCurrentlyPlaying={isCurrentlyPlaying}
         formatTime={formatTime}
         formatDate={formatDate}
@@ -47,6 +53,7 @@ export const PlaylistContainer = ({
         hasMoreSpins={hasMoreSpins}
         loadingMore={loadingMore}
         onLoadMore={onLoadMore}
+        playlistState={playlistState}
       />
     </div>
   );
