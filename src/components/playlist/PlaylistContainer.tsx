@@ -72,7 +72,7 @@ export const PlaylistContainer = ({
 
   if (error) {
     return (
-      <Card className="w-full h-full">
+      <Card className={`w-full ${isEmbedMode ? 'h-full flex flex-col' : ''}`}>
         <CardContent className="p-6">
           <div className="text-center text-red-500">
             <Radio className="h-8 w-8 mx-auto mb-2" />
@@ -114,27 +114,27 @@ export const PlaylistContainer = ({
         formatDate={formatDate}
       />
       
-      <CardContent className={`${compact ? "pt-0" : ""} ${isEmbedMode ? 'flex-1 flex flex-col min-h-0 p-0' : ''}`}>
-        <PlaylistDebugInfo
-          hasActiveFilters={hasActiveFilters}
-          dataUpdatedAt={dataUpdatedAt}
-          onManualRefresh={handlers.handleManualRefresh}
-        />
-        
-        <PlaylistContent
-          displayedSpins={displayedSpins}
-          hasActiveFilters={hasActiveFilters}
-          layout={layout}
-          compact={compact}
-          isEmbedMode={isEmbedMode}
-          isCurrentlyPlaying={(spin, index) => isCurrentlyPlaying(spin, index, playlistState.currentTime, hasActiveFilters)}
-          formatTime={formatTime}
-          formatDate={formatDate}
-          audioPlayer={audioPlayer}
-          stationId={stationId}
-        />
-        
-        <div className={isEmbedMode ? "p-4 flex-shrink-0" : ""}>
+      <CardContent className={`${compact ? "pt-0" : ""} ${isEmbedMode ? 'flex-1 flex flex-col min-h-0' : ''}`}>
+        <div className={isEmbedMode ? "flex-1 flex flex-col min-h-0" : ""}>
+          <PlaylistDebugInfo
+            hasActiveFilters={hasActiveFilters}
+            dataUpdatedAt={dataUpdatedAt}
+            onManualRefresh={handlers.handleManualRefresh}
+          />
+          
+          <PlaylistContent
+            displayedSpins={displayedSpins}
+            hasActiveFilters={hasActiveFilters}
+            layout={layout}
+            compact={compact}
+            isEmbedMode={isEmbedMode}
+            isCurrentlyPlaying={(spin, index) => isCurrentlyPlaying(spin, index, playlistState.currentTime, hasActiveFilters)}
+            formatTime={formatTime}
+            formatDate={formatDate}
+            audioPlayer={audioPlayer}
+            stationId={stationId}
+          />
+          
           <LoadMoreButton
             hasMoreSpins={hasMoreSpins}
             loadingMore={playlistState.loadingMore}
