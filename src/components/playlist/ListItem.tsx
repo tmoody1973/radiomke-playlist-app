@@ -47,8 +47,9 @@ export const ListItem = ({
   formatTime, 
   formatDate,
   audioPlayer,
-  stationId
-}: ListItemProps) => {
+  stationId,
+  tracking
+}: ListItemProps & { tracking?: any }) => {
   const trackId = `${spin.artist}-${spin.song}-${spin.id}`;
 
   // Debug logging for list item rendering
@@ -57,6 +58,17 @@ export const ListItem = ({
     spinId: spin.id,
     audioPlayer: !!audioPlayer
   });
+
+  // Enhanced audio player with tracking
+  const enhancedAudioPlayer = {
+    ...audioPlayer,
+    playVideo: (embedUrl: string, trackId: string) => {
+      if (tracking) {
+        tracking.trackSongPlay(spin.artist, spin.song, trackId);
+      }
+      audioPlayer.playVideo(embedUrl, trackId);
+    }
+  };
 
   return (
     <div className="space-y-2">
@@ -88,9 +100,9 @@ export const ListItem = ({
                   artist={spin.artist}
                   song={spin.song}
                   trackId={trackId}
-                  currentlyPlaying={audioPlayer.currentlyPlaying}
-                  isLoading={audioPlayer.isLoading}
-                  onPlay={audioPlayer.playVideo}
+                  currentlyPlaying={enhancedAudioPlayer.currentlyPlaying}
+                  isLoading={enhancedAudioPlayer.isLoading}
+                  onPlay={enhancedAudioPlayer.playVideo}
                   size={compact ? 'sm' : 'md'}
                 />
               </div>
@@ -127,11 +139,12 @@ export const ListItem = ({
         </div>
       </div>
       
-      {/* Artist Events - pass the stationId */}
+      {/* Artist Events - pass the stationId and tracking */}
       <ArtistEvents 
         artistName={spin.artist} 
         compact={compact} 
         stationId={stationId || spin.station_id}
+        tracking={tracking}
       />
     </div>
   );
