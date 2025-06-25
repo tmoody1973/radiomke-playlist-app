@@ -36,17 +36,20 @@ const EmbedPreview = ({ config }: EmbedPreviewProps) => {
   const iframeHeight = baseHeight + 100; // Add extra space for Load More button
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader>
-        <CardTitle>Live Preview</CardTitle>
+    <Card className="h-full flex flex-col border-orange-200 shadow-lg">
+      <CardHeader className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900">
+        <CardTitle className="bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent">
+          Live Preview
+        </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col min-h-0">
+      <CardContent className="flex-1 flex flex-col min-h-0 p-4">
         <div 
-          className="border rounded-lg flex-1 relative"
+          className="border-2 border-orange-300 rounded-lg flex-1 relative shadow-lg"
           style={{
-            backgroundColor: '#f8f9fa',
+            backgroundColor: '#ffffff',
             minHeight: `${iframeHeight}px`,
-            overflow: 'visible' // Allow content to overflow if needed
+            overflow: 'visible !important',
+            boxShadow: '0 4px 6px -1px rgba(249, 115, 22, 0.1), 0 2px 4px -1px rgba(249, 115, 22, 0.06)'
           }}
         >
           <iframe
@@ -58,16 +61,20 @@ const EmbedPreview = ({ config }: EmbedPreviewProps) => {
               border: 'none',
               display: 'block',
               backgroundColor: 'transparent',
-              overflow: 'visible' // Ensure iframe content can overflow
+              overflow: 'visible !important',
+              borderRadius: '6px'
             }}
             title="Playlist Preview"
             sandbox="allow-scripts allow-same-origin"
             loading="lazy"
-            scrolling="yes" // Enable scrolling
+            scrolling="yes"
           />
         </div>
-        <div className="mt-2 text-sm text-muted-foreground">
-          Theme: {config.theme} | Height: {config.height}px | Layout: {config.layout}
+        <div className="mt-3 text-sm text-muted-foreground bg-gradient-to-r from-orange-100 to-orange-50 p-2 rounded border border-orange-200">
+          <span className="font-medium text-orange-800">Preview Settings:</span> 
+          <span className="text-orange-700">
+            Theme: {config.theme} | Height: {config.height}px | Layout: {config.layout}
+          </span>
         </div>
       </CardContent>
     </Card>
