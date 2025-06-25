@@ -6,19 +6,19 @@
   function generateCSS(config) {
     const isDark = config.theme === 'dark';
     
-    // Updated color scheme matching the reference design
+    // Improved color scheme with better contrast for light theme
     const colors = {
       background: isDark ? '#0f172a' : '#ffffff',
-      cardBg: isDark ? '#1e293b' : '#f8fafc',
-      text: isDark ? '#f8fafc' : '#1e293b',
-      textMuted: isDark ? '#cbd5e1' : '#64748b',
-      border: isDark ? '#475569' : '#e2e8f0',
+      cardBg: isDark ? '#1e293b' : '#ffffff',
+      text: isDark ? '#f8fafc' : '#1f2937', // Darker text for better contrast
+      textMuted: isDark ? '#cbd5e1' : '#6b7280',
+      border: isDark ? '#475569' : '#e5e7eb',
       inputBg: isDark ? '#334155' : '#ffffff',
-      inputBorder: isDark ? '#64748b' : '#cbd5e1',
-      inputText: isDark ? '#f8fafc' : '#1e293b',
-      inputPlaceholder: isDark ? '#94a3b8' : '#94a3b8',
-      hover: isDark ? '#334155' : '#f1f5f9',
-      accent: '#3b82f6', // Updated to blue accent to match reference
+      inputBorder: isDark ? '#64748b' : '#d1d5db', // More visible border
+      inputText: isDark ? '#f8fafc' : '#1f2937', // Dark text in light theme
+      inputPlaceholder: isDark ? '#94a3b8' : '#9ca3af',
+      hover: isDark ? '#334155' : '#f8fafc',
+      accent: '#3b82f6',
       accentHover: isDark ? '#2563eb' : '#1d4ed8'
     };
     
@@ -49,17 +49,17 @@
       .spinitron-search input {
         width: 100%;
         padding: 12px 16px;
-        border: 1px solid ${colors.inputBorder};
+        border: 2px solid ${colors.inputBorder};
         border-radius: 8px;
         background-color: ${colors.inputBg};
-        color: ${colors.inputText};
+        color: ${colors.inputText} !important;
         font-size: 14px;
         transition: all 0.2s ease;
         box-shadow: ${isDark ? 'none' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'};
       }
       
       .spinitron-search input::placeholder {
-        color: ${colors.inputPlaceholder};
+        color: ${colors.inputPlaceholder} !important;
         opacity: 1;
       }
       
@@ -90,19 +90,19 @@
         font-weight: 600;
         font-size: ${config.compact ? '14px' : '16px'};
         margin: 0 0 6px 0;
-        color: ${colors.text};
+        color: ${colors.text} !important;
         line-height: 1.4;
       }
       
       .spinitron-song-artist {
-        color: ${colors.textMuted};
+        color: ${colors.textMuted} !important;
         font-size: ${config.compact ? '13px' : '14px'};
         margin: 0 0 4px 0;
         line-height: 1.3;
       }
       
       .spinitron-song-time {
-        color: ${colors.textMuted};
+        color: ${colors.textMuted} !important;
         font-size: 12px;
         margin: 0;
         opacity: 0.8;

@@ -31,13 +31,14 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   const isDark = config.theme === 'dark';
   const colors = {
     backgroundColor: isDark ? '#0f172a' : '#ffffff',
-    textColor: isDark ? '#cbd5e1' : '#1e293b',
-    headingColor: isDark ? '#f8fafc' : '#1e293b',
-    linkColor: '#3b82f6', // Updated to blue to match reference
-    borderColor: isDark ? '#475569' : '#e2e8f0',
-    cardBg: isDark ? '#1e293b' : '#f8fafc',
+    textColor: isDark ? '#cbd5e1' : '#1f2937', // Darker text for light theme
+    headingColor: isDark ? '#f8fafc' : '#1f2937', // Dark headings for light theme
+    linkColor: '#3b82f6',
+    borderColor: isDark ? '#475569' : '#e5e7eb',
+    cardBg: isDark ? '#1e293b' : '#ffffff',
     inputBg: isDark ? '#334155' : '#ffffff',
-    inputBorder: isDark ? '#64748b' : '#cbd5e1'
+    inputBorder: isDark ? '#64748b' : '#d1d5db', // More visible border
+    inputText: isDark ? '#f8fafc' : '#1f2937' // Dark text for light theme inputs
   };
   
   // Calculate iframe height with extra space for Load More button
