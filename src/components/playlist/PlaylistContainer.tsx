@@ -72,7 +72,7 @@ export const PlaylistContainer = ({
 
   if (error) {
     return (
-      <Card className={`w-full ${isEmbedMode ? 'h-full flex flex-col' : ''}`}>
+      <Card className="w-full h-full">
         <CardContent className="p-6">
           <div className="text-center text-red-500">
             <Radio className="h-8 w-8 mx-auto mb-2" />
@@ -114,7 +114,7 @@ export const PlaylistContainer = ({
         formatDate={formatDate}
       />
       
-      <CardContent className={`${compact ? "pt-0" : ""} ${isEmbedMode ? 'flex-1 flex flex-col min-h-0 pb-2' : ''}`}>
+      <CardContent className={`${compact ? "pt-0" : ""} ${isEmbedMode ? 'flex-1 flex flex-col min-h-0 p-0' : ''}`}>
         <PlaylistDebugInfo
           hasActiveFilters={hasActiveFilters}
           dataUpdatedAt={dataUpdatedAt}
@@ -134,11 +134,13 @@ export const PlaylistContainer = ({
           stationId={stationId}
         />
         
-        <LoadMoreButton
-          hasMoreSpins={hasMoreSpins}
-          loadingMore={playlistState.loadingMore}
-          onLoadMore={handlers.handleLoadMore}
-        />
+        <div className={isEmbedMode ? "p-4 flex-shrink-0" : ""}>
+          <LoadMoreButton
+            hasMoreSpins={hasMoreSpins}
+            loadingMore={playlistState.loadingMore}
+            onLoadMore={handlers.handleLoadMore}
+          />
+        </div>
       </CardContent>
     </Card>
   );
