@@ -23,19 +23,16 @@ const Embed = () => {
 
   // Apply theme and styling to match homepage
   useEffect(() => {
-    // Remove any existing theme classes first
+    // Remove all theme-related classes first
     document.documentElement.classList.remove('dark', 'light');
     document.body.classList.remove('dark', 'light');
     
-    // Apply the correct theme to html element for Tailwind dark mode
+    // Apply the correct theme classes
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
       document.body.classList.add('dark');
-    } else {
-      // For light mode, we don't add 'dark' class to html, ensuring Tailwind uses light mode
-      document.documentElement.classList.add('light');
-      document.body.classList.add('light');
     }
+    // For light mode, we explicitly don't add 'dark' class to ensure Tailwind uses light mode
     
     document.documentElement.setAttribute('data-theme', theme);
     
@@ -43,7 +40,7 @@ const Embed = () => {
     const bgColor = theme === 'dark' ? '#0f172a' : '#ffffff';
     const textColor = theme === 'dark' ? '#f8fafc' : '#1e293b';
     
-    document.body.className = `embed-container w-full m-0 p-0 ${theme === 'dark' ? 'dark' : 'light'}`;
+    document.body.className = `embed-container w-full m-0 p-0`;
     document.body.style.cssText = `
       height: ${height !== 'auto' ? `${height}px` : '100vh'};
       overflow: visible !important;
