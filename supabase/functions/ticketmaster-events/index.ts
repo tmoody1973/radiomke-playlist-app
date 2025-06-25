@@ -30,7 +30,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // First, check if we have cached events for this artist
+    // Check if we have cached events for this artist
     const { data: cachedEvents, error: cacheError } = await supabase
       .from('ticketmaster_events_cache')
       .select('*')
@@ -43,17 +43,19 @@ serve(async (req) => {
       console.error('Cache lookup error:', cacheError)
     }
 
-    // If we have recent cached events (less than 7 days old), return them
+    // If we have cached events less than 24 hours old, return them
     if (cachedEvents && cachedEvents.length > 0) {
-      const recentCache = cachedEvents.filter(event => {
-        const cacheAge = Date.now() - new Date(event.updated_at).getTime()
-        return cacheAge < (7 * 24 * 60 * 60 * 1000) // 7 days
-      })
+      const mostRecentCache = cachedEvents.reduce((latest, event) => 
+        new Date(event.updated_at) > new Date(latest.updated_at) ? event : latest
+      )
+      
+      const cacheAge = Date.now() - new Date(mostRecentCache.updated_at).getTime()
+      const isRecentCache = cacheAge < (24 * 60 * 60 * 1000) // 24 hours
 
-      if (recentCache.length > 0) {
-        console.log(`Returning ${recentCache.length} cached events for artist: ${artistName}`)
+      if (isRecentCache) {
+        console.log(`Returning cached events for artist: ${artistName} (cached ${Math.floor(cacheAge / (60 * 60 * 1000))} hours ago)`)
         // Convert cached events to match Ticketmaster format
-        const formattedEvents = recentCache.map(event => ({
+        const formattedEvents = cachedEvents.map(event => ({
           id: event.event_id,
           name: event.event_name,
           dates: {
@@ -84,7 +86,7 @@ serve(async (req) => {
       }
     }
 
-    // If no recent cache, fetch from Ticketmaster API
+    // Only fetch from API if we don't have recent cache
     const apiKey = Deno.env.get('TICKETMASTER_API_KEY')
     if (!apiKey) {
       console.error('TICKETMASTER_API_KEY not found in environment')
@@ -105,12 +107,13 @@ serve(async (req) => {
     searchUrl.searchParams.set('apikey', apiKey)
     searchUrl.searchParams.set('size', '20')
 
-    console.log(`Fetching fresh events from Ticketmaster for artist: ${artistName}`)
+    console.log(`Making fresh API call to Ticketmaster for artist: ${artistName}`)
     
     const response = await fetch(searchUrl.toString())
     
     if (!response.ok) {
       console.error(`Ticketmaster API error: ${response.status} ${response.statusText}`)
+      
       // If API fails, return cached events even if they're older
       if (cachedEvents && cachedEvents.length > 0) {
         console.log(`API failed, returning ${cachedEvents.length} older cached events`)
@@ -226,10 +229,18 @@ serve(async (req) => {
 
       if (insertError) {
         console.error('Error caching events:', insertError)
-        // Continue anyway, just log the error
       } else {
         console.log(`Successfully cached ${eventsToCache.length} events for ${artistName}`)
       }
+    } else {
+      // Even if no events found, cache that fact to avoid repeated API calls
+      console.log(`No events found for ${artistName}, caching negative result`)
+      
+      // Deactivate old cached events
+      await supabase
+        .from('ticketmaster_events_cache')
+        .update({ is_active: false })
+        .eq('artist_name', artistName)
     }
     
     console.log(`Found ${events.length} filtered events for artist: ${artistName}`)
