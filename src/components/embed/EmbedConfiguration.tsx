@@ -2,19 +2,10 @@
 import BasicConfiguration from './configuration/BasicConfiguration';
 import DisplayConfiguration from './configuration/DisplayConfiguration';
 import DateSearchConfiguration from './configuration/DateSearchConfiguration';
-import ThemeCustomizer from './ThemeCustomizer';
 
 interface Station {
   id: string;
   name: string;
-}
-
-interface CustomColors {
-  backgroundColor: string;
-  textColor: string;
-  headingColor: string;
-  linkColor: string;
-  borderColor: string;
 }
 
 interface EmbedConfigurationProps {
@@ -43,8 +34,6 @@ interface EmbedConfigurationProps {
   setStartDate: (value: Date | undefined) => void;
   endDate?: Date;
   setEndDate: (value: Date | undefined) => void;
-  customColors?: CustomColors;
-  setCustomColors: (colors: CustomColors | undefined) => void;
 }
 
 const EmbedConfiguration = ({
@@ -73,8 +62,6 @@ const EmbedConfiguration = ({
   setStartDate,
   endDate,
   setEndDate,
-  customColors,
-  setCustomColors,
 }: EmbedConfigurationProps) => {
   return (
     <div className="space-y-6">
@@ -110,11 +97,6 @@ const EmbedConfiguration = ({
         setStartDate={setStartDate}
         endDate={endDate}
         setEndDate={setEndDate}
-      />
-
-      <ThemeCustomizer
-        customColors={customColors}
-        onColorsChange={setCustomColors}
       />
     </div>
   );

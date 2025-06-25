@@ -10,14 +10,6 @@ interface Station {
   name: string;
 }
 
-interface CustomColors {
-  backgroundColor: string;
-  textColor: string;
-  headingColor: string;
-  linkColor: string;
-  borderColor: string;
-}
-
 interface EmbedConfig {
   selectedStation: string;
   autoUpdate: boolean;
@@ -31,7 +23,6 @@ interface EmbedConfig {
   enableDateSearch: boolean;
   startDate?: Date;
   endDate?: Date;
-  customColors?: CustomColors;
 }
 
 interface EmbedDemoContentProps {
@@ -60,8 +51,6 @@ interface EmbedDemoContentProps {
   setStartDate: (value: Date | undefined) => void;
   endDate?: Date;
   setEndDate: (value: Date | undefined) => void;
-  customColors?: CustomColors;
-  setCustomColors: (colors: CustomColors | undefined) => void;
   embedConfig: EmbedConfig;
 }
 
@@ -91,8 +80,6 @@ const EmbedDemoContent = ({
   setStartDate,
   endDate,
   setEndDate,
-  customColors,
-  setCustomColors,
   embedConfig,
 }: EmbedDemoContentProps) => {
   const { toast } = useToast();
@@ -139,8 +126,6 @@ const EmbedDemoContent = ({
             setStartDate={setStartDate}
             endDate={endDate}
             setEndDate={setEndDate}
-            customColors={customColors}
-            setCustomColors={setCustomColors}
           />
 
           <div className="mt-6">
