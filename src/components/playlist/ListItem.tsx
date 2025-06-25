@@ -53,7 +53,8 @@ export const ListItem = ({
   console.log(`🎵 Rendering ListItem for ${spin.artist} - ${spin.song}`, {
     trackId,
     spinId: spin.id,
-    audioPlayer: !!audioPlayer
+    audioPlayer: !!audioPlayer,
+    isCurrentlyPlaying
   });
 
   return (
@@ -105,6 +106,7 @@ export const ListItem = ({
                 currentlyPlaying={audioPlayer.currentlyPlaying}
                 isLoading={audioPlayer.isLoading}
                 onPlay={audioPlayer.playVideo}
+                isCurrentlyPlaying={isCurrentlyPlaying}
               />
               <AudioPreviewButton 
                 artist={spin.artist}

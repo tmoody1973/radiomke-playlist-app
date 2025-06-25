@@ -1,3 +1,4 @@
+
 import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Play } from 'lucide-react';
@@ -51,7 +52,7 @@ export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, audioPla
           song={spin.song}
         />
         
-        {/* YouTube Preview Button */}
+        {/* YouTube Preview Button - only show for currently playing */}
         <div className="absolute top-2 right-2 z-10">
           <YouTubePreviewButton
             artist={spin.artist}
@@ -61,6 +62,7 @@ export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, audioPla
             isLoading={audioPlayer.isLoading}
             onPlay={audioPlayer.playVideo}
             size="sm"
+            isCurrentlyPlaying={isCurrentlyPlaying}
           />
         </div>
         
