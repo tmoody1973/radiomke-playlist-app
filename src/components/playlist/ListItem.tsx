@@ -66,7 +66,8 @@ export const ListItem = ({
           <EnhancedAlbumArtwork 
             artist={spin.artist}
             song={spin.song}
-            image={spin.image}
+            src={spin.image}
+            alt={`${spin.artist} - ${spin.song}`}
             compact={compact}
           />
         </div>
@@ -78,7 +79,6 @@ export const ListItem = ({
               <EnhancedSongInfo 
                 spin={spin}
                 compact={compact}
-                isCurrentlyPlaying={isCurrentlyPlaying}
               />
               <div className="flex items-center gap-3 mt-2">
                 <div className="flex items-center gap-2 text-slate-500 text-sm">
@@ -103,13 +103,17 @@ export const ListItem = ({
                 artist={spin.artist}
                 song={spin.song}
                 trackId={trackId}
-                audioPlayer={audioPlayer}
+                currentlyPlaying={audioPlayer.currentlyPlaying}
+                isLoading={audioPlayer.isLoading}
+                onPlay={audioPlayer.playVideo}
               />
               <AudioPreviewButton 
                 artist={spin.artist}
                 song={spin.song}
                 trackId={trackId}
-                audioPlayer={audioPlayer}
+                currentlyPlaying={audioPlayer.currentlyPlaying}
+                isLoading={audioPlayer.isLoading}
+                onPlay={audioPlayer.playVideo}
               />
             </div>
           </div>
