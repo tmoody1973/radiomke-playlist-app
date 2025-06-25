@@ -32,27 +32,29 @@ const EmbedPreview = ({ config }: EmbedPreviewProps) => {
   }, [config.theme, config.layout, config.height]);
 
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle>Live Preview</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col min-h-0">
         <div 
-          className="border rounded-lg overflow-hidden"
+          className="border rounded-lg overflow-hidden flex-1 flex flex-col"
           style={{
             backgroundColor: '#f8f9fa',
-            isolation: 'isolate'
+            isolation: 'isolate',
+            minHeight: '500px'
           }}
         >
           <iframe
             key={key}
             src={embedUrl}
             width="100%"
-            height={`${config.height}px`}
+            height="100%"
             style={{ 
               border: 'none',
               display: 'block',
-              backgroundColor: 'transparent'
+              backgroundColor: 'transparent',
+              flex: '1'
             }}
             title="Playlist Preview"
             sandbox="allow-scripts allow-same-origin"
