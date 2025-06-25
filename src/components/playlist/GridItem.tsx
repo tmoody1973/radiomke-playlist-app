@@ -30,29 +30,10 @@ interface GridItemProps {
   isCurrentlyPlaying: boolean;
   formatTime: (dateString: string) => string;
   audioPlayer: AudioPlayer;
-  tracking?: any;
 }
 
-export const GridItem = ({ 
-  spin, 
-  index, 
-  isCurrentlyPlaying, 
-  formatTime, 
-  audioPlayer,
-  tracking
-}: GridItemProps & { tracking?: any }) => {
+export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, audioPlayer }: GridItemProps) => {
   const trackId = `${spin.artist}-${spin.song}-${spin.id}`;
-
-  // Enhanced audio player with tracking
-  const enhancedAudioPlayer = {
-    ...audioPlayer,
-    playVideo: (embedUrl: string, trackId: string) => {
-      if (tracking) {
-        tracking.trackSongPlay(spin.artist, spin.song, trackId);
-      }
-      audioPlayer.playVideo(embedUrl, trackId);
-    }
-  };
 
   return (
     <div 
@@ -76,9 +57,9 @@ export const GridItem = ({
             artist={spin.artist}
             song={spin.song}
             trackId={trackId}
-            currentlyPlaying={enhancedAudioPlayer.currentlyPlaying}
-            isLoading={enhancedAudioPlayer.isLoading}
-            onPlay={enhancedAudioPlayer.playVideo}
+            currentlyPlaying={audioPlayer.currentlyPlaying}
+            isLoading={audioPlayer.isLoading}
+            onPlay={audioPlayer.playVideo}
             size="sm"
           />
         </div>

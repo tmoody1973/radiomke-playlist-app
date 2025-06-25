@@ -3,7 +3,6 @@ import React from 'react';
 import { PlaylistContainer } from './playlist/PlaylistContainer';
 import { usePlaylistData } from '@/hooks/usePlaylistData';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
-import { usePostHogTracking } from '@/hooks/usePostHogTracking';
 import { createPlaylistHandlers } from './playlist/PlaylistHandlers';
 
 interface SpinitinonPlaylistProps {
@@ -39,14 +38,6 @@ const SpinitinonPlaylist = ({
 
   const audioPlayer = useAudioPlayer();
   const handlers = createPlaylistHandlers(playlistState, refetch);
-
-  // Initialize PostHog tracking
-  const tracking = usePostHogTracking({
-    stationId,
-    theme: new URLSearchParams(window.location.search).get('theme') || 'light',
-    layout,
-    compact
-  });
 
   // Calculate displayed spins
   const displayedSpins = playlistState.allSpins.slice(0, playlistState.displayCount);
@@ -84,12 +75,8 @@ const SpinitinonPlaylist = ({
       audioPlayer={audioPlayer}
       hasMoreSpins={hasMoreSpins}
       loadingMore={playlistState.loadingMore}
-      onLoadMore={() => {
-        tracking.trackLoadMore(playlistState.displayCount, playlistState.displayCount + 10);
-        handlers.handleLoadMore();
-      }}
+      onLoadMore={handlers.handleLoadMore}
       playlistState={playlistState}
-      tracking={tracking}
     />
   );
 };

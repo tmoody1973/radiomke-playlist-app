@@ -16,7 +16,6 @@ interface PlaylistContainerProps {
   loadingMore: boolean;
   onLoadMore: () => void;
   playlistState: any;
-  tracking: any;
 }
 
 export const PlaylistContainer = ({
@@ -33,8 +32,7 @@ export const PlaylistContainer = ({
   hasMoreSpins,
   loadingMore,
   onLoadMore,
-  playlistState,
-  tracking
+  playlistState
 }: PlaylistContainerProps) => {
   const isEmbedMode = window.location.pathname === '/embed';
 
@@ -56,7 +54,6 @@ export const PlaylistContainer = ({
         loadingMore={loadingMore}
         onLoadMore={onLoadMore}
         playlistState={playlistState}
-        tracking={tracking}
       />
     </div>
   );

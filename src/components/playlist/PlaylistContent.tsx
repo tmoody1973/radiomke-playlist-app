@@ -5,7 +5,6 @@ import { GridItem } from './GridItem';
 import { ListItem } from './ListItem';
 import { LoadMoreButton } from './LoadMoreButton';
 import { SearchFilters } from './SearchFilters';
-import { useEffect } from 'react';
 
 interface Spin {
   id: number;
@@ -42,7 +41,6 @@ interface PlaylistContentProps {
   loadingMore: boolean;
   onLoadMore: () => void;
   playlistState: any;
-  tracking?: any;
 }
 
 export const PlaylistContent = ({
@@ -60,17 +58,9 @@ export const PlaylistContent = ({
   hasMoreSpins,
   loadingMore,
   onLoadMore,
-  playlistState,
-  tracking
+  playlistState
 }: PlaylistContentProps) => {
   const safeDisplayedSpins = displayedSpins || [];
-
-  // Track search events when search term changes
-  useEffect(() => {
-    if (tracking && playlistState.searchTerm && playlistState.searchTerm.length > 2) {
-      tracking.trackSearch(playlistState.searchTerm, safeDisplayedSpins.length);
-    }
-  }, [playlistState.searchTerm, safeDisplayedSpins.length, tracking]);
 
   // Calculate scroll area height - use full available height
   const getScrollAreaHeight = () => {
@@ -127,7 +117,6 @@ export const PlaylistContent = ({
                       isCurrentlyPlaying={isCurrentlyPlaying(spin, index)}
                       formatTime={formatTime}
                       audioPlayer={audioPlayer}
-                      tracking={tracking}
                     />
                   ))}
                 </div>
@@ -144,7 +133,6 @@ export const PlaylistContent = ({
                       formatDate={formatDate}
                       audioPlayer={audioPlayer}
                       stationId={stationId}
-                      tracking={tracking}
                     />
                   ))}
                 </div>
