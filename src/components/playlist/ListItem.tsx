@@ -68,7 +68,6 @@ export const ListItem = ({
             song={spin.song}
             src={spin.image}
             alt={`${spin.artist} - ${spin.song}`}
-            compact={compact}
           />
         </div>
         
