@@ -1,6 +1,9 @@
 
 import React from 'react';
 import { PlaylistContainer } from './playlist/PlaylistContainer';
+import { usePlaylistData } from '@/hooks/usePlaylistData';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { createPlaylistHandlers } from './playlist/PlaylistHandlers';
 
 interface SpinitinonPlaylistProps {
   stationId?: string;
@@ -25,16 +28,53 @@ const SpinitinonPlaylist = ({
 }: SpinitinonPlaylistProps) => {
   console.log(`🎵 SpinitinonPlaylist rendering for station: ${stationId}`);
 
+  const { playlistState, spins, isLoading, error, refetch, hasActiveFilters } = usePlaylistData({
+    stationId,
+    autoUpdate,
+    maxItems,
+    initialStartDate: startDate,
+    initialEndDate: endDate
+  });
+
+  const audioPlayer = useAudioPlayer();
+  const handlers = createPlaylistHandlers(playlistState, refetch);
+
+  // Calculate displayed spins
+  const displayedSpins = playlistState.allSpins.slice(0, playlistState.displayCount);
+  
+  // Check if there are more spins to load
+  const hasMoreSpins = playlistState.displayCount < playlistState.allSpins.length;
+
+  // Helper functions
+  const isCurrentlyPlaying = (spin: any, index: number) => {
+    return audioPlayer.currentlyPlaying === `${spin.artist}-${spin.song}-${index}`;
+  };
+
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
   return (
     <PlaylistContainer
-      stationId={stationId}
-      autoUpdate={autoUpdate}
-      showSearch={showSearch}
-      maxItems={maxItems}
-      compact={compact}
-      startDate={startDate}
-      endDate={endDate}
+      displayedSpins={displayedSpins}
+      hasActiveFilters={hasActiveFilters}
       layout={layout}
+      compact={compact}
+      stationId={stationId}
+      isCurrentlyPlaying={isCurrentlyPlaying}
+      formatTime={formatTime}
+      formatDate={formatDate}
+      audioPlayer={audioPlayer}
+      hasMoreSpins={hasMoreSpins}
+      loadingMore={playlistState.loadingMore}
+      onLoadMore={handlers.handleLoadMore}
     />
   );
 };
