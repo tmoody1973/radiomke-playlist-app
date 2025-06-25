@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Radio } from 'lucide-react';
@@ -97,7 +96,7 @@ export const PlaylistContainer = ({
   const title = getPlaylistTitle(hasDateFilter, playlistState.debouncedSearchTerm);
 
   return (
-    <Card className={`w-full ${isEmbedMode ? 'h-full flex flex-col' : ''}`}>
+    <Card className={`w-full ${isEmbedMode ? 'h-full flex flex-col border-0 shadow-none bg-transparent' : ''}`}>
       <PlaylistHeader
         title={title}
         compact={compact}
@@ -114,7 +113,7 @@ export const PlaylistContainer = ({
         formatDate={formatDate}
       />
       
-      <CardContent className={`${compact ? "pt-0" : ""} ${isEmbedMode ? 'flex-1 flex flex-col min-h-0 pb-2' : ''}`}>
+      <CardContent className={`${compact ? "pt-0" : ""} ${isEmbedMode ? 'flex-1 flex flex-col min-h-0 p-0' : ''}`}>
         <PlaylistDebugInfo
           hasActiveFilters={hasActiveFilters}
           dataUpdatedAt={dataUpdatedAt}
@@ -135,11 +134,23 @@ export const PlaylistContainer = ({
           hasMoreSpins={hasMoreSpins}
         />
         
-        <LoadMoreButton
-          hasMoreSpins={hasMoreSpins}
-          loadingMore={playlistState.loadingMore}
-          onLoadMore={handlers.handleLoadMore}
-        />
+        {/* Load More button positioned outside PlaylistContent for embed mode */}
+        {isEmbedMode && (
+          <LoadMoreButton
+            hasMoreSpins={hasMoreSpins}
+            loadingMore={playlistState.loadingMore}
+            onLoadMore={handlers.handleLoadMore}
+          />
+        )}
+        
+        {/* Keep Load More button inside for non-embed mode */}
+        {!isEmbedMode && (
+          <LoadMoreButton
+            hasMoreSpins={hasMoreSpins}
+            loadingMore={playlistState.loadingMore}
+            onLoadMore={handlers.handleLoadMore}
+          />
+        )}
       </CardContent>
     </Card>
   );

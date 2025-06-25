@@ -50,20 +50,18 @@ export const PlaylistContent = ({
   stationId,
   hasMoreSpins
 }: PlaylistContentProps) => {
-  // Ensure displayedSpins is always an array
   const safeDisplayedSpins = displayedSpins || [];
 
-  // Adjust height based on mode and whether there are more spins to load
+  // For embed mode, use full height minus space for Load More button
   const getScrollAreaHeight = () => {
     if (isEmbedMode) {
-      // Leave more space at bottom for Load More button
-      return hasMoreSpins ? "h-[calc(100vh-180px)]" : "h-[calc(100vh-140px)]";
+      return "h-[calc(100vh-120px)]";
     }
     return compact ? "h-64" : "h-96";
   };
 
   return (
-    <div className={isEmbedMode ? 'flex-1 flex flex-col min-h-0' : ''}>
+    <div className={isEmbedMode ? 'flex-1 flex flex-col' : ''}>
       <ScrollArea className={getScrollAreaHeight()}>
         {safeDisplayedSpins.length === 0 ? (
           <div className="text-center py-8">
@@ -73,7 +71,6 @@ export const PlaylistContent = ({
             </p>
           </div>
         ) : layout === 'grid' ? (
-          // Grid Layout
           <div className={`grid gap-4 p-4 ${compact ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
             {safeDisplayedSpins.map((spin, index) => (
               <GridItem 
@@ -87,8 +84,7 @@ export const PlaylistContent = ({
             ))}
           </div>
         ) : (
-          // List Layout
-          <div className="space-y-3">
+          <div className="space-y-0">
             {safeDisplayedSpins.map((spin, index) => (
               <ListItem
                 key={`${spin.id}-${index}`}
