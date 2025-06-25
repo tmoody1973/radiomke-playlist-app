@@ -44,9 +44,8 @@ const EmbedPreview = ({ config }: EmbedPreviewProps) => {
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0">
         <div 
-          className="border-2 border-orange-200 rounded-lg flex-1 relative shadow-lg"
+          className="border border-orange-200 rounded-lg flex-1 relative shadow-sm bg-white"
           style={{
-            background: 'linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%)',
             minHeight: `${iframeHeight}px`,
             overflow: 'visible'
           }}
