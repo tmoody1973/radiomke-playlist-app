@@ -54,7 +54,7 @@ export const PlaylistContent = ({
   // Use the same ScrollArea approach for both embed and regular mode
   const getScrollAreaHeight = () => {
     if (isEmbedMode) {
-      return "h-[calc(100vh-120px)]"; // Adjust height for embed mode
+      return "h-[calc(100vh-180px)]"; // Leave more space for the Load More button in embed mode
     }
     return compact ? "h-64" : "h-96";
   };
