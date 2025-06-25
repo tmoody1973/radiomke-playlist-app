@@ -1,4 +1,3 @@
-
 import { useSearchParams } from 'react-router-dom';
 import SpinitinonPlaylist from '@/components/SpinitinonPlaylist';
 import { useEffect } from 'react';
@@ -42,6 +41,11 @@ const Embed = () => {
     const bgColor = theme === 'dark' ? '#0f172a' : '#ffffff';
     const textColor = theme === 'dark' ? '#f8fafc' : '#1e293b';
     
+    // Scrollbar colors based on theme
+    const scrollbarTrack = theme === 'dark' ? '#1e293b' : '#f1f5f9';
+    const scrollbarThumb = theme === 'dark' ? '#475569' : '#cbd5e1';
+    const scrollbarThumbHover = theme === 'dark' ? '#64748b' : '#94a3b8';
+    
     // Force these styles to override any global theme
     document.documentElement.style.cssText = `
       --background: ${theme === 'dark' ? '222.2 84% 4.9%' : '0 0% 100%'};
@@ -52,6 +56,62 @@ const Embed = () => {
       height: 100%;
       background-color: ${bgColor} !important;
     `;
+
+    // Add scrollbar styling directly to the document
+    let scrollbarStyle = document.getElementById('embed-scrollbar-style');
+    if (scrollbarStyle) {
+      scrollbarStyle.remove();
+    }
+    
+    scrollbarStyle = document.createElement('style');
+    scrollbarStyle.id = 'embed-scrollbar-style';
+    scrollbarStyle.textContent = `
+      /* Webkit scrollbars */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: ${scrollbarTrack} !important;
+        border-radius: 4px;
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background: ${scrollbarThumb} !important;
+        border-radius: 4px;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: ${scrollbarThumbHover} !important;
+      }
+      
+      /* Firefox scrollbars */
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: ${scrollbarThumb} ${scrollbarTrack};
+      }
+      
+      /* Override any global scrollbar styles */
+      .embed-container ::-webkit-scrollbar {
+        width: 8px !important;
+        height: 8px !important;
+      }
+      
+      .embed-container ::-webkit-scrollbar-track {
+        background: ${scrollbarTrack} !important;
+      }
+      
+      .embed-container ::-webkit-scrollbar-thumb {
+        background: ${scrollbarThumb} !important;
+      }
+      
+      .embed-container ::-webkit-scrollbar-thumb:hover {
+        background: ${scrollbarThumbHover} !important;
+      }
+    `;
+    
+    document.head.appendChild(scrollbarStyle);
 
     document.body.className = `embed-container ${theme}`;
     document.body.style.cssText = `
@@ -99,7 +159,14 @@ const Embed = () => {
     const observer = new MutationObserver(sendHeightUpdate);
     observer.observe(document.body, { childList: true, subtree: true });
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      // Clean up scrollbar styles when component unmounts
+      const style = document.getElementById('embed-scrollbar-style');
+      if (style) {
+        style.remove();
+      }
+    };
   }, [theme, height]);
 
   // Create inline styles to completely override any global theme
