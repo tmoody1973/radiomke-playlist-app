@@ -104,19 +104,19 @@ export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistE
 
   return (
     <Card className={`${compact ? 'text-xs' : 'text-sm'} border-slate-200 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 shadow-sm hover:shadow-md transition-shadow duration-200`}>
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 px-3 sm:px-6">
         <CardTitle className={`${compact ? 'text-sm' : 'text-base'} text-slate-800 flex items-center gap-2 font-semibold`}>
-          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-          <span>🎵 {artistName} Live Shows</span>
+          <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+          <span className="truncate">🎵 {artistName} Live Shows</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-0 space-y-3">
+      <CardContent className="pt-0 space-y-3 px-3 sm:px-6">
         {allEvents.slice(0, 3).map((event, index) => {
           const venue = event._embedded?.venues?.[0];
           const priceRange = event.priceRanges?.[0];
           
           return (
-            <div key={event.isCustom ? event.id : event.id} className="group relative bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50 hover:bg-white hover:shadow-lg transition-all duration-300 hover:scale-[1.01]">
+            <div key={event.isCustom ? event.id : event.id} className="group relative bg-white/80 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-slate-200/50 hover:bg-white hover:shadow-lg transition-all duration-300 hover:scale-[1.01]">
               {/* Gradient accent bar */}
               <div className={`absolute top-0 left-0 w-full h-1 rounded-t-xl ${
                 event.isCustom 
@@ -124,64 +124,84 @@ export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistE
                   : 'bg-gradient-to-r from-green-400 via-blue-500 to-purple-600'
               }`}></div>
               
-              <div className="flex justify-between items-start gap-4">
-                <div className="flex-1 min-w-0 space-y-2">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4">
+                <div className="flex-1 min-w-0 space-y-2 w-full sm:w-auto">
                   {/* Event name with custom event indicator */}
-                  <div className="flex items-center gap-2">
-                    <h4 className={`font-semibold text-slate-900 leading-tight ${compact ? 'text-sm' : 'text-base'} group-hover:text-slate-700 transition-colors`}>
+                  <div className="flex items-start gap-2">
+                    <h4 className={`font-semibold text-slate-900 leading-tight ${compact ? 'text-sm' : 'text-base'} group-hover:text-slate-700 transition-colors flex-1`}>
                       {event.name}
                     </h4>
                     {event.isCustom && (
-                      <Star className="h-4 w-4 text-purple-600 fill-purple-200" />
+                      <Star className="h-4 w-4 text-purple-600 fill-purple-200 flex-shrink-0 mt-0.5" />
                     )}
                   </div>
                   
                   {/* Date and time */}
                   <div className="flex items-center gap-2 text-slate-600">
-                    <Calendar className="h-4 w-4 text-green-600" />
-                    <span className={`${compact ? 'text-xs' : 'text-sm'} font-medium`}>
+                    <Calendar className="h-4 w-4 text-green-600 flex-shrink-0" />
+                    <span className={`${compact ? 'text-xs' : 'text-sm'} font-medium break-words`}>
                       {formatEventDate(event.date, event.time)}
                     </span>
                   </div>
                   
                   {/* Venue */}
                   {venue && (
-                    <div className="flex items-center gap-2 text-slate-600">
-                      <MapPin className="h-4 w-4 text-blue-600" />
-                      <span className={`${compact ? 'text-xs' : 'text-sm'} truncate`}>
+                    <div className="flex items-start gap-2 text-slate-600">
+                      <MapPin className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <span className={`${compact ? 'text-xs' : 'text-sm'} break-words`}>
                         <span className="font-medium">{venue.name}</span>
-                        <span className="text-slate-500"> • {venue.city.name}, {venue.state.stateCode}</span>
+                        <span className="text-slate-500 block sm:inline"> 
+                          <span className="hidden sm:inline"> • </span>
+                          {venue.city.name}, {venue.state.stateCode}
+                        </span>
                       </span>
                     </div>
                   )}
                   
-                  {/* Price range */}
-                  {priceRange && (
-                    <div className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 rounded-full">
-                      <span className={`${compact ? 'text-xs' : 'text-sm'} font-semibold`}>
-                        ${priceRange.min} - ${priceRange.max}
-                      </span>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    {/* Price range */}
+                    {priceRange && (
+                      <div className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 rounded-full w-fit">
+                        <span className={`${compact ? 'text-xs' : 'text-sm'} font-semibold whitespace-nowrap`}>
+                          ${priceRange.min} - ${priceRange.max}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Ticket button - mobile optimized */}
+                    <div className="sm:hidden w-full">
+                      <Button
+                        size="sm"
+                        className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
+                        onClick={() => event.url && event.url !== '#' ? window.open(event.url, '_blank') : null}
+                        disabled={!event.url || event.url === '#'}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Get Tickets
+                      </Button>
                     </div>
-                  )}
+                  </div>
                   
                   {/* Custom event description */}
                   {event.isCustom && event.description && (
-                    <p className={`text-slate-600 ${compact ? 'text-xs' : 'text-sm'} italic`}>
+                    <p className={`text-slate-600 ${compact ? 'text-xs' : 'text-sm'} italic break-words`}>
                       {event.description}
                     </p>
                   )}
                 </div>
                 
-                {/* Ticket button */}
-                <Button
-                  size={compact ? "sm" : "default"}
-                  className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
-                  onClick={() => event.url && event.url !== '#' ? window.open(event.url, '_blank') : null}
-                  disabled={!event.url || event.url === '#'}
-                >
-                  <ExternalLink className={`${compact ? 'h-3 w-3' : 'h-4 w-4'} mr-2`} />
-                  {compact ? 'Tix' : 'Get Tickets'}
-                </Button>
+                {/* Ticket button - desktop */}
+                <div className="hidden sm:block flex-shrink-0">
+                  <Button
+                    size={compact ? "sm" : "default"}
+                    className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200 font-semibold whitespace-nowrap"
+                    onClick={() => event.url && event.url !== '#' ? window.open(event.url, '_blank') : null}
+                    disabled={!event.url || event.url === '#'}
+                  >
+                    <ExternalLink className={`${compact ? 'h-3 w-3' : 'h-4 w-4'} mr-2`} />
+                    {compact ? 'Tix' : 'Get Tickets'}
+                  </Button>
+                </div>
               </div>
             </div>
           );
