@@ -97,9 +97,13 @@ const Embed = () => {
     return () => observer.disconnect();
   }, [theme, height]);
 
+  // Create dynamic classes based on theme to force re-render
+  const containerClasses = theme === 'dark' 
+    ? 'min-h-full flex flex-col dark bg-slate-900 text-slate-100'
+    : 'min-h-full flex flex-col bg-white text-slate-900';
+
   return (
-    <div className={`min-h-full flex flex-col ${theme === 'dark' ? 'dark bg-slate-900 text-slate-100' : 'bg-white text-slate-900'}`}
-         style={{ overflow: 'visible' }}>
+    <div className={containerClasses} style={{ overflow: 'visible' }}>
       <div className="flex-1" style={{ overflow: 'visible' }}>
         <SpinitinonPlaylist 
           stationId={stationId}
