@@ -15,7 +15,7 @@ interface EnhancedAlbumArtworkProps {
 export const EnhancedAlbumArtwork = ({ 
   src, 
   alt, 
-  className = "",
+  className = "w-16 h-16",
   fallbackIconSize = "w-6 h-6",
   artist,
   song
@@ -34,7 +34,7 @@ export const EnhancedAlbumArtwork = ({
   // Show fallback icon when no image or error
   if (!finalImageSrc || imageError) {
     return (
-      <div className={`bg-muted flex items-center justify-center ${className}`}>
+      <div className={`bg-muted flex items-center justify-center rounded-md ${className}`}>
         <Music className={`${fallbackIconSize} text-muted-foreground`} />
       </div>
     );
@@ -44,7 +44,7 @@ export const EnhancedAlbumArtwork = ({
     <img
       src={finalImageSrc}
       alt={alt}
-      className={`w-full h-full object-cover ${className}`}
+      className={`rounded-md ${className}`}
       onError={() => setImageError(true)}
       loading="lazy"
     />

@@ -62,13 +62,14 @@ export const ListItem = ({
       isCurrentlyPlaying ? 'bg-gradient-to-r from-green-50 to-blue-50 border-green-300 shadow-md' : 'bg-white'
     }`}>
       <div className="flex items-start gap-4">
-        {/* Album Artwork */}
-        <div className="flex-shrink-0">
+        {/* Album Artwork - Fixed size */}
+        <div className="flex-shrink-0 w-16 h-16">
           <EnhancedAlbumArtwork 
             artist={spin.artist}
             song={spin.song}
             src={spin.image}
             alt={`${spin.artist} - ${spin.song}`}
+            className="w-16 h-16 rounded-md object-cover"
           />
         </div>
         
