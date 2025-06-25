@@ -32,9 +32,21 @@ export const createPlaylistHandlers = (
 
   const handleLoadMore = () => {
     console.log('🔄 Load more clicked, current display count:', playlistState.displayCount, 'total spins:', playlistState.allSpins.length);
+    
+    // Set loading state
+    playlistState.setLoadingMore(true);
+    
+    // Calculate new count
     const newCount = Math.min(playlistState.displayCount + 15, playlistState.allSpins.length);
     console.log('🔄 Setting new display count to:', newCount);
+    
+    // Update display count
     playlistState.setDisplayCount(newCount);
+    
+    // Clear loading state after a brief delay to show the loading state
+    setTimeout(() => {
+      playlistState.setLoadingMore(false);
+    }, 500);
   };
 
   const handleManualRefresh = () => {

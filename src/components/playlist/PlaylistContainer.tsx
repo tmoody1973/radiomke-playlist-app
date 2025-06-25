@@ -63,7 +63,22 @@ export const PlaylistContainer = ({
   }, [playlistState.allSpins, hasActiveFilters, stationId]);
 
   const displayedSpins = playlistState.allSpins.slice(0, playlistState.displayCount);
-  const hasMoreSpins = playlistState.displayCount < playlistState.allSpins.length;
+  
+  // Improved logic for hasMoreSpins
+  const hasMoreSpins = React.useMemo(() => {
+    const totalSpins = playlistState.allSpins.length;
+    const displayCount = playlistState.displayCount;
+    const hasMore = displayCount < totalSpins;
+    
+    console.log(`🔄 HasMoreSpins check for station ${stationId}:`, {
+      totalSpins,
+      displayCount,
+      hasMore,
+      isLoading: playlistState.loadingMore
+    });
+    
+    return hasMore;
+  }, [playlistState.allSpins.length, playlistState.displayCount, stationId, playlistState.loadingMore]);
 
   console.log(`🎵 Displayed spins for station ${stationId}:`, displayedSpins.length, 'out of', playlistState.allSpins.length);
 
