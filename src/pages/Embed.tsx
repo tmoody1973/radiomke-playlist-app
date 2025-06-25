@@ -1,5 +1,7 @@
+
 import { useSearchParams } from 'react-router-dom';
 import SpinitinonPlaylist from '@/components/SpinitinonPlaylist';
+import { PostHogProvider } from '@/components/embed/PostHogProvider';
 import { useEffect } from 'react';
 
 const Embed = () => {
@@ -179,21 +181,29 @@ const Embed = () => {
     overflow: 'visible'
   };
 
+  const embedUrl = window.location.href;
+
   return (
-    <div style={containerStyles}>
-      <div className="flex-1" style={{ overflow: 'visible' }}>
-        <SpinitinonPlaylist 
-          stationId={stationId}
-          autoUpdate={autoUpdate}
-          showSearch={showSearch}
-          maxItems={maxItems}
-          compact={compact}
-          startDate={startDate}
-          endDate={endDate}
-          layout={layout}
-        />
+    <PostHogProvider 
+      theme={theme as 'light' | 'dark'} 
+      stationId={stationId}
+      embedUrl={embedUrl}
+    >
+      <div style={containerStyles}>
+        <div className="flex-1" style={{ overflow: 'visible' }}>
+          <SpinitinonPlaylist 
+            stationId={stationId}
+            autoUpdate={autoUpdate}
+            showSearch={showSearch}
+            maxItems={maxItems}
+            compact={compact}
+            startDate={startDate}
+            endDate={endDate}
+            layout={layout}
+          />
+        </div>
       </div>
-    </div>
+    </PostHogProvider>
   );
 };
 

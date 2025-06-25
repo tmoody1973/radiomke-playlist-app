@@ -3,6 +3,7 @@ import React from 'react';
 import { PlaylistContainer } from './playlist/PlaylistContainer';
 import { usePlaylistData } from '@/hooks/usePlaylistData';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { usePostHogTracking } from '@/hooks/usePostHogTracking';
 import { createPlaylistHandlers } from './playlist/PlaylistHandlers';
 
 interface SpinitinonPlaylistProps {
@@ -37,6 +38,7 @@ const SpinitinonPlaylist = ({
   });
 
   const audioPlayer = useAudioPlayer();
+  const { trackSongPlay, trackSearch, trackLoadMore, trackError } = usePostHogTracking();
   const handlers = createPlaylistHandlers(playlistState, refetch);
 
   // Calculate displayed spins
@@ -45,7 +47,7 @@ const SpinitinonPlaylist = ({
   // Check if there are more spins to load
   const hasMoreSpins = playlistState.displayCount < playlistState.allSpins.length;
 
-  // Helper functions
+  // Enhanced helper functions with tracking
   const isCurrentlyPlaying = (spin: any, index: number) => {
     return audioPlayer.currentlyPlaying === `${spin.artist}-${spin.song}-${index}`;
   };
@@ -61,6 +63,19 @@ const SpinitinonPlaylist = ({
     return new Date(dateString).toLocaleDateString();
   };
 
+  // Enhanced handlers with PostHog tracking
+  const handleLoadMoreWithTracking = () => {
+    trackLoadMore(playlistState.displayCount, playlistState.allSpins.length);
+    handlers.handleLoadMore();
+  };
+
+  // Track errors
+  React.useEffect(() => {
+    if (error) {
+      trackError(error.toString(), 'playlist_loading');
+    }
+  }, [error, trackError]);
+
   return (
     <PlaylistContainer
       displayedSpins={displayedSpins}
@@ -75,7 +90,7 @@ const SpinitinonPlaylist = ({
       audioPlayer={audioPlayer}
       hasMoreSpins={hasMoreSpins}
       loadingMore={playlistState.loadingMore}
-      onLoadMore={handlers.handleLoadMore}
+      onLoadMore={handleLoadMoreWithTracking}
       playlistState={playlistState}
     />
   );
