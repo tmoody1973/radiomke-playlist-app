@@ -27,15 +27,17 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   const embedUrl = generateEmbedUrl(config);
   const stationName = config.selectedStation === 'hyfin' ? 'HYFIN' : '88Nine';
   
-  // Generate theme-aware colors matching homepage orange theme
+  // Generate theme-aware colors matching the dark slate theme
   const isDark = config.theme === 'dark';
-  const colors = config.customColors || {
-    headingColor: isDark ? '#f8fafc' : '#1e293b',
-    textColor: isDark ? '#cbd5e1' : '#64748b',
-    linkColor: '#ea580c', // Orange accent matching homepage
-    fallbackBg: isDark ? '#334155' : '#f8fafc',
+  const colors = {
     backgroundColor: isDark ? '#0f172a' : '#ffffff',
-    borderColor: isDark ? '#334155' : '#e2e8f0'
+    textColor: isDark ? '#cbd5e1' : '#374151',
+    headingColor: isDark ? '#f8fafc' : '#1e293b',
+    linkColor: '#ea580c', // Orange accent
+    borderColor: isDark ? '#475569' : '#e2e8f0',
+    cardBg: isDark ? '#1e293b' : '#f8fafc',
+    inputBg: isDark ? '#334155' : '#ffffff',
+    inputBorder: isDark ? '#64748b' : '#d1d5db'
   };
   
   // Calculate iframe height with extra space for Load More button
@@ -112,17 +114,19 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   });
 </script>
 
-<!-- Custom Theme CSS matching homepage orange theme -->
+<!-- Custom Theme CSS matching dark slate theme -->
 <style>
 .radio-milwaukee-embed-container {
   max-width: 100%;
   margin: 1rem 0;
-  background-color: ${colors.backgroundColor};
+  background-color: ${colors.cardBg};
+  border: 1px solid ${colors.borderColor};
   border-radius: 8px;
   padding: 1rem;
   overflow: visible !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
+
 .radio-milwaukee-embed-container h3 {
   margin: 0 0 0.5rem 0;
   font-size: 1.25rem;
@@ -133,11 +137,14 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
 .radio-milwaukee-embed-container p {
   margin: 0 0 1rem 0;
   color: ${colors.textColor};
   line-height: 1.5;
+  font-size: 0.875rem;
 }
+
 .iframe-fallback {
   padding: 2rem;
   background: ${colors.backgroundColor};
@@ -145,18 +152,22 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   border-radius: 8px;
   text-align: center;
 }
+
 .iframe-fallback a {
   color: ${colors.linkColor};
   text-decoration: none;
   font-weight: 500;
 }
+
 .iframe-fallback a:hover {
   text-decoration: underline;
 }
+
 #spinitron-iframe {
   overflow: visible !important;
-  border: 1px solid ${isDark ? '#334155' : '#f97316'};
-  box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.1);
+  border: 1px solid ${colors.borderColor};
+  background-color: ${colors.backgroundColor} !important;
+  box-shadow: ${isDark ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' : '0 4px 6px -1px rgba(249, 115, 22, 0.1)'};
 }
 </style>`;
 };

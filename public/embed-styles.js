@@ -4,16 +4,32 @@
   
   // CSS styles generator
   function generateCSS(config) {
+    const isDark = config.theme === 'dark';
+    
+    // Dark theme colors matching the preview
+    const colors = {
+      background: isDark ? '#0f172a' : '#ffffff',
+      cardBg: isDark ? '#1e293b' : '#ffffff',
+      text: isDark ? '#f8fafc' : '#374151',
+      textMuted: isDark ? '#cbd5e1' : '#6b7280',
+      border: isDark ? '#475569' : '#e5e7eb',
+      inputBg: isDark ? '#334155' : '#ffffff',
+      inputBorder: isDark ? '#64748b' : '#d1d5db',
+      inputText: isDark ? '#f8fafc' : '#374151',
+      hover: isDark ? '#334155' : '#f9fafb',
+      accent: '#ea580c'
+    };
+    
     return `
       .spinitron-widget {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        line-height: 1.5;
-        color: ${config.theme === 'dark' ? '#ffffff' : '#374151'};
-        background-color: ${config.theme === 'dark' ? '#1f2937' : '#ffffff'};
+        line-height: 1.6;
+        color: ${colors.text};
+        background-color: ${colors.background};
         border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         ${config.height !== 'auto' ? `height: ${config.height}px; overflow-y: auto;` : ''}
+        min-height: 400px;
       }
       
       .spinitron-widget * {
@@ -22,55 +38,68 @@
       
       .spinitron-search {
         padding: 16px;
-        border-bottom: 1px solid ${config.theme === 'dark' ? '#374151' : '#e5e7eb'};
+        background-color: ${colors.cardBg};
+        border-bottom: 1px solid ${colors.border};
       }
       
       .spinitron-search input {
         width: 100%;
-        padding: 8px 12px;
-        border: 1px solid ${config.theme === 'dark' ? '#4b5563' : '#d1d5db'};
+        padding: 12px 16px;
+        border: 1px solid ${colors.inputBorder};
         border-radius: 6px;
-        background-color: ${config.theme === 'dark' ? '#374151' : '#ffffff'};
-        color: ${config.theme === 'dark' ? '#ffffff' : '#374151'};
+        background-color: ${colors.inputBg};
+        color: ${colors.inputText};
         font-size: 14px;
+        transition: all 0.2s ease;
+      }
+      
+      .spinitron-search input::placeholder {
+        color: ${colors.textMuted};
+        opacity: 0.8;
       }
       
       .spinitron-search input:focus {
         outline: none;
-        border-color: ${config.theme === 'dark' ? '#6366f1' : '#3b82f6'};
-        box-shadow: 0 0 0 2px ${config.theme === 'dark' ? 'rgba(99, 102, 241, 0.2)' : 'rgba(59, 130, 246, 0.2)'};
+        border-color: ${colors.accent};
+        box-shadow: 0 0 0 2px ${colors.accent}20;
       }
       
       .spinitron-playlist {
+        background-color: ${colors.background};
         ${config.layout === 'grid' ? 'display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; padding: 16px;' : ''}
       }
       
       .spinitron-song {
-        ${config.layout === 'list' ? 'border-bottom: 1px solid ' + (config.theme === 'dark' ? '#374151' : '#e5e7eb') + ';' : 'border: 1px solid ' + (config.theme === 'dark' ? '#374151' : '#e5e7eb') + '; border-radius: 6px;'}
-        padding: ${config.compact ? '8px 16px' : '16px'};
+        ${config.layout === 'list' ? 'border-bottom: 1px solid ' + colors.border + ';' : 'border: 1px solid ' + colors.border + '; border-radius: 6px; background-color: ' + colors.cardBg + ';'}
+        padding: ${config.compact ? '12px 16px' : '16px'};
         ${config.layout === 'grid' ? 'text-align: center;' : ''}
+        transition: all 0.2s ease;
       }
       
       .spinitron-song:hover {
-        background-color: ${config.theme === 'dark' ? '#374151' : '#f9fafb'};
+        background-color: ${colors.hover};
       }
       
       .spinitron-song-title {
         font-weight: 600;
         font-size: ${config.compact ? '14px' : '16px'};
-        margin: 0 0 4px 0;
+        margin: 0 0 6px 0;
+        color: ${colors.text};
+        line-height: 1.4;
       }
       
       .spinitron-song-artist {
-        color: ${config.theme === 'dark' ? '#9ca3af' : '#6b7280'};
-        font-size: ${config.compact ? '12px' : '14px'};
+        color: ${colors.textMuted};
+        font-size: ${config.compact ? '13px' : '14px'};
         margin: 0 0 4px 0;
+        line-height: 1.3;
       }
       
       .spinitron-song-time {
-        color: ${config.theme === 'dark' ? '#9ca3af' : '#6b7280'};
+        color: ${colors.textMuted};
         font-size: 12px;
         margin: 0;
+        opacity: 0.8;
       }
       
       .spinitron-song-image {
@@ -83,38 +112,64 @@
       
       .spinitron-load-more {
         text-align: center;
-        padding: 16px;
+        padding: 20px 16px;
+        background-color: ${colors.background};
+        border-top: 1px solid ${colors.border};
       }
       
       .spinitron-load-more button {
-        background-color: ${config.theme === 'dark' ? '#3b82f6' : '#2563eb'};
+        background-color: ${colors.accent};
         color: white;
         border: none;
-        padding: 8px 16px;
+        padding: 10px 20px;
         border-radius: 6px;
         cursor: pointer;
         font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
       }
       
       .spinitron-load-more button:hover {
-        background-color: ${config.theme === 'dark' ? '#2563eb' : '#1d4ed8'};
+        background-color: ${isDark ? '#dc2626' : '#c2410c'};
+        transform: translateY(-1px);
       }
       
       .spinitron-load-more button:disabled {
-        background-color: ${config.theme === 'dark' ? '#4b5563' : '#9ca3af'};
+        background-color: ${colors.textMuted};
         cursor: not-allowed;
+        transform: none;
       }
       
       .spinitron-loading {
         text-align: center;
-        padding: 32px;
-        color: ${config.theme === 'dark' ? '#9ca3af' : '#6b7280'};
+        padding: 40px 16px;
+        color: ${colors.textMuted};
+        background-color: ${colors.background};
       }
       
       .spinitron-error {
         text-align: center;
-        padding: 32px;
-        color: ${config.theme === 'dark' ? '#f87171' : '#dc2626'};
+        padding: 40px 16px;
+        color: ${isDark ? '#f87171' : '#dc2626'};
+        background-color: ${colors.background};
+      }
+      
+      /* Ensure proper scrolling */
+      .spinitron-widget::-webkit-scrollbar {
+        width: 6px;
+      }
+      
+      .spinitron-widget::-webkit-scrollbar-track {
+        background: ${colors.border};
+      }
+      
+      .spinitron-widget::-webkit-scrollbar-thumb {
+        background: ${colors.textMuted};
+        border-radius: 3px;
+      }
+      
+      .spinitron-widget::-webkit-scrollbar-thumb:hover {
+        background: ${colors.accent};
       }
     `;
   }
