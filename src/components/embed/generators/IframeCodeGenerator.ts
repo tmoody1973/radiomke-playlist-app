@@ -38,6 +38,10 @@ export const generateIframeCode = (config: EmbedConfig): string => {
     borderColor: isDark ? '#374151' : '#e5e7eb'
   };
   
+  // Calculate iframe height with extra space for Load More button
+  const baseHeight = parseInt(config.height) || 600;
+  const iframeHeight = baseHeight + 100;
+  
   return `<!-- SEO-Friendly Radio Milwaukee Playlist Embed -->
 <div class="radio-milwaukee-embed-container">
   <!-- Contextual content for SEO -->
@@ -48,14 +52,15 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   <iframe 
     src="${embedUrl}" 
     width="100%" 
-    height="${config.height}px"
+    height="${iframeHeight}px"
     title="Radio Milwaukee ${stationName} Live Playlist - Currently Playing Songs"
     name="radio-milwaukee-playlist"
     loading="lazy"
     allow="autoplay; encrypted-media"
     referrerpolicy="strict-origin-when-cross-origin"
     sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-    style="border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); display: block; max-width: 100%; background-color: ${colors.backgroundColor};"
+    scrolling="yes"
+    style="border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); display: block; max-width: 100%; background-color: ${colors.backgroundColor}; overflow: visible !important;"
     id="spinitron-iframe">
     
     <!-- Fallback content for accessibility and SEO -->
@@ -94,18 +99,20 @@ export const generateIframeCode = (config: EmbedConfig): string => {
 </div>
 
 <script>
-  // Auto-resize iframe based on content
+  // Auto-resize iframe based on content with overflow handling
   window.addEventListener('message', function(event) {
     if (event.data.type === 'spinitron-resize') {
       const iframe = document.getElementById('spinitron-iframe');
       if (iframe) {
-        iframe.style.height = event.data.height + 'px';
+        const newHeight = Math.max(event.data.height, ${baseHeight});
+        iframe.style.height = newHeight + 'px';
+        iframe.style.overflow = 'visible';
       }
     }
   });
 </script>
 
-<!-- Custom Theme CSS -->
+<!-- Custom Theme CSS with overflow fixes -->
 <style>
 .radio-milwaukee-embed-container {
   max-width: 100%;
@@ -113,6 +120,7 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   background-color: ${colors.backgroundColor};
   border-radius: 8px;
   padding: 1rem;
+  overflow: visible !important;
 }
 .radio-milwaukee-embed-container h3 {
   margin: 0 0 0.5rem 0;
@@ -139,6 +147,9 @@ export const generateIframeCode = (config: EmbedConfig): string => {
 }
 .iframe-fallback a:hover {
   text-decoration: underline;
+}
+#spinitron-iframe {
+  overflow: visible !important;
 }
 </style>`;
 };

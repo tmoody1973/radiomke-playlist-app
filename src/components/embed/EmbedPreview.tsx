@@ -31,8 +31,9 @@ const EmbedPreview = ({ config }: EmbedPreviewProps) => {
     setKey(prev => prev + 1);
   }, [config.theme, config.layout, config.height]);
 
-  // Calculate proper iframe height - ensure it's at least the configured height
-  const iframeHeight = Math.max(parseInt(config.height) || 600, 600);
+  // Calculate proper iframe height with extra padding for Load More button
+  const baseHeight = parseInt(config.height) || 600;
+  const iframeHeight = baseHeight + 100; // Add extra space for Load More button
 
   return (
     <Card className="h-full flex flex-col">
@@ -41,11 +42,11 @@ const EmbedPreview = ({ config }: EmbedPreviewProps) => {
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0">
         <div 
-          className="border rounded-lg overflow-hidden flex-1"
+          className="border rounded-lg flex-1 relative"
           style={{
             backgroundColor: '#f8f9fa',
             minHeight: `${iframeHeight}px`,
-            maxHeight: `${iframeHeight}px`
+            overflow: 'visible' // Allow content to overflow if needed
           }}
         >
           <iframe
@@ -56,11 +57,13 @@ const EmbedPreview = ({ config }: EmbedPreviewProps) => {
             style={{ 
               border: 'none',
               display: 'block',
-              backgroundColor: 'transparent'
+              backgroundColor: 'transparent',
+              overflow: 'visible' // Ensure iframe content can overflow
             }}
             title="Playlist Preview"
             sandbox="allow-scripts allow-same-origin"
             loading="lazy"
+            scrolling="yes" // Enable scrolling
           />
         </div>
         <div className="mt-2 text-sm text-muted-foreground">
