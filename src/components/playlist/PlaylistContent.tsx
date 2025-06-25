@@ -51,11 +51,11 @@ export const PlaylistContent = ({
   // Ensure displayedSpins is always an array
   const safeDisplayedSpins = displayedSpins || [];
 
-  // For embed mode, we need a different approach to scrolling
+  // For embed mode, use a different scrolling approach
   if (isEmbedMode) {
     return (
-      <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full">
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="h-full overflow-y-auto">
           <div className="p-4">
             {safeDisplayedSpins.length === 0 ? (
               <div className="text-center py-8">
@@ -97,7 +97,7 @@ export const PlaylistContent = ({
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
       </div>
     );
   }

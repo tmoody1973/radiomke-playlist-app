@@ -114,7 +114,7 @@ export const PlaylistContainer = ({
         formatDate={formatDate}
       />
       
-      <CardContent className={`${compact ? "pt-0" : ""} ${isEmbedMode ? 'flex-1 flex flex-col min-h-0 pb-2' : ''}`}>
+      <CardContent className={`${compact ? "pt-0" : ""} ${isEmbedMode ? 'flex-1 flex flex-col min-h-0 p-0' : ''}`}>
         <PlaylistDebugInfo
           hasActiveFilters={hasActiveFilters}
           dataUpdatedAt={dataUpdatedAt}
@@ -134,11 +134,23 @@ export const PlaylistContainer = ({
           stationId={stationId}
         />
         
-        <LoadMoreButton
-          hasMoreSpins={hasMoreSpins}
-          loadingMore={playlistState.loadingMore}
-          onLoadMore={handlers.handleLoadMore}
-        />
+        {!isEmbedMode && (
+          <LoadMoreButton
+            hasMoreSpins={hasMoreSpins}
+            loadingMore={playlistState.loadingMore}
+            onLoadMore={handlers.handleLoadMore}
+          />
+        )}
+        
+        {isEmbedMode && hasMoreSpins && (
+          <div className="p-4 border-t">
+            <LoadMoreButton
+              hasMoreSpins={hasMoreSpins}
+              loadingMore={playlistState.loadingMore}
+              onLoadMore={handlers.handleLoadMore}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
