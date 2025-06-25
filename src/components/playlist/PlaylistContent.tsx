@@ -34,6 +34,7 @@ interface PlaylistContentProps {
   formatDate: (dateString: string) => string;
   audioPlayer: AudioPlayer;
   stationId?: string;
+  hasMoreSpins: boolean;
 }
 
 export const PlaylistContent = ({
@@ -46,15 +47,16 @@ export const PlaylistContent = ({
   formatTime,
   formatDate,
   audioPlayer,
-  stationId
+  stationId,
+  hasMoreSpins
 }: PlaylistContentProps) => {
   // Ensure displayedSpins is always an array
   const safeDisplayedSpins = displayedSpins || [];
 
-  // Use consistent ScrollArea height for both embed and regular mode
+  // Use consistent ScrollArea height - in embed mode, account for Load More button space
   const getScrollAreaHeight = () => {
     if (isEmbedMode) {
-      return "h-[calc(100vh-220px)]"; // Leave space for header and Load More button
+      return hasMoreSpins ? "h-[calc(100vh-200px)]" : "h-[calc(100vh-160px)]";
     }
     return compact ? "h-64" : "h-96";
   };

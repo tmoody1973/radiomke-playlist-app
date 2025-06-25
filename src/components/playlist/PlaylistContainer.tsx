@@ -121,24 +121,39 @@ export const PlaylistContainer = ({
           onManualRefresh={handlers.handleManualRefresh}
         />
         
-        <PlaylistContent
-          displayedSpins={displayedSpins}
-          hasActiveFilters={hasActiveFilters}
-          layout={layout}
-          compact={compact}
-          isEmbedMode={isEmbedMode}
-          isCurrentlyPlaying={(spin, index) => isCurrentlyPlaying(spin, index, playlistState.currentTime, hasActiveFilters)}
-          formatTime={formatTime}
-          formatDate={formatDate}
-          audioPlayer={audioPlayer}
-          stationId={stationId}
-        />
+        <div className={isEmbedMode ? 'flex-1 flex flex-col min-h-0' : ''}>
+          <PlaylistContent
+            displayedSpins={displayedSpins}
+            hasActiveFilters={hasActiveFilters}
+            layout={layout}
+            compact={compact}
+            isEmbedMode={isEmbedMode}
+            isCurrentlyPlaying={(spin, index) => isCurrentlyPlaying(spin, index, playlistState.currentTime, hasActiveFilters)}
+            formatTime={formatTime}
+            formatDate={formatDate}
+            audioPlayer={audioPlayer}
+            stationId={stationId}
+            hasMoreSpins={hasMoreSpins}
+          />
+          
+          {isEmbedMode && (
+            <div className="flex-shrink-0 pt-4">
+              <LoadMoreButton
+                hasMoreSpins={hasMoreSpins}
+                loadingMore={playlistState.loadingMore}
+                onLoadMore={handlers.handleLoadMore}
+              />
+            </div>
+          )}
+        </div>
         
-        <LoadMoreButton
-          hasMoreSpins={hasMoreSpins}
-          loadingMore={playlistState.loadingMore}
-          onLoadMore={handlers.handleLoadMore}
-        />
+        {!isEmbedMode && (
+          <LoadMoreButton
+            hasMoreSpins={hasMoreSpins}
+            loadingMore={playlistState.loadingMore}
+            onLoadMore={handlers.handleLoadMore}
+          />
+        )}
       </CardContent>
     </Card>
   );
