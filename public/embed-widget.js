@@ -47,6 +47,7 @@
         <div class="spinitron-load-more" id="spinitron-load-more" style="display: none;">
           <button id="spinitron-load-more-btn">Load More</button>
         </div>
+        <div class="spinitron-footer">Made with ❤️ by Tarik aka the Architect</div>
       `;
 
       if (this.config.showSearch) {

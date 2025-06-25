@@ -1,8 +1,9 @@
+
 import SpinitinonPlaylist from '@/components/SpinitinonPlaylist';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Code, ExternalLink, Heart, FileText } from 'lucide-react';
+import { Code, ExternalLink, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -82,12 +83,6 @@ const Index = () => {
         </div>
         
         <SpinitinonPlaylist stationId={selectedStation} autoUpdate={true} showSearch={true} maxItems={50} />
-        
-        <div className="mt-8 text-center text-sm text-muted-foreground">
-          <p className="flex items-center justify-center gap-1">
-            Made with <Heart className="h-4 w-4 text-red-500 fill-current" /> by Tarik aka the Architect
-          </p>
-        </div>
       </div>
     </div>
   );

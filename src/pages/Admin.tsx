@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CustomEventsAdmin } from '@/components/admin/CustomEventsAdmin';
-import { Lock } from 'lucide-react';
+import { Lock, Heart } from 'lucide-react';
 
 // Simple password protection for admin access
 const ADMIN_PASSWORD = 'playlist2024'; // You can change this
@@ -68,6 +68,13 @@ export default function Admin() {
         </div>
         
         <CustomEventsAdmin />
+        
+        {/* Footer */}
+        <div className="mt-8 text-center text-sm text-muted-foreground border-t pt-4">
+          <p className="flex items-center justify-center gap-1">
+            Made with <Heart className="h-4 w-4 text-red-500 fill-current" /> by Tarik aka the Architect
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 import { useSearchParams } from 'react-router-dom';
 import SpinitinonPlaylist from '@/components/SpinitinonPlaylist';
 import { useEffect } from 'react';
+import { Heart } from 'lucide-react';
 
 const Embed = () => {
   const [searchParams] = useSearchParams();
@@ -48,6 +49,13 @@ const Embed = () => {
           endDate={endDate}
           layout={layout}
         />
+      </div>
+      
+      {/* Footer for embedded view */}
+      <div className="text-center text-xs text-muted-foreground border-t py-2 mt-2">
+        <p className="flex items-center justify-center gap-1">
+          Made with <Heart className="h-4 w-4 text-red-500 fill-current" /> by Tarik aka the Architect
+        </p>
       </div>
     </div>
   );
