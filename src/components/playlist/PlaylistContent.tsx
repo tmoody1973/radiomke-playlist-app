@@ -52,11 +52,11 @@ export const PlaylistContent = ({
 }: PlaylistContentProps) => {
   const safeDisplayedSpins = displayedSpins || [];
 
-  // Calculate scroll area height - leave space for Load More button
+  // Calculate scroll area height - adjusted for embed mode
   const getScrollAreaHeight = () => {
     if (isEmbedMode) {
-      // Reserve space for Load More button (approximately 60px with padding)
-      return "h-[calc(100vh-160px)]";
+      // Use flexible height that doesn't reserve too much space
+      return "h-[calc(100vh-120px)]";
     }
     return compact ? "h-64" : "h-96";
   };

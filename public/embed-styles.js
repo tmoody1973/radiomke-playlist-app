@@ -118,7 +118,7 @@
       
       .spinitron-load-more {
         text-align: center;
-        padding: 20px 16px;
+        padding: 12px 16px;
         background-color: ${colors.background};
         border-top: 1px solid ${colors.border};
       }

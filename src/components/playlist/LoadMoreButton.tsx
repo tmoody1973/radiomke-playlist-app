@@ -16,7 +16,7 @@ export const LoadMoreButton = ({ hasMoreSpins, loadingMore, onLoadMore }: LoadMo
   }
 
   return (
-    <div className={`flex justify-center ${isEmbedMode ? 'p-4 bg-transparent border-t border-gray-200' : 'mt-4'}`}>
+    <div className={`flex justify-center ${isEmbedMode ? 'p-2 bg-transparent border-t border-gray-200' : 'mt-4'}`}>
       <Button
         variant="outline"
         onClick={onLoadMore}
