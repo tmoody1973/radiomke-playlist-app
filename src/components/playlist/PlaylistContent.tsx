@@ -88,8 +88,8 @@ export const PlaylistContent = ({
           ))}
         </div>
       ) : (
-        // List Layout
-        <div className="space-y-3">
+        // List Layout - Clean vertical list without extra spacing
+        <div className="divide-y divide-slate-100">
           {safeDisplayedSpins.map((spin, index) => (
             <ListItem
               key={`${spin.id}-${index}`}

@@ -58,79 +58,99 @@ export const ListItem = ({
   });
 
   return (
-    <div className={`group p-4 border border-slate-200 rounded-lg transition-all duration-200 hover:border-slate-300 hover:shadow-md ${
-      isCurrentlyPlaying ? 'bg-gradient-to-r from-green-50 to-blue-50 border-green-300 shadow-md' : 'bg-white'
-    }`}>
-      <div className="flex items-start gap-4">
-        {/* Album Artwork - Fixed size */}
-        <div className="flex-shrink-0 w-16 h-16">
+    <div className="group">
+      {/* Main song item - compact horizontal layout */}
+      <div className={`flex items-center gap-3 p-3 border-b border-slate-100 hover:bg-slate-50 transition-colors ${
+        isCurrentlyPlaying ? 'bg-gradient-to-r from-green-50 to-blue-50' : ''
+      }`}>
+        {/* Small Album Artwork */}
+        <div className="flex-shrink-0">
           <EnhancedAlbumArtwork 
             artist={spin.artist}
             song={spin.song}
             src={spin.image}
             alt={`${spin.artist} - ${spin.song}`}
-            className="w-16 h-16 rounded-md object-cover"
+            className="w-12 h-12 rounded-md object-cover"
+            fallbackIconSize="w-4 h-4"
           />
         </div>
         
-        {/* Song Info */}
+        {/* Song Info - Horizontal layout */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <EnhancedSongInfo 
-                spin={spin}
-                compact={compact}
-              />
-              <div className="flex items-center gap-3 mt-2">
-                <div className="flex items-center gap-2 text-slate-500 text-sm">
-                  <Clock className="h-4 w-4" />
-                  <span>{formatTime(spin.start)}</span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-500 text-sm">
-                  <Calendar className="h-4 w-4" />
-                  <span>{formatDate(spin.start)}</span>
-                </div>
-                {isCurrentlyPlaying && (
-                  <Badge className="bg-red-100 text-red-800 border-red-200">
-                    Now Playing
-                  </Badge>
+              <h3 className={`font-semibold truncate ${compact ? "text-sm" : "text-base"}`}>
+                {spin.song}
+              </h3>
+              <div className="flex items-center gap-4 text-sm text-slate-600">
+                <span className="truncate">{spin.artist}</span>
+                {spin.release && (
+                  <>
+                    <span>•</span>
+                    <span className="truncate">{spin.release}</span>
+                  </>
+                )}
+                {spin.label && (
+                  <>
+                    <span>•</span>
+                    <span className="truncate">{spin.label}</span>
+                  </>
                 )}
               </div>
             </div>
             
-            {/* Audio Controls */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <YouTubePreviewButton 
-                artist={spin.artist}
-                song={spin.song}
-                trackId={trackId}
-                currentlyPlaying={audioPlayer.currentlyPlaying}
-                isLoading={audioPlayer.isLoading}
-                onPlay={audioPlayer.playVideo}
-                isCurrentlyPlaying={isCurrentlyPlaying}
-              />
-              <AudioPreviewButton 
-                artist={spin.artist}
-                song={spin.song}
-                trackId={trackId}
-                currentlyPlaying={audioPlayer.currentlyPlaying}
-                isLoading={audioPlayer.isLoading}
-                onPlay={audioPlayer.playVideo}
-              />
+            {/* Time info and controls */}
+            <div className="flex items-center gap-4 flex-shrink-0">
+              <div className="flex items-center gap-2 text-slate-500 text-sm">
+                <Clock className="h-4 w-4" />
+                <span>{formatTime(spin.start)}</span>
+              </div>
+              <div className="flex items-center gap-2 text-slate-500 text-sm">
+                <Calendar className="h-4 w-4" />
+                <span>{formatDate(spin.start)}</span>
+              </div>
+              {isCurrentlyPlaying && (
+                <Badge className="bg-red-100 text-red-800 border-red-200 text-xs">
+                  Now Playing
+                </Badge>
+              )}
+              
+              {/* Audio Controls */}
+              <div className="flex items-center gap-1">
+                <YouTubePreviewButton 
+                  artist={spin.artist}
+                  song={spin.song}
+                  trackId={trackId}
+                  currentlyPlaying={audioPlayer.currentlyPlaying}
+                  isLoading={audioPlayer.isLoading}
+                  onPlay={audioPlayer.playVideo}
+                  isCurrentlyPlaying={isCurrentlyPlaying}
+                />
+                <AudioPreviewButton 
+                  artist={spin.artist}
+                  song={spin.song}
+                  trackId={trackId}
+                  currentlyPlaying={audioPlayer.currentlyPlaying}
+                  isLoading={audioPlayer.isLoading}
+                  onPlay={audioPlayer.playVideo}
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
       
-      {/* Artist Events - Only show Ticketmaster events for currently playing song */}
-      <div className="mt-4">
-        <ArtistEvents 
-          artistName={spin.artist} 
-          compact={compact}
-          stationId={stationId}
-          isCurrentlyPlaying={isCurrentlyPlaying}
-        />
-      </div>
+      {/* Artist Events - Only show for currently playing song */}
+      {isCurrentlyPlaying && (
+        <div className="px-3 pb-3">
+          <ArtistEvents 
+            artistName={spin.artist} 
+            compact={true}
+            stationId={stationId}
+            isCurrentlyPlaying={isCurrentlyPlaying}
+          />
+        </div>
+      )}
     </div>
   );
 };

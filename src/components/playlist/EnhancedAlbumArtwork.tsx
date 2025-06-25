@@ -15,8 +15,8 @@ interface EnhancedAlbumArtworkProps {
 export const EnhancedAlbumArtwork = ({ 
   src, 
   alt, 
-  className = "w-16 h-16",
-  fallbackIconSize = "w-6 h-6",
+  className = "w-12 h-12",
+  fallbackIconSize = "w-4 h-4",
   artist,
   song
 }: EnhancedAlbumArtworkProps) => {
@@ -44,7 +44,7 @@ export const EnhancedAlbumArtwork = ({
     <img
       src={finalImageSrc}
       alt={alt}
-      className={`rounded-md ${className}`}
+      className={`rounded-md object-cover ${className}`}
       onError={() => setImageError(true)}
       loading="lazy"
     />
