@@ -116,14 +116,14 @@
         ${config.layout === 'list' ? 'float: left; margin-right: 12px;' : 'margin: 0 auto 8px; display: block;'}
       }
       
-      .spinitron-load-more {
+      .spinitron-load-more-inline {
         text-align: center;
-        padding: 12px 16px;
+        padding: 16px;
         background-color: ${colors.background};
-        border-top: 1px solid ${colors.border};
+        ${config.layout === 'list' ? 'border-top: 1px solid ' + colors.border + ';' : ''}
       }
       
-      .spinitron-load-more button {
+      .spinitron-load-more-inline button {
         background-color: ${colors.accent};
         color: white;
         border: none;
@@ -133,14 +133,16 @@
         font-size: 14px;
         font-weight: 500;
         transition: all 0.2s ease;
+        width: 100%;
+        max-width: 200px;
       }
       
-      .spinitron-load-more button:hover {
+      .spinitron-load-more-inline button:hover {
         background-color: ${colors.accentHover};
         transform: translateY(-1px);
       }
       
-      .spinitron-load-more button:disabled {
+      .spinitron-load-more-inline button:disabled {
         background-color: ${colors.textMuted};
         cursor: not-allowed;
         transform: none;

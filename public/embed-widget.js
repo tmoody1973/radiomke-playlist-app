@@ -44,9 +44,6 @@
           </div>
         ` : ''}
         <div class="spinitron-playlist" id="spinitron-playlist"></div>
-        <div class="spinitron-load-more" id="spinitron-load-more" style="display: none;">
-          <button id="spinitron-load-more-btn">Load More</button>
-        </div>
       `;
 
       if (this.config.showSearch) {
@@ -55,11 +52,6 @@
           this.searchQuery = e.target.value;
           this.filterSongs();
         });
-      }
-
-      const loadMoreBtn = this.container.querySelector('#spinitron-load-more-btn');
-      if (loadMoreBtn) {
-        loadMoreBtn.addEventListener('click', () => this.loadMore());
       }
     }
 
@@ -111,12 +103,9 @@
 
     updateDisplay() {
       const playlistDiv = this.container.querySelector('#spinitron-playlist');
-      const loadMoreDiv = this.container.querySelector('#spinitron-load-more');
-      const loadMoreBtn = this.container.querySelector('#spinitron-load-more-btn');
       
       if (this.filteredSongs.length === 0) {
         playlistDiv.innerHTML = '<div class="spinitron-loading">No songs found</div>';
-        loadMoreDiv.style.display = 'none';
         setTimeout(window.EmbedUtils.sendHeightUpdate, 100);
         return;
       }
@@ -128,13 +117,20 @@
         playlistDiv.appendChild(this.createSongElement(song));
       });
 
-      // Show/hide load more button
+      // Add Load More button inside the playlist if there are more songs
       if (this.displayCount < this.filteredSongs.length && this.config.maxItems !== 'unlimited') {
-        loadMoreDiv.style.display = 'block';
-        loadMoreBtn.disabled = this.loading;
-        loadMoreBtn.textContent = this.loading ? 'Loading...' : 'Load More';
-      } else {
-        loadMoreDiv.style.display = 'none';
+        const loadMoreDiv = document.createElement('div');
+        loadMoreDiv.className = 'spinitron-load-more-inline';
+        loadMoreDiv.innerHTML = `
+          <button id="spinitron-load-more-btn" ${this.loading ? 'disabled' : ''}>
+            ${this.loading ? 'Loading...' : 'Load More'}
+          </button>
+        `;
+        
+        const loadMoreBtn = loadMoreDiv.querySelector('#spinitron-load-more-btn');
+        loadMoreBtn.addEventListener('click', () => this.loadMore());
+        
+        playlistDiv.appendChild(loadMoreDiv);
       }
       
       // Send height update after display changes
