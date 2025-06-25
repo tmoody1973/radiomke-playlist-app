@@ -38,15 +38,17 @@ const EmbedPreview = ({ config }: EmbedPreviewProps) => {
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
-        <CardTitle>Live Preview</CardTitle>
+        <CardTitle className="bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent">
+          Live Preview
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0">
         <div 
-          className="border rounded-lg flex-1 relative"
+          className="border-2 border-orange-200 rounded-lg flex-1 relative shadow-lg"
           style={{
-            backgroundColor: '#f8f9fa',
+            background: 'linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%)',
             minHeight: `${iframeHeight}px`,
-            overflow: 'visible' // Allow content to overflow if needed
+            overflow: 'visible'
           }}
         >
           <iframe
@@ -58,16 +60,21 @@ const EmbedPreview = ({ config }: EmbedPreviewProps) => {
               border: 'none',
               display: 'block',
               backgroundColor: 'transparent',
-              overflow: 'visible' // Ensure iframe content can overflow
+              overflow: 'visible',
+              borderRadius: '6px'
             }}
             title="Playlist Preview"
             sandbox="allow-scripts allow-same-origin"
             loading="lazy"
-            scrolling="yes" // Enable scrolling
+            scrolling="yes"
           />
         </div>
-        <div className="mt-2 text-sm text-muted-foreground">
-          Theme: {config.theme} | Height: {config.height}px | Layout: {config.layout}
+        <div className="mt-3 text-sm text-gray-600 bg-orange-50 rounded-md p-2 border border-orange-100">
+          <div className="flex items-center justify-between">
+            <span className="font-medium text-orange-800">Theme: {config.theme}</span>
+            <span className="font-medium text-orange-800">Height: {config.height}px</span>
+            <span className="font-medium text-orange-800">Layout: {config.layout}</span>
+          </div>
         </div>
       </CardContent>
     </Card>
