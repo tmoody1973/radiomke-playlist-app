@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Radio } from 'lucide-react';
@@ -134,23 +135,12 @@ export const PlaylistContainer = ({
           hasMoreSpins={hasMoreSpins}
         />
         
-        {/* Load More button positioned outside PlaylistContent for embed mode */}
-        {isEmbedMode && (
-          <LoadMoreButton
-            hasMoreSpins={hasMoreSpins}
-            loadingMore={playlistState.loadingMore}
-            onLoadMore={handlers.handleLoadMore}
-          />
-        )}
-        
-        {/* Keep Load More button inside for non-embed mode */}
-        {!isEmbedMode && (
-          <LoadMoreButton
-            hasMoreSpins={hasMoreSpins}
-            loadingMore={playlistState.loadingMore}
-            onLoadMore={handlers.handleLoadMore}
-          />
-        )}
+        {/* Load More button positioned outside PlaylistContent to ensure visibility */}
+        <LoadMoreButton
+          hasMoreSpins={hasMoreSpins}
+          loadingMore={playlistState.loadingMore}
+          onLoadMore={handlers.handleLoadMore}
+        />
       </CardContent>
     </Card>
   );
