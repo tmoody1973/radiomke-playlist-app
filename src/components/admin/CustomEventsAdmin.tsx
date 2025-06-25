@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { CustomEvent } from '@/types/customEvent';
 import { CustomEventForm } from './CustomEventForm';
 import { CustomEventsList } from './CustomEventsList';
+import { TicketmasterEventsAdmin } from './TicketmasterEventsAdmin';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const CustomEventsAdmin = () => {
   const { toast } = useToast();
@@ -142,39 +143,52 @@ export const CustomEventsAdmin = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            Custom Events Admin
-            {!isCreating && (
-              <Button onClick={() => setIsCreating(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Event
-              </Button>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isCreating && (
-            <CustomEventForm
-              formData={formData}
-              setFormData={setFormData}
-              onSubmit={handleSubmit}
-              onCancel={handleCancel}
-              isLoading={createEvent.isPending || updateEvent.isPending}
-              editingId={editingId}
-              artistSearchTerm={artistSearchTerm}
-              setArtistSearchTerm={setArtistSearchTerm}
-            />
-          )}
+      <Tabs defaultValue="custom" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="custom">Custom Events</TabsTrigger>
+          <TabsTrigger value="ticketmaster">Ticketmaster Events</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="custom">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Custom Events Admin
+                {!isCreating && (
+                  <Button onClick={() => setIsCreating(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Event
+                  </Button>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isCreating && (
+                <CustomEventForm
+                  formData={formData}
+                  setFormData={setFormData}
+                  onSubmit={handleSubmit}
+                  onCancel={handleCancel}
+                  isLoading={createEvent.isPending || updateEvent.isPending}
+                  editingId={editingId}
+                  artistSearchTerm={artistSearchTerm}
+                  setArtistSearchTerm={setArtistSearchTerm}
+                />
+              )}
 
-          <CustomEventsList
-            events={events}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        </CardContent>
-      </Card>
+              <CustomEventsList
+                events={events}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="ticketmaster">
+          <TicketmasterEventsAdmin />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
