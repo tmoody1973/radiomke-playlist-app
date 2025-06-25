@@ -21,48 +21,48 @@ const Embed = () => {
   const layoutParam = searchParams.get('layout');
   const layout: 'list' | 'grid' = layoutParam === 'grid' ? 'grid' : 'list';
 
-  // Apply theme and styling to match homepage
+  // Apply theme and styling - completely isolated from global theme
   useEffect(() => {
     console.log('Embed theme effect triggered:', theme);
     
-    // Clear all existing theme classes
-    document.documentElement.className = document.documentElement.className
-      .replace(/\b(dark|light)\b/g, '');
-    document.body.className = document.body.className
-      .replace(/\b(dark|light)\b/g, '');
+    // Force override any global theme by removing all theme-related classes
+    document.documentElement.className = '';
+    document.body.className = '';
     
-    // Apply theme to html element
+    // Apply embed-specific theme directly to elements
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
-      document.body.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
     } else {
-      // For light theme, explicitly ensure no dark class
       document.documentElement.classList.remove('dark');
-      document.body.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
     }
     
-    document.documentElement.setAttribute('data-theme', theme);
-    
-    // Apply styles
+    // Apply styles directly to override any CSS custom properties
     const bgColor = theme === 'dark' ? '#0f172a' : '#ffffff';
     const textColor = theme === 'dark' ? '#f8fafc' : '#1e293b';
     
-    document.body.className = `embed-container w-full m-0 p-0 ${theme}`;
+    // Force these styles to override any global theme
+    document.documentElement.style.cssText = `
+      --background: ${theme === 'dark' ? '222.2 84% 4.9%' : '0 0% 100%'};
+      --foreground: ${theme === 'dark' ? '210 40% 98%' : '222.2 84% 4.9%'};
+      --card: ${theme === 'dark' ? '222.2 84% 4.9%' : '0 0% 100%'};
+      --card-foreground: ${theme === 'dark' ? '210 40% 98%' : '222.2 84% 4.9%'};
+      overflow: visible !important;
+      height: 100%;
+      background-color: ${bgColor} !important;
+    `;
+
+    document.body.className = `embed-container ${theme}`;
     document.body.style.cssText = `
       height: ${height !== 'auto' ? `${height}px` : '100vh'};
       overflow: visible !important;
       margin: 0;
       padding: 0;
-      background-color: ${bgColor};
-      color: ${textColor};
+      background-color: ${bgColor} !important;
+      color: ${textColor} !important;
       min-height: ${height !== 'auto' ? `${height}px` : '100vh'};
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    `;
-
-    document.documentElement.style.cssText = `
-      overflow: visible !important;
-      height: 100%;
-      background-color: ${bgColor};
     `;
 
     // Send height updates to parent frame for dynamic resizing
@@ -102,15 +102,18 @@ const Embed = () => {
     return () => observer.disconnect();
   }, [theme, height]);
 
-  // Force theme classes based on current theme
-  const containerClasses = `min-h-full flex flex-col ${
-    theme === 'dark' 
-      ? 'dark bg-slate-900 text-slate-100' 
-      : 'bg-white text-slate-900'
-  }`;
+  // Create inline styles to completely override any global theme
+  const containerStyles = {
+    minHeight: '100%',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff',
+    color: theme === 'dark' ? '#f8fafc' : '#1e293b',
+    overflow: 'visible'
+  };
 
   return (
-    <div className={containerClasses} style={{ overflow: 'visible' }}>
+    <div style={containerStyles}>
       <div className="flex-1" style={{ overflow: 'visible' }}>
         <SpinitinonPlaylist 
           stationId={stationId}
