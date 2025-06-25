@@ -38,7 +38,7 @@ export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, audioPla
 
   return (
     <div 
-      className={`relative group overflow-hidden rounded-lg transition-all hover:scale-105 ${
+      className={`relative group overflow-hidden rounded-lg transition-all hover:scale-105 max-w-xs ${
         isCurrentlyPlaying ? 'ring-2 ring-primary shadow-lg' : ''
       }`}
     >
@@ -46,7 +46,7 @@ export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, audioPla
         <EnhancedAlbumArtwork
           src={spin.image}
           alt={`${spin.song} by ${spin.artist}`}
-          className="w-full h-full rounded-lg overflow-hidden"
+          className="w-full h-full rounded-lg overflow-hidden object-cover"
           fallbackIconSize="w-8 h-8"
           artist={spin.artist}
           song={spin.song}

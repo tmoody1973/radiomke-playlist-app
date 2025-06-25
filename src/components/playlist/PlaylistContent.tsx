@@ -70,8 +70,12 @@ export const PlaylistContent = ({
           </p>
         </div>
       ) : layout === 'grid' ? (
-        // Grid Layout
-        <div className={`grid gap-4 ${compact ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
+        // Grid Layout - Fixed sizing to prevent large images
+        <div className={`grid gap-4 p-4 ${
+          compact 
+            ? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6' 
+            : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
+        } justify-items-center`}>
           {safeDisplayedSpins.map((spin, index) => (
             <GridItem 
               key={`${spin.id}-${index}`} 
