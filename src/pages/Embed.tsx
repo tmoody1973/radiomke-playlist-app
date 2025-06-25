@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import SpinitinonPlaylist from '@/components/SpinitinonPlaylist';
 import { useEffect } from 'react';
 import { Heart } from 'lucide-react';
+import { LoadMoreButton } from '@/components/playlist/LoadMoreButton';
 
 const Embed = () => {
   const [searchParams] = useSearchParams();
@@ -39,16 +40,18 @@ const Embed = () => {
   return (
     <div className={`h-full flex flex-col ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
       <div className="flex-1 min-h-0 p-2 sm:p-4">
-        <SpinitinonPlaylist 
-          stationId={stationId}
-          autoUpdate={autoUpdate}
-          showSearch={showSearch}
-          maxItems={maxItems}
-          compact={compact}
-          startDate={startDate}
-          endDate={endDate}
-          layout={layout}
-        />
+        <div className="h-full flex flex-col">
+          <SpinitinonPlaylist 
+            stationId={stationId}
+            autoUpdate={autoUpdate}
+            showSearch={showSearch}
+            maxItems={maxItems}
+            compact={compact}
+            startDate={startDate}
+            endDate={endDate}
+            layout={layout}
+          />
+        </div>
       </div>
       
       {/* Footer for embedded view */}

@@ -114,33 +114,33 @@ export const PlaylistContainer = ({
         formatDate={formatDate}
       />
       
-      <CardContent className={`${compact ? "pt-0" : ""} ${isEmbedMode ? 'flex-1 flex flex-col min-h-0' : ''}`}>
-        <div className={isEmbedMode ? "flex-1 flex flex-col min-h-0" : ""}>
-          <PlaylistDebugInfo
-            hasActiveFilters={hasActiveFilters}
-            dataUpdatedAt={dataUpdatedAt}
-            onManualRefresh={handlers.handleManualRefresh}
-          />
-          
-          <PlaylistContent
-            displayedSpins={displayedSpins}
-            hasActiveFilters={hasActiveFilters}
-            layout={layout}
-            compact={compact}
-            isEmbedMode={isEmbedMode}
-            isCurrentlyPlaying={(spin, index) => isCurrentlyPlaying(spin, index, playlistState.currentTime, hasActiveFilters)}
-            formatTime={formatTime}
-            formatDate={formatDate}
-            audioPlayer={audioPlayer}
-            stationId={stationId}
-          />
-          
+      <CardContent className={`${compact ? "pt-0" : ""} ${isEmbedMode ? 'flex-1 flex flex-col min-h-0 pb-2' : ''}`}>
+        <PlaylistDebugInfo
+          hasActiveFilters={hasActiveFilters}
+          dataUpdatedAt={dataUpdatedAt}
+          onManualRefresh={handlers.handleManualRefresh}
+        />
+        
+        <PlaylistContent
+          displayedSpins={displayedSpins}
+          hasActiveFilters={hasActiveFilters}
+          layout={layout}
+          compact={compact}
+          isEmbedMode={isEmbedMode}
+          isCurrentlyPlaying={(spin, index) => isCurrentlyPlaying(spin, index, playlistState.currentTime, hasActiveFilters)}
+          formatTime={formatTime}
+          formatDate={formatDate}
+          audioPlayer={audioPlayer}
+          stationId={stationId}
+        />
+        
+        {!isEmbedMode && (
           <LoadMoreButton
             hasMoreSpins={hasMoreSpins}
             loadingMore={playlistState.loadingMore}
             onLoadMore={handlers.handleLoadMore}
           />
-        </div>
+        )}
       </CardContent>
     </Card>
   );
