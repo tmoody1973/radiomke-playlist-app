@@ -89,7 +89,7 @@ export const PostHogProvider: React.FC<PostHogProviderProps> = ({
     };
 
     // Only initialize if PostHog hasn't been initialized yet
-    if (typeof window.posthog === 'undefined') {
+    if (!window.posthog || !window.posthog.__SV) {
       initPostHog();
     }
 
