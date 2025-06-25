@@ -10,7 +10,7 @@ interface LoadMoreButtonProps {
 export const LoadMoreButton = ({ hasMoreSpins, loadingMore, onLoadMore }: LoadMoreButtonProps) => {
   const isEmbedMode = window.location.pathname === '/embed';
 
-  // Always show the button if there are more spins, even during loading
+  // Show button if there are more spins OR if we're currently loading
   if (!hasMoreSpins && !loadingMore) return null;
 
   return (
@@ -30,10 +30,8 @@ export const LoadMoreButton = ({ hasMoreSpins, loadingMore, onLoadMore }: LoadMo
             <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
             Loading...
           </span>
-        ) : hasMoreSpins ? (
-          'Load More'
         ) : (
-          'No more songs'
+          'Load More'
         )}
       </Button>
     </div>
