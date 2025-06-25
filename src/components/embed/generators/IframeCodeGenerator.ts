@@ -27,15 +27,15 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   const embedUrl = generateEmbedUrl(config);
   const stationName = config.selectedStation === 'hyfin' ? 'HYFIN' : '88Nine';
   
-  // Generate theme-aware colors with custom color support
+  // Generate theme-aware colors matching homepage orange theme
   const isDark = config.theme === 'dark';
   const colors = config.customColors || {
-    headingColor: isDark ? '#f9fafb' : '#1f2937',
-    textColor: isDark ? '#d1d5db' : '#6b7280',
-    linkColor: isDark ? '#fb923c' : '#ea580c',
-    fallbackBg: isDark ? '#374151' : '#f9fafb',
-    backgroundColor: isDark ? '#1f2937' : '#ffffff',
-    borderColor: isDark ? '#374151' : '#e5e7eb'
+    headingColor: isDark ? '#f8fafc' : '#1e293b',
+    textColor: isDark ? '#cbd5e1' : '#64748b',
+    linkColor: '#ea580c', // Orange accent matching homepage
+    fallbackBg: isDark ? '#334155' : '#f8fafc',
+    backgroundColor: isDark ? '#0f172a' : '#ffffff',
+    borderColor: isDark ? '#334155' : '#e2e8f0'
   };
   
   // Calculate iframe height with extra space for Load More button
@@ -112,7 +112,7 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   });
 </script>
 
-<!-- Custom Theme CSS with overflow fixes -->
+<!-- Custom Theme CSS matching homepage orange theme -->
 <style>
 .radio-milwaukee-embed-container {
   max-width: 100%;
@@ -121,12 +121,17 @@ export const generateIframeCode = (config: EmbedConfig): string => {
   border-radius: 8px;
   padding: 1rem;
   overflow: visible !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 .radio-milwaukee-embed-container h3 {
   margin: 0 0 0.5rem 0;
   font-size: 1.25rem;
   font-weight: 600;
   color: ${colors.headingColor};
+  background: linear-gradient(to right, #ea580c, #fb923c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 .radio-milwaukee-embed-container p {
   margin: 0 0 1rem 0;
@@ -150,6 +155,8 @@ export const generateIframeCode = (config: EmbedConfig): string => {
 }
 #spinitron-iframe {
   overflow: visible !important;
+  border: 1px solid ${isDark ? '#334155' : '#f97316'};
+  box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.1);
 }
 </style>`;
 };
