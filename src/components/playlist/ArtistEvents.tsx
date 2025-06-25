@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, ExternalLink, Loader2, Star } from 'lucide-react';
@@ -10,7 +9,7 @@ interface ArtistEventsProps {
   artistName: string;
   compact?: boolean;
   stationId?: string;
-  isCurrentlyPlaying?: boolean; // New prop to control when to fetch Ticketmaster events
+  isCurrentlyPlaying?: boolean;
 }
 
 export const ArtistEvents = ({ 
@@ -19,13 +18,13 @@ export const ArtistEvents = ({
   stationId, 
   isCurrentlyPlaying = false 
 }: ArtistEventsProps) => {
-  // Add debugging to ensure we're using the artist name
   console.log(`🎫 ArtistEvents component for: "${artistName}" with stationId: "${stationId}", isCurrentlyPlaying: ${isCurrentlyPlaying}`);
+  console.log(`🎫 Exact artist name being searched: "${artistName}" (length: ${artistName.length})`);
   
   // Only fetch Ticketmaster events if this is the currently playing song
   const { data: ticketmasterEvents, isLoading: ticketmasterLoading, error: ticketmasterError } = useTicketmasterEvents(
     artistName, 
-    isCurrentlyPlaying // Only enabled for currently playing song
+    isCurrentlyPlaying
   );
   
   const { data: customEvents, isLoading: customLoading, error: customError } = useCustomEvents(artistName, stationId);
@@ -33,7 +32,10 @@ export const ArtistEvents = ({
   const isLoading = (isCurrentlyPlaying ? ticketmasterLoading : false) || customLoading;
   const hasError = (isCurrentlyPlaying ? ticketmasterError : false) && customError;
   
-  console.log(`🎫 Custom events data for ${artistName}:`, customEvents);
+  console.log(`🎫 Custom events data for "${artistName}":`, customEvents);
+  console.log(`🎫 Custom events loading state:`, customLoading);
+  console.log(`🎫 Custom events error:`, customError);
+  
   if (isCurrentlyPlaying) {
     console.log(`🎫 Ticketmaster events data for ${artistName} (currently playing):`, ticketmasterEvents);
   } else {
@@ -45,8 +47,17 @@ export const ArtistEvents = ({
   
   // Add custom events with a flag
   if (customEvents) {
-    console.log(`🎫 Adding ${customEvents.length} custom events for ${artistName}`);
-    customEvents.forEach(event => {
+    console.log(`🎫 Processing ${customEvents.length} custom events for "${artistName}"`);
+    customEvents.forEach((event, index) => {
+      console.log(`🎫 Custom event ${index + 1}:`, {
+        id: event.id,
+        artist_name: event.artist_name,
+        event_title: event.event_title,
+        event_date: event.event_date,
+        is_active: event.is_active,
+        station_ids: event.station_ids
+      });
+      
       allEvents.push({
         ...event,
         isCustom: true,
@@ -67,6 +78,8 @@ export const ArtistEvents = ({
         }] : []
       });
     });
+  } else {
+    console.log(`🎫 No custom events data received for "${artistName}"`);
   }
   
   // Add Ticketmaster events only if this is currently playing
@@ -85,7 +98,8 @@ export const ArtistEvents = ({
   // Sort by date
   allEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  console.log(`🎫 Total combined events for ${artistName}: ${allEvents.length}`);
+  console.log(`🎫 Final combined events for "${artistName}": ${allEvents.length} total events`);
+  console.log(`🎫 All events details:`, allEvents);
 
   if (isLoading) {
     return (
@@ -101,7 +115,8 @@ export const ArtistEvents = ({
   }
 
   if (hasError || !allEvents || allEvents.length === 0) {
-    return null; // Don't show anything if no events or error
+    console.log(`🎫 Not showing events card for "${artistName}" - hasError: ${hasError}, allEvents length: ${allEvents?.length || 0}`);
+    return null;
   }
 
   const formatEventDate = (dateString: string, timeString?: string) => {
