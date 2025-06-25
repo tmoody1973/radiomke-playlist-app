@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, ExternalLink, Loader2, Star } from 'lucide-react';
@@ -9,20 +10,35 @@ interface ArtistEventsProps {
   artistName: string;
   compact?: boolean;
   stationId?: string;
+  isCurrentlyPlaying?: boolean; // New prop to control when to fetch Ticketmaster events
 }
 
-export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistEventsProps) => {
+export const ArtistEvents = ({ 
+  artistName, 
+  compact = false, 
+  stationId, 
+  isCurrentlyPlaying = false 
+}: ArtistEventsProps) => {
   // Add debugging to ensure we're using the artist name
-  console.log(`🎫 ArtistEvents component for: "${artistName}" with stationId: "${stationId}"`);
+  console.log(`🎫 ArtistEvents component for: "${artistName}" with stationId: "${stationId}", isCurrentlyPlaying: ${isCurrentlyPlaying}`);
   
-  const { data: ticketmasterEvents, isLoading: ticketmasterLoading, error: ticketmasterError } = useTicketmasterEvents(artistName);
+  // Only fetch Ticketmaster events if this is the currently playing song
+  const { data: ticketmasterEvents, isLoading: ticketmasterLoading, error: ticketmasterError } = useTicketmasterEvents(
+    artistName, 
+    isCurrentlyPlaying // Only enabled for currently playing song
+  );
+  
   const { data: customEvents, isLoading: customLoading, error: customError } = useCustomEvents(artistName, stationId);
 
-  const isLoading = ticketmasterLoading || customLoading;
-  const hasError = ticketmasterError && customError;
+  const isLoading = (isCurrentlyPlaying ? ticketmasterLoading : false) || customLoading;
+  const hasError = (isCurrentlyPlaying ? ticketmasterError : false) && customError;
   
   console.log(`🎫 Custom events data for ${artistName}:`, customEvents);
-  console.log(`🎫 Ticketmaster events data for ${artistName}:`, ticketmasterEvents);
+  if (isCurrentlyPlaying) {
+    console.log(`🎫 Ticketmaster events data for ${artistName} (currently playing):`, ticketmasterEvents);
+  } else {
+    console.log(`🎫 Skipping Ticketmaster API call for ${artistName} (not currently playing)`);
+  }
   
   // Combine and sort events by date
   const allEvents = [];
@@ -53,9 +69,9 @@ export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistE
     });
   }
   
-  // Add Ticketmaster events
-  if (ticketmasterEvents) {
-    console.log(`🎫 Adding ${ticketmasterEvents.length} Ticketmaster events for ${artistName}`);
+  // Add Ticketmaster events only if this is currently playing
+  if (isCurrentlyPlaying && ticketmasterEvents) {
+    console.log(`🎫 Adding ${ticketmasterEvents.length} Ticketmaster events for ${artistName} (currently playing)`);
     ticketmasterEvents.forEach(event => {
       allEvents.push({
         ...event,
@@ -108,6 +124,9 @@ export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistE
         <CardTitle className={`${compact ? 'text-sm' : 'text-base'} text-slate-800 flex items-center gap-2 font-semibold`}>
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
           <span>🎵 {artistName} Live Shows</span>
+          {isCurrentlyPlaying && (
+            <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">Now Playing</span>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-3">

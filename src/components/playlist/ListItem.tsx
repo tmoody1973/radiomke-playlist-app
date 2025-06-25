@@ -1,11 +1,11 @@
 
+import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Clock } from 'lucide-react';
-import { EnhancedAlbumArtwork } from './EnhancedAlbumArtwork';
+import { Clock, Calendar } from 'lucide-react';
 import { EnhancedSongInfo } from './EnhancedSongInfo';
-import { AudioPreviewButton } from './AudioPreviewButton';
+import { EnhancedAlbumArtwork } from './EnhancedAlbumArtwork';
 import { YouTubePreviewButton } from './YouTubePreviewButton';
+import { AudioPreviewButton } from './AudioPreviewButton';
 import { ArtistEvents } from './ArtistEvents';
 
 interface Spin {
@@ -18,7 +18,6 @@ interface Spin {
   label?: string;
   release?: string;
   image?: string;
-  station_id?: string;
 }
 
 interface AudioPlayer {
@@ -45,13 +44,12 @@ export const ListItem = ({
   isCurrentlyPlaying, 
   compact, 
   formatTime, 
-  formatDate,
+  formatDate, 
   audioPlayer,
-  stationId
+  stationId 
 }: ListItemProps) => {
   const trackId = `${spin.artist}-${spin.song}-${spin.id}`;
-
-  // Debug logging for list item rendering
+  
   console.log(`🎵 Rendering ListItem for ${spin.artist} - ${spin.song}`, {
     trackId,
     spinId: spin.id,
@@ -59,78 +57,74 @@ export const ListItem = ({
   });
 
   return (
-    <div className="space-y-2">
-      <div 
-        className={`p-3 border rounded-lg transition-colors hover:bg-accent/50 ${
-          isCurrentlyPlaying ? 'bg-primary/5 border-primary/20' : 'bg-card'
-        }`}
-      >
-        <div className="flex gap-3">
-          {/* Album Artwork */}
-          <div className={`flex-shrink-0 relative group ${compact ? 'w-12 h-12' : 'w-16 h-16'}`}>
-            <AspectRatio ratio={1} className="bg-muted rounded-md overflow-hidden">
-              <EnhancedAlbumArtwork
-                src={spin.image}
-                alt={`${spin.song} by ${spin.artist}`}
-                className="w-full h-full"
-                fallbackIconSize={compact ? 'w-4 h-4' : 'w-6 h-6'}
-                artist={spin.artist}
-                song={spin.song}
+    <div className={`group p-4 border border-slate-200 rounded-lg transition-all duration-200 hover:border-slate-300 hover:shadow-md ${
+      isCurrentlyPlaying ? 'bg-gradient-to-r from-green-50 to-blue-50 border-green-300 shadow-md' : 'bg-white'
+    }`}>
+      <div className="flex items-start gap-4">
+        {/* Album Artwork */}
+        <div className="flex-shrink-0">
+          <EnhancedAlbumArtwork 
+            artist={spin.artist}
+            song={spin.song}
+            image={spin.image}
+            compact={compact}
+          />
+        </div>
+        
+        {/* Song Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <EnhancedSongInfo 
+                spin={spin}
+                compact={compact}
+                isCurrentlyPlaying={isCurrentlyPlaying}
               />
-            </AspectRatio>
-            
-            {/* YouTube Preview Button Overlay */}
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-md">
-              <div className="debug-youtube-button">
-                <YouTubePreviewButton
-                  artist={spin.artist}
-                  song={spin.song}
-                  trackId={trackId}
-                  currentlyPlaying={audioPlayer.currentlyPlaying}
-                  isLoading={audioPlayer.isLoading}
-                  onPlay={audioPlayer.playVideo}
-                  size={compact ? 'sm' : 'md'}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Song Information */}
-          <div className="flex-1 min-w-0">
-            <div className="flex justify-between items-start">
-              <EnhancedSongInfo spin={spin} compact={compact} />
-              <div className="flex flex-col items-end ml-2">
+              <div className="flex items-center gap-3 mt-2">
+                <div className="flex items-center gap-2 text-slate-500 text-sm">
+                  <Clock className="h-4 w-4" />
+                  <span>{formatTime(spin.start)}</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-500 text-sm">
+                  <Calendar className="h-4 w-4" />
+                  <span>{formatDate(spin.start)}</span>
+                </div>
                 {isCurrentlyPlaying && (
-                  <Badge variant="secondary" className={compact ? "text-xs px-2 py-0" : ""}>
+                  <Badge className="bg-red-100 text-red-800 border-red-200">
                     Now Playing
                   </Badge>
                 )}
-                <div className={`text-right mt-1 ${compact ? "text-xs" : "text-sm"}`}>
-                  <div className="flex items-center text-muted-foreground">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {formatTime(spin.start)}
-                  </div>
-                  <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
-                    {formatDate(spin.start)}
-                  </div>
-                  {spin.duration && (
-                    <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
-                      {Math.floor(spin.duration / 60)}:{(spin.duration % 60).toString().padStart(2, '0')}
-                    </div>
-                  )}
-                </div>
               </div>
+            </div>
+            
+            {/* Audio Controls */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <YouTubePreviewButton 
+                artist={spin.artist}
+                song={spin.song}
+                trackId={trackId}
+                audioPlayer={audioPlayer}
+              />
+              <AudioPreviewButton 
+                artist={spin.artist}
+                song={spin.song}
+                trackId={trackId}
+                audioPlayer={audioPlayer}
+              />
             </div>
           </div>
         </div>
       </div>
       
-      {/* Artist Events - pass the stationId */}
-      <ArtistEvents 
-        artistName={spin.artist} 
-        compact={compact} 
-        stationId={stationId || spin.station_id}
-      />
+      {/* Artist Events - Only show Ticketmaster events for currently playing song */}
+      <div className="mt-4">
+        <ArtistEvents 
+          artistName={spin.artist} 
+          compact={compact}
+          stationId={stationId}
+          isCurrentlyPlaying={isCurrentlyPlaying}
+        />
+      </div>
     </div>
   );
 };
