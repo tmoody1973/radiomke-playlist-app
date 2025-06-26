@@ -22,11 +22,12 @@ export const useYouTubeData = (artist: string, song: string) => {
       setLoading(true);
       
       try {
-        console.log(`🎵 Checking for existing YouTube data for: ${artist} - ${song}`);
+        console.log(`🎵 Fetching YouTube data for: ${artist} - ${song}`);
 
-        // First check if we already have cached data
+        // Create search key for caching
         const searchKey = `${artist}-${song}`.toLowerCase().replace(/[^a-z0-9]/g, '');
         
+        // First check if we already have cached data
         const { data: cachedResult, error: cacheError } = await supabase
           .from('youtube_cache')
           .select('*')
@@ -57,7 +58,7 @@ export const useYouTubeData = (artist: string, song: string) => {
           return;
         }
 
-        // Only make API call if we don't have cached data
+        // No cached data found, make API call
         console.log(`🎵 No cache found for ${artist} - ${song}, making API call`);
 
         const { data, error } = await supabase.functions.invoke('youtube-search', {
@@ -65,22 +66,22 @@ export const useYouTubeData = (artist: string, song: string) => {
         });
 
         if (error) {
-          console.error('Supabase function error:', error);
+          console.error('YouTube search function error:', error);
           setYouTubeData(null);
         } else if (data?.found && data?.videoId) {
-          console.log('YouTube video found:', data.fromCache ? '(from cache)' : '(fresh API call)', data);
+          console.log(`✅ YouTube video found for ${artist} - ${song}:`, data.videoId);
           const newYouTubeData: YouTubeData = {
             videoId: data.videoId,
             title: data.title,
             channelTitle: data.channelTitle,
             thumbnail: data.thumbnail,
             embedUrl: data.embedUrl,
-            fromCache: data.fromCache
+            fromCache: data.fromCache || false
           };
           
           setYouTubeData(newYouTubeData);
         } else {
-          console.log('No YouTube video found for:', artist, '-', song, data?.fromCache ? '(cached result)' : '(fresh API call)');
+          console.log(`❌ No YouTube video found for ${artist} - ${song}`);
           setYouTubeData(null);
         }
       } catch (error) {
@@ -91,8 +92,8 @@ export const useYouTubeData = (artist: string, song: string) => {
       }
     };
 
-    // Debounce the API call
-    const timeoutId = setTimeout(fetchYouTubeData, 300);
+    // Debounce the API call to avoid too many requests
+    const timeoutId = setTimeout(fetchYouTubeData, 100);
     return () => clearTimeout(timeoutId);
   }, [artist, song]);
 
