@@ -26,6 +26,47 @@ interface YouTubeSearchResponse {
   items: YouTubeSearchItem[];
 }
 
+// Helper function to clean and normalize search terms
+function cleanSearchTerm(term: string): string {
+  return term
+    .replace(/\(.*?\)/g, '') // Remove content in parentheses
+    .replace(/\[.*?\]/g, '') // Remove content in brackets
+    .replace(/feat\.|ft\.|featuring/gi, '') // Remove featuring indicators
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .trim();
+}
+
+// Generate multiple search variations to improve matching
+function generateSearchQueries(artist: string, song: string): string[] {
+  const cleanArtist = cleanSearchTerm(artist);
+  const cleanSong = cleanSearchTerm(song);
+  
+  const queries = [
+    `${cleanArtist} ${cleanSong}`, // Primary clean search
+    `${artist} ${song}`, // Original search
+    `${cleanSong} ${cleanArtist}`, // Reversed order
+    `${cleanSong}`, // Song only
+  ];
+  
+  // Remove duplicates and empty queries
+  return [...new Set(queries)].filter(q => q.trim().length > 0);
+}
+
+// Check if a video title is a reasonable match
+function isReasonableMatch(videoTitle: string, artist: string, song: string): boolean {
+  const title = videoTitle.toLowerCase();
+  const artistLower = artist.toLowerCase();
+  const songLower = song.toLowerCase();
+  
+  // Check if both artist and song appear in title (flexible matching)
+  const hasArtist = title.includes(artistLower) || 
+                   artistLower.split(' ').some(word => word.length > 2 && title.includes(word));
+  const hasSong = title.includes(songLower) || 
+                 songLower.split(' ').some(word => word.length > 2 && title.includes(word));
+  
+  return hasArtist && hasSong;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -122,49 +163,63 @@ serve(async (req) => {
       );
     }
 
-    // Search YouTube API
-    const searchQuery = encodeURIComponent(`${artist} ${song}`);
-    console.log('Making YouTube API request for:', searchQuery);
-    
-    const searchResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${searchQuery}&type=video&maxResults=1&key=${youtubeApiKey}`,
-      {
-        headers: {
-          'Accept': 'application/json'
-        }
-      }
-    );
+    // Generate multiple search queries
+    const searchQueries = generateSearchQueries(artist, song);
+    console.log('Generated search queries:', searchQueries);
 
-    if (!searchResponse.ok) {
-      console.error('YouTube search failed:', await searchResponse.text());
+    let bestVideo = null;
+    let searchAttempts = 0;
+
+    // Try each search query until we find a good match
+    for (const query of searchQueries) {
+      if (bestVideo) break; // Found a good match, stop searching
       
-      // Cache as "not found" to avoid repeated failed requests
-      await supabase
-        .from('youtube_cache')
-        .insert({
-          search_key: searchKey,
-          artist,
-          song,
-          found: false
-        });
-
-      return new Response(
-        JSON.stringify({ 
-          found: false, 
-          error: 'Failed to search YouTube' 
-        }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      searchAttempts++;
+      const searchQuery = encodeURIComponent(query);
+      console.log(`Search attempt ${searchAttempts}: "${query}"`);
+      
+      const searchResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${searchQuery}&type=video&maxResults=5&key=${youtubeApiKey}`,
+        {
+          headers: {
+            'Accept': 'application/json'
+          }
         }
       );
+
+      if (!searchResponse.ok) {
+        console.error('YouTube search failed:', await searchResponse.text());
+        continue; // Try next query
+      }
+
+      const searchData: YouTubeSearchResponse = await searchResponse.json();
+      console.log(`Search attempt ${searchAttempts} results:`, searchData.items?.length || 0, 'videos found');
+      
+      if (searchData.items && searchData.items.length > 0) {
+        // Find the best matching video from the results
+        for (const video of searchData.items) {
+          if (isReasonableMatch(video.snippet.title, artist, song)) {
+            console.log(`Found reasonable match: "${video.snippet.title}" by ${video.snippet.channelTitle}`);
+            bestVideo = video;
+            break;
+          }
+        }
+        
+        // If no reasonable match found but we have results, take the first one as fallback
+        if (!bestVideo && searchAttempts === 1) {
+          console.log('No perfect match found, using first result as fallback');
+          bestVideo = searchData.items[0];
+        }
+      }
+      
+      // Add small delay between API calls to be respectful
+      if (searchAttempts < searchQueries.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
     }
 
-    const searchData: YouTubeSearchResponse = await searchResponse.json();
-    console.log('YouTube search results:', searchData.items?.length || 0, 'videos found');
-    
-    if (!searchData.items || searchData.items.length === 0) {
-      console.log('No videos found for query');
+    if (!bestVideo) {
+      console.log('No videos found for any search query');
       
       // Cache as "not found"
       await supabase
@@ -184,15 +239,14 @@ serve(async (req) => {
       );
     }
 
-    const video = searchData.items[0];
-    const thumbnail = video.snippet.thumbnails.medium?.url || 
-                     video.snippet.thumbnails.high?.url ||
-                     video.snippet.thumbnails.default?.url || null;
+    const thumbnail = bestVideo.snippet.thumbnails.medium?.url || 
+                     bestVideo.snippet.thumbnails.high?.url ||
+                     bestVideo.snippet.thumbnails.default?.url || null;
 
-    const embedUrl = `https://www.youtube.com/embed/${video.id.videoId}?autoplay=1&start=0`;
+    const embedUrl = `https://www.youtube.com/embed/${bestVideo.id.videoId}?autoplay=1&start=0`;
 
-    console.log('Video found:', video.snippet.title, 'by', video.snippet.channelTitle);
-    console.log('Video ID:', video.id.videoId);
+    console.log(`Best match found: "${bestVideo.snippet.title}" by ${bestVideo.snippet.channelTitle}`);
+    console.log('Video ID:', bestVideo.id.videoId);
 
     // Cache the result
     const { error: insertError } = await supabase
@@ -201,9 +255,9 @@ serve(async (req) => {
         search_key: searchKey,
         artist,
         song,
-        video_id: video.id.videoId,
-        title: video.snippet.title,
-        channel_title: video.snippet.channelTitle,
+        video_id: bestVideo.id.videoId,
+        title: bestVideo.snippet.title,
+        channel_title: bestVideo.snippet.channelTitle,
         thumbnail,
         embed_url: embedUrl,
         found: true
@@ -218,12 +272,13 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         found: true,
-        videoId: video.id.videoId,
-        title: video.snippet.title,
-        channelTitle: video.snippet.channelTitle,
+        videoId: bestVideo.id.videoId,
+        title: bestVideo.snippet.title,
+        channelTitle: bestVideo.snippet.channelTitle,
         thumbnail: thumbnail,
         embedUrl: embedUrl,
-        fromCache: false
+        fromCache: false,
+        searchAttempts
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
