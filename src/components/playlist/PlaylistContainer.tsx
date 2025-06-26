@@ -42,6 +42,10 @@ interface PlaylistState {
   filteredSpins: Spin[];
   loadingMore: boolean;
   lastUpdate: Date;
+  setSearchTerm: (term: string) => void;
+  setDateSearchEnabled: (enabled: boolean) => void;
+  setStartDate: (date: string) => void;
+  setEndDate: (date: string) => void;
 }
 
 interface PlaylistContainerProps {
@@ -60,6 +64,10 @@ interface PlaylistContainerProps {
   loadingMore: boolean;
   onLoadMore: () => void;
   playlistState: PlaylistState;
+  onDateChange: (start: string, end: string) => void;
+  onDateClear: () => void;
+  onDateSearchToggle: (enabled: boolean) => void;
+  onManualRefresh: () => void;
 }
 
 export const PlaylistContainer = ({
@@ -77,16 +85,28 @@ export const PlaylistContainer = ({
   hasMoreSpins,
   loadingMore,
   onLoadMore,
-  playlistState
+  playlistState,
+  onDateChange,
+  onDateClear,
+  onDateSearchToggle,
+  onManualRefresh
 }: PlaylistContainerProps) => {
   return (
     <div className="space-y-4">
       <PlaylistHeader
-        stationId={stationId}
-        showSearch={showSearch}
-        layout={layout}
+        title={`${stationId.toUpperCase()} Recent Spins`}
         compact={compact}
-        playlistState={playlistState}
+        isLoading={false}
+        showSearch={showSearch}
+        searchTerm={playlistState.searchTerm}
+        setSearchTerm={playlistState.setSearchTerm}
+        dateSearchEnabled={playlistState.dateSearchEnabled}
+        setDateSearchEnabled={onDateSearchToggle}
+        startDate={playlistState.startDate}
+        endDate={playlistState.endDate}
+        onDateChange={onDateChange}
+        onDateClear={onDateClear}
+        formatDate={formatDate}
       />
 
       <PlaylistContent
@@ -101,17 +121,16 @@ export const PlaylistContainer = ({
         youtubePlayer={youtubePlayer}
       />
 
-      {hasMoreSpins && (
-        <LoadMoreButton
-          onLoadMore={onLoadMore}
-          loadingMore={loadingMore}
-        />
-      )}
+      <LoadMoreButton
+        hasMoreSpins={hasMoreSpins}
+        onLoadMore={onLoadMore}
+        loadingMore={loadingMore}
+      />
 
       <PlaylistDebugInfo
-        displayedSpins={displayedSpins}
         hasActiveFilters={hasActiveFilters}
-        playlistState={playlistState}
+        dataUpdatedAt={playlistState.lastUpdate.getTime()}
+        onManualRefresh={onManualRefresh}
       />
     </div>
   );

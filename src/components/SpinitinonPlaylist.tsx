@@ -37,9 +37,17 @@ const SpinitinonPlaylist = ({
     initialEndDate: endDate
   });
 
-  const audioPlayer = useAudioPlayer();
+  const audioPlayerHook = useAudioPlayer();
   const youtubePlayer = useYouTubePlayer();
   const handlers = createPlaylistHandlers(playlistState, refetch);
+
+  // Transform audioPlayer to match AudioPlayer interface
+  const audioPlayer = {
+    currentlyPlaying: audioPlayerHook.currentlyPlaying,
+    isLoading: audioPlayerHook.isLoading,
+    playVideo: audioPlayerHook.playAudio,
+    stopVideo: audioPlayerHook.stopAudio
+  };
 
   // Calculate displayed spins
   const displayedSpins = playlistState.allSpins.slice(0, playlistState.displayCount);
@@ -63,6 +71,13 @@ const SpinitinonPlaylist = ({
     return new Date(dateString).toLocaleDateString();
   };
 
+  // Create extended playlist state with missing properties
+  const extendedPlaylistState = {
+    ...playlistState,
+    filteredSpins: playlistState.allSpins, // Use allSpins as filteredSpins
+    lastUpdate: new Date() // Add current date as lastUpdate
+  };
+
   return (
     <PlaylistContainer
       displayedSpins={displayedSpins}
@@ -79,7 +94,11 @@ const SpinitinonPlaylist = ({
       hasMoreSpins={hasMoreSpins}
       loadingMore={playlistState.loadingMore}
       onLoadMore={handlers.handleLoadMore}
-      playlistState={playlistState}
+      playlistState={extendedPlaylistState}
+      onDateChange={handlers.handleDateChange}
+      onDateClear={handlers.handleDateClear}
+      onDateSearchToggle={handlers.handleDateSearchToggle}
+      onManualRefresh={handlers.handleManualRefresh}
     />
   );
 };
