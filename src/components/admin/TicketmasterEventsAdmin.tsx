@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Edit, Trash2, Search } from 'lucide-react';
+import { Edit, Trash2, Search, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   Table,
@@ -141,6 +140,35 @@ export const TicketmasterEventsAdmin = () => {
     },
   });
 
+  // Make event active mutation
+  const makeActiveEvent = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase
+        .from('ticketmaster_events_cache')
+        .update({ is_active: true, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-ticketmaster-events'] });
+      toast({
+        title: "Success",
+        description: "Event activated successfully"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to activate event",
+        variant: "destructive"
+      });
+    },
+  });
+
   const handleEdit = (event: TicketmasterEvent) => {
     setEditingId(event.id);
     setEditForm(event);
@@ -156,6 +184,10 @@ export const TicketmasterEventsAdmin = () => {
     if (confirm('Are you sure you want to delete this cached event?')) {
       deleteEvent.mutate(id);
     }
+  };
+
+  const handleMakeActive = (id: string) => {
+    makeActiveEvent.mutate(id);
   };
 
   const handleSearch = (value: string) => {
@@ -331,6 +363,17 @@ export const TicketmasterEventsAdmin = () => {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
+                    {!event.is_active && (
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => handleMakeActive(event.id)}
+                        disabled={makeActiveEvent.isPending}
+                        className="text-green-600 hover:text-green-700"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button size="sm" variant="outline" onClick={() => handleEdit(event)}>
                       <Edit className="h-4 w-4" />
                     </Button>
