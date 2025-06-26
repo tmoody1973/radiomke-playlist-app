@@ -92,62 +92,9 @@ export const useYouTubeData = (artist: string, song: string) => {
       }
     };
 
-    // Initial fetch
-    fetchYouTubeData();
-
-    // Set up a periodic refresh to check for newly cached data
-    // This will help catch YouTube data that gets cached in the background
-    const intervalId = setInterval(() => {
-      // Only refresh if we don't currently have data and we're not loading
-      if (!youtubeData && !loading) {
-        fetchYouTubeData();
-      }
-    }, 5000); // Check every 5 seconds
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [artist, song, youtubeData, loading]);
-
-  // Set up real-time subscription to youtube_cache table
-  useEffect(() => {
-    if (!artist || !song) return;
-
-    const searchKey = `${artist}-${song}`.toLowerCase().replace(/[^a-z0-9]/g, '');
-    
-    const channel = supabase
-      .channel('youtube-cache-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'youtube_cache',
-          filter: `search_key=eq.${searchKey}`
-        },
-        (payload) => {
-          console.log(`🎵 Real-time YouTube data update for ${artist} - ${song}:`, payload);
-          const newData = payload.new as any;
-          
-          if (newData.found && newData.video_id) {
-            setYouTubeData({
-              videoId: newData.video_id,
-              title: newData.title,
-              channelTitle: newData.channel_title,
-              thumbnail: newData.thumbnail,
-              embedUrl: newData.embed_url,
-              fromCache: true
-            });
-          } else {
-            setYouTubeData(null);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // Debounce the API call to avoid too many requests
+    const timeoutId = setTimeout(fetchYouTubeData, 100);
+    return () => clearTimeout(timeoutId);
   }, [artist, song]);
 
   return { youtubeData, loading };
