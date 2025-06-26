@@ -3,6 +3,7 @@ import React from 'react';
 import { PlaylistContainer } from './playlist/PlaylistContainer';
 import { usePlaylistData } from '@/hooks/usePlaylistData';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
 import { createPlaylistHandlers } from './playlist/PlaylistHandlers';
 
 interface SpinitinonPlaylistProps {
@@ -37,6 +38,7 @@ const SpinitinonPlaylist = ({
   });
 
   const audioPlayer = useAudioPlayer();
+  const youtubePlayer = useYouTubePlayer();
   const handlers = createPlaylistHandlers(playlistState, refetch);
 
   // Calculate displayed spins
@@ -73,6 +75,7 @@ const SpinitinonPlaylist = ({
       formatTime={formatTime}
       formatDate={formatDate}
       audioPlayer={audioPlayer}
+      youtubePlayer={youtubePlayer}
       hasMoreSpins={hasMoreSpins}
       loadingMore={playlistState.loadingMore}
       onLoadMore={handlers.handleLoadMore}
