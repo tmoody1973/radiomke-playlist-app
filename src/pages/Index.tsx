@@ -1,3 +1,4 @@
+
 import SpinitinonPlaylist from '@/components/SpinitinonPlaylist';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,8 @@ import { Label } from '@/components/ui/label';
 const Index = () => {
   const [selectedStation, setSelectedStation] = useState('hyfin');
 
+  console.log('🏠 Index component rendering with selectedStation:', selectedStation);
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -18,7 +21,11 @@ const Index = () => {
         <div className="container mx-auto py-8">
           {/* Enhanced header with logo */}
           <div className="mb-6 flex flex-col items-center">
-            <img src="/lovable-uploads/f79975fc-c2f8-4693-8bd1-b4b15d882845.png" alt="Radio Milwaukee Logo" className="h-20 w-auto mb-4 drop-shadow-lg" />
+            <img 
+              src="/lovable-uploads/f79975fc-c2f8-4693-8bd1-b4b15d882845.png" 
+              alt="Radio Milwaukee Logo" 
+              className="h-20 w-auto mb-4 drop-shadow-lg" 
+            />
             <div className="bg-gradient-to-r from-gray-600 to-gray-800 bg-clip-text text-transparent">
               <h2 className="text-2xl font-semibold mb-4">Playlist App v.0.5 beta</h2>
             </div>
@@ -47,7 +54,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          <p className="text-xl text-muted-foreground mb-6 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground mb-6 max-w-2xl mx-auto text-center">
             Experience Milwaukee's independent radio with live playlist updates, 
             real-time song tracking, and seamless music discovery
           </p>
@@ -74,14 +81,19 @@ const Index = () => {
                   </Button>
                 </Link>
               </div>
-              <p className="text-sm text-muted-foreground mt-4 font-medium">
+              <p className="text-sm text-muted-foreground mt-4 font-medium text-center">
                 🎵 Embed this playlist widget on any website with customizable options
               </p>
             </CardContent>
           </Card>
         </div>
         
-        <SpinitinonPlaylist stationId={selectedStation} autoUpdate={true} showSearch={true} maxItems={50} />
+        <SpinitinonPlaylist 
+          stationId={selectedStation} 
+          autoUpdate={true} 
+          showSearch={true} 
+          maxItems={50} 
+        />
         
         <div className="mt-8 text-center text-sm text-muted-foreground">
           <p className="flex items-center justify-center gap-1">
