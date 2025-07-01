@@ -154,7 +154,7 @@ const Guide = () => {
                 <div>
                   <h4 className="font-semibold mb-2">Concert Information</h4>
                   <p className="text-sm mb-2">Event cards show upcoming concerts for artists when available.</p>
-                  <div class="bg-green-50 p-3 rounded text-sm">
+                  <div className="bg-green-50 p-3 rounded text-sm">
                     <strong>Note:</strong> Events are pulled from Ticketmaster and custom events added by the team.
                   </div>
                 </div>
