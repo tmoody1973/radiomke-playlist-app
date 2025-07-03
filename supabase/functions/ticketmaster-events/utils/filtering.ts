@@ -86,35 +86,14 @@ export const filterEventsByArtist = (events: TicketmasterEvent[], artistName: st
 }
 
 export const filterEventsForCaching = (events: TicketmasterEvent[], artistName: string): TicketmasterEvent[] => {
-  const cleanArtistName = artistName.toLowerCase().trim()
+  // Use the same filtering logic as display to ensure consistency
+  // This prevents events from being excluded from cache but shown to users
+  const filtered = filterEventsByArtist(events, artistName)
   
-  return events.filter(event => {
-    const eventName = event.name.toLowerCase()
-    const attractions = event._embedded?.attractions || []
-    
-    // For caching, be even more strict - require exact artist name match
-    const hasExactAttractionMatch = attractions.some(attraction => {
-      const attractionName = attraction.name.toLowerCase()
-      return attractionName === cleanArtistName
-    })
-    
-    // Or exact match in event title
-    const hasExactTitleMatch = (
-      eventName === cleanArtistName ||
-      eventName.startsWith(cleanArtistName + ' ') ||
-      eventName.startsWith(cleanArtistName + ':') ||
-      eventName.startsWith(cleanArtistName + ' -') ||
-      eventName.endsWith(' ' + cleanArtistName) ||
-      eventName.includes('(' + cleanArtistName + ')')
-    )
-    
-    const shouldCache = hasExactAttractionMatch || hasExactTitleMatch
-    if (shouldCache) {
-      console.log(`🗄️ Will cache exact match: ${event.name}`)
-    } else {
-      console.log(`⚠️ Filtered out for caching (not exact match): ${event.name}`)
-    }
-    
-    return shouldCache
+  console.log(`🗄️ Caching ${filtered.length} events for ${artistName} (using same filter as display)`)
+  filtered.forEach(event => {
+    console.log(`🗄️ Will cache: ${event.name}`)
   })
+  
+  return filtered
 }

@@ -72,13 +72,13 @@ serve(async (req) => {
       // Filter events by artist
       let filteredEvents = filterEventsByArtist(apiEvents, artistName)
       
-      // Filter events for caching (stricter criteria)
+      // Use same filtering for caching and display to ensure consistency
       const eventsToCache = filterEventsForCaching(apiEvents, artistName)
       
       // Limit displayed events
       filteredEvents = filteredEvents.slice(0, 10)
 
-      // Cache the exact matches
+      // Cache the filtered events
       await cacheEvents(supabase, artistName, eventsToCache)
       
       console.log(`Found ${filteredEvents.length} filtered events for artist: ${artistName}`)

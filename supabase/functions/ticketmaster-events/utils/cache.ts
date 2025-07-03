@@ -97,27 +97,24 @@ export const formatCachedEventsAsTicketmaster = (cachedEvents: CachedEvent[]): T
 }
 
 export const cacheEvents = async (supabase: any, artistName: string, events: TicketmasterEvent[]): Promise<void> => {
+  console.log(`Caching ${events.length} events for artist: ${artistName}`)
+  
   if (events.length === 0) {
-    console.log(`No exact matches found for ${artistName}, caching negative result`)
-    
-    // Deactivate old cached events
-    await supabase
-      .from('ticketmaster_events_cache')
-      .update({ is_active: false })
-      .eq('artist_name', artistName)
-    
+    console.log(`No events found for ${artistName}, preserving existing cache`)
+    // Don't deactivate existing events if API returns empty results
+    // This prevents valid events from being deactivated due to temporary API issues
     return
   }
 
-  console.log(`Caching ${events.length} exact-match events for artist: ${artistName}`)
-  
-  // First, deactivate old cached events for this artist
+  // Only deactivate events that have passed their event date or are no longer in the new results
+  const today = new Date().toISOString().split('T')[0]
   await supabase
     .from('ticketmaster_events_cache')
     .update({ is_active: false })
     .eq('artist_name', artistName)
+    .lt('event_date', today)
 
-  // Insert new events into cache
+  // Prepare new events for upsert
   const cacheData = events.map(event => {
     const venue = event._embedded?.venues?.[0]
     const priceRange = event.priceRanges?.[0]
@@ -139,13 +136,17 @@ export const cacheEvents = async (supabase: any, artistName: string, events: Tic
     }
   })
 
-  const { error: insertError } = await supabase
+  // Upsert events (insert or update if they already exist)
+  const { error: upsertError } = await supabase
     .from('ticketmaster_events_cache')
-    .insert(cacheData)
+    .upsert(cacheData, { 
+      onConflict: 'artist_name,event_id',
+      ignoreDuplicates: false 
+    })
 
-  if (insertError) {
-    console.error('Error caching events:', insertError)
+  if (upsertError) {
+    console.error('Error upserting events:', upsertError)
   } else {
-    console.log(`Successfully cached ${cacheData.length} exact-match events for ${artistName}`)
+    console.log(`Successfully cached/updated ${cacheData.length} events for ${artistName}`)
   }
 }
