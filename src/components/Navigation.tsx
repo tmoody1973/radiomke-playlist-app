@@ -20,8 +20,17 @@ const Navigation = () => {
   return (
     <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4">
-        <NavigationMenu className="max-w-full justify-start">
-          <NavigationMenuList className="flex-wrap gap-2">
+        <div className="flex items-center justify-between">
+          <Link to="/" className="flex items-center py-2">
+            <img 
+              src="/lovable-uploads/0da6f44e-503e-4fc6-aeac-cf292b08dedb.png" 
+              alt="Radio Milwaukee" 
+              className="h-8 md:h-10 w-auto"
+            />
+          </Link>
+          
+          <NavigationMenu className="max-w-full justify-start">
+            <NavigationMenuList className="flex-wrap gap-2">
             <NavigationMenuItem>
               <Link to="/">
                 <NavigationMenuLink
@@ -100,8 +109,9 @@ const Navigation = () => {
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
+            </NavigationMenuList>
+          </NavigationMenu>
+        </div>
       </div>
     </div>
   );
