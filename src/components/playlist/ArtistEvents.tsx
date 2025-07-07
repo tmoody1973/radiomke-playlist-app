@@ -89,7 +89,18 @@ export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistE
   }
 
   const formatEventDate = (dateString: string, timeString?: string) => {
-    const date = new Date(dateString);
+    let date: Date;
+    
+    // Check if it's a date-only string (YYYY-MM-DD format)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      // Parse as local date to avoid timezone issues
+      const [year, month, day] = dateString.split('-').map(Number);
+      date = new Date(year, month - 1, day); // month is 0-indexed
+    } else {
+      // Use normal parsing for datetime strings
+      date = new Date(dateString);
+    }
+    
     const formattedDate = date.toLocaleDateString('en-US', { 
       month: 'short', 
       day: 'numeric',
