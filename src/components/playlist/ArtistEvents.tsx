@@ -18,8 +18,8 @@ export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistE
   const { data: ticketmasterEvents, isLoading: ticketmasterLoading, error: ticketmasterError } = useTicketmasterEvents(artistName);
   const { data: customEvents, isLoading: customLoading, error: customError } = useCustomEvents(artistName, stationId);
 
-  const isLoading = ticketmasterLoading || customLoading;
-  const hasError = ticketmasterError && customError;
+  const isLoading = customLoading;
+  const hasError = customError;
   
   console.log(`🎫 Custom events data for ${artistName}:`, customEvents);
   console.log(`🎫 Ticketmaster events data for ${artistName}:`, ticketmasterEvents);
@@ -217,6 +217,14 @@ export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistE
             </div>
           );
         })}
+        
+        {/* Ticketmaster loading indicator */}
+        {ticketmasterLoading && (
+          <div className="flex items-center gap-2 text-xs text-slate-500 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+            <Loader2 className="h-3 w-3 animate-spin text-blue-600" />
+            <span>Checking Ticketmaster for more shows...</span>
+          </div>
+        )}
         
         {/* Show more indicator */}
         {allEvents.length > 3 && (
