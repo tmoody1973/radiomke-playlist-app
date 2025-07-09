@@ -7,38 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Helper function to queue YouTube data fetching
-async function queueYouTubeDataFetch(supabase: any, songs: any[]) {
-  for (const song of songs) {
-    try {
-      const searchKey = `${song.artist}-${song.song}`.toLowerCase().replace(/[^a-z0-9]/g, '');
-      
-      // Check if we already have cached data
-      const { data: existingCache } = await supabase
-        .from('youtube_cache')
-        .select('id')
-        .eq('search_key', searchKey)
-        .single();
-
-      if (!existingCache && song.artist && song.song) {
-        console.log(`🎵 Queuing YouTube search for: ${song.artist} - ${song.song}`);
-        
-        // Call the YouTube search function in the background
-        const { error } = await supabase.functions.invoke('youtube-search', {
-          body: { artist: song.artist, song: song.song }
-        });
-
-        if (error) {
-          console.error(`Failed to fetch YouTube data for ${song.artist} - ${song.song}:`, error);
-        } else {
-          console.log(`✅ YouTube data cached for: ${song.artist} - ${song.song}`);
-        }
-      }
-    } catch (error) {
-      console.error('Error queueing YouTube fetch:', error);
-    }
-  }
-}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -317,14 +285,6 @@ serve(async (req) => {
       } else {
         console.log('Successfully stored', insertedData?.length || songsToStore.length, 'songs in database for station:', stationId);
         
-        // Queue YouTube data fetching for new songs (background task)
-        if (insertedData && insertedData.length > 0) {
-          console.log('🎵 Queuing YouTube data fetch for', insertedData.length, 'new songs');
-          // Run YouTube fetching in background without blocking the response
-          queueYouTubeDataFetch(supabase, insertedData).catch(error => {
-            console.error('Background YouTube fetch error:', error);
-          });
-        }
       }
     } else {
       console.log('No songs received from API to store for station:', stationId);
