@@ -3,8 +3,9 @@ import { TicketmasterEvent } from './cache.ts'
 
 export const filterEventsByArtist = (events: TicketmasterEvent[], artistName: string): TicketmasterEvent[] => {
   const cleanArtistName = artistName.toLowerCase().trim()
+  console.log(`🔍 Filtering ${events.length} events for artist: "${artistName}" (normalized: "${cleanArtistName}")`)
   
-  return events.filter(event => {
+  const matchedEvents = events.filter(event => {
     const eventName = event.name.toLowerCase()
     const attractions = event._embedded?.attractions || []
     
@@ -17,19 +18,38 @@ export const filterEventsByArtist = (events: TicketmasterEvent[], artistName: st
         return true
       }
       
+      // Handle variations like "NxWorries" vs "NXworries" - normalize special characters
+      const normalizeArtistName = (name: string) => {
+        return name
+          .toLowerCase()
+          .replace(/[^a-z0-9\s]/g, '') // Remove special characters
+          .replace(/\s+/g, ' ') // Normalize spaces
+          .trim()
+      }
+      
+      const normalizedCleanName = normalizeArtistName(cleanArtistName)
+      const normalizedAttractionName = normalizeArtistName(attractionName)
+      
+      if (normalizedAttractionName === normalizedCleanName) {
+        console.log(`✅ Normalized match: "${attractionName}" matches "${cleanArtistName}"`)
+        return true
+      }
+      
       // Allow for minor variations like "Artist" vs "Artist Band" but be strict
       const words = cleanArtistName.split(' ')
       const attractionWords = attractionName.split(' ')
       
       // If searching for a single word, require exact match or the artist name to be the first word
       if (words.length === 1) {
-        return attractionWords[0] === cleanArtistName
+        return attractionWords[0] === cleanArtistName || normalizeArtistName(attractionWords[0]) === normalizedCleanName
       }
       
       // For multi-word artist names, require all words to match in order
       if (words.length > 1) {
         return attractionName.startsWith(cleanArtistName) || 
-               cleanArtistName.startsWith(attractionName)
+               cleanArtistName.startsWith(attractionName) ||
+               normalizedAttractionName.startsWith(normalizedCleanName) ||
+               normalizedCleanName.startsWith(normalizedAttractionName)
       }
       
       return false
@@ -83,6 +103,13 @@ export const filterEventsByArtist = (events: TicketmasterEvent[], artistName: st
     
     return artistInTitle
   })
+
+  console.log(`🎯 Found ${matchedEvents.length} matching events for "${artistName}"`)
+  matchedEvents.forEach(event => {
+    console.log(`  ✅ ${event.name} (${event.dates.start.localDate})`)
+  })
+
+  return matchedEvents
 }
 
 export const filterEventsForCaching = (events: TicketmasterEvent[], artistName: string): TicketmasterEvent[] => {

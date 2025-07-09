@@ -97,22 +97,71 @@ export const formatCachedEventsAsTicketmaster = (cachedEvents: CachedEvent[]): T
 }
 
 export const cacheEvents = async (supabase: any, artistName: string, events: TicketmasterEvent[]): Promise<void> => {
-  console.log(`Caching ${events.length} events for artist: ${artistName}`)
+  console.log(`🗄️ Caching ${events.length} events for artist: ${artistName}`)
   
   if (events.length === 0) {
-    console.log(`No events found for ${artistName}, preserving existing cache`)
+    console.log(`⚠️ No events found for ${artistName}, preserving existing cache`)
     // Don't deactivate existing events if API returns empty results
     // This prevents valid events from being deactivated due to temporary API issues
     return
   }
 
-  // Only deactivate events that have passed their event date or are no longer in the new results
+  // Get current event IDs from the new results
+  const newEventIds = events.map(event => event.id)
+  console.log(`🆔 New event IDs for ${artistName}:`, newEventIds)
+
+  // First, reactivate any existing events that match the new results
+  const { data: reactivatedEvents, error: reactivateError } = await supabase
+    .from('ticketmaster_events_cache')
+    .update({ is_active: true, updated_at: new Date().toISOString() })
+    .eq('artist_name', artistName)
+    .in('event_id', newEventIds)
+    .select('event_id, event_name')
+
+  if (reactivateError) {
+    console.error('❌ Error reactivating events:', reactivateError)
+  } else if (reactivatedEvents && reactivatedEvents.length > 0) {
+    console.log(`✅ Reactivated ${reactivatedEvents.length} existing events for ${artistName}:`)
+    reactivatedEvents.forEach(event => {
+      console.log(`  📅 Reactivated: ${event.event_name} (ID: ${event.event_id})`)
+    })
+  }
+
+  // Deactivate events that have passed their event date
   const today = new Date().toISOString().split('T')[0]
-  await supabase
+  const { data: deactivatedPastEvents, error: deactivateError } = await supabase
     .from('ticketmaster_events_cache')
     .update({ is_active: false })
     .eq('artist_name', artistName)
     .lt('event_date', today)
+    .select('event_id, event_name, event_date')
+
+  if (deactivateError) {
+    console.error('❌ Error deactivating past events:', deactivateError)
+  } else if (deactivatedPastEvents && deactivatedPastEvents.length > 0) {
+    console.log(`🗑️ Deactivated ${deactivatedPastEvents.length} past events for ${artistName}:`)
+    deactivatedPastEvents.forEach(event => {
+      console.log(`  📅 Deactivated (past): ${event.event_name} (${event.event_date})`)
+    })
+  }
+
+  // Deactivate events that are no longer in the new results (but keep future events)
+  const { data: deactivatedRemovedEvents, error: deactivateRemovedError } = await supabase
+    .from('ticketmaster_events_cache')
+    .update({ is_active: false })
+    .eq('artist_name', artistName)
+    .not('event_id', 'in', `(${newEventIds.map(id => `"${id}"`).join(',')})`)
+    .gte('event_date', today)
+    .select('event_id, event_name, event_date')
+
+  if (deactivateRemovedError) {
+    console.error('❌ Error deactivating removed events:', deactivateRemovedError)
+  } else if (deactivatedRemovedEvents && deactivatedRemovedEvents.length > 0) {
+    console.log(`🗑️ Deactivated ${deactivatedRemovedEvents.length} removed events for ${artistName}:`)
+    deactivatedRemovedEvents.forEach(event => {
+      console.log(`  📅 Deactivated (removed): ${event.event_name} (${event.event_date})`)
+    })
+  }
 
   // Prepare new events for upsert
   const cacheData = events.map(event => {
