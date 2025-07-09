@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { Music } from 'lucide-react';
-import { useSpotifyData } from '@/hooks/useSpotifyData';
 
 interface EnhancedAlbumArtworkProps {
   src?: string;
@@ -21,10 +20,9 @@ export const EnhancedAlbumArtwork = ({
   song
 }: EnhancedAlbumArtworkProps) => {
   const [imageError, setImageError] = useState(false);
-  const { spotifyData, loading } = useSpotifyData(artist, song);
 
-  // Use Spotify artwork if available, otherwise fall back to original
-  const finalImageSrc = spotifyData?.albumArt || src;
+  // Use the provided image source
+  const finalImageSrc = src;
 
   // Reset error state when image source changes
   useEffect(() => {

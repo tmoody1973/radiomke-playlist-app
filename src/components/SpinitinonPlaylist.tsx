@@ -2,7 +2,6 @@
 import React from 'react';
 import { PlaylistContainer } from './playlist/PlaylistContainer';
 import { usePlaylistData } from '@/hooks/usePlaylistData';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
 import { createPlaylistHandlers } from './playlist/PlaylistHandlers';
 
@@ -37,17 +36,8 @@ const SpinitinonPlaylist = ({
     initialEndDate: endDate
   });
 
-  const audioPlayerHook = useAudioPlayer();
   const youtubePlayer = useYouTubePlayer();
   const handlers = createPlaylistHandlers(playlistState, refetch);
-
-  // Transform audioPlayer to match AudioPlayer interface
-  const audioPlayer = {
-    currentlyPlaying: audioPlayerHook.currentlyPlaying,
-    isLoading: audioPlayerHook.isLoading,
-    playVideo: audioPlayerHook.playAudio,
-    stopVideo: audioPlayerHook.stopAudio
-  };
 
   // Calculate displayed spins
   const displayedSpins = playlistState.allSpins.slice(0, playlistState.displayCount);
@@ -57,7 +47,7 @@ const SpinitinonPlaylist = ({
 
   // Helper functions
   const isCurrentlyPlaying = (spin: any, index: number) => {
-    return audioPlayer.currentlyPlaying === `${spin.artist}-${spin.song}-${index}`;
+    return youtubePlayer.currentlyPlaying === `${spin.artist}-${spin.song}-${index}`;
   };
 
   const formatTime = (dateString: string) => {
@@ -89,7 +79,6 @@ const SpinitinonPlaylist = ({
       isCurrentlyPlaying={isCurrentlyPlaying}
       formatTime={formatTime}
       formatDate={formatDate}
-      audioPlayer={audioPlayer}
       youtubePlayer={youtubePlayer}
       hasMoreSpins={hasMoreSpins}
       loadingMore={playlistState.loadingMore}

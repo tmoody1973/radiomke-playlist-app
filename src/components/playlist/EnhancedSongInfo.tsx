@@ -1,6 +1,5 @@
 
 import { User } from 'lucide-react';
-import { useSpotifyData } from '@/hooks/useSpotifyData';
 
 interface Spin {
   id: number;
@@ -23,12 +22,10 @@ export const EnhancedSongInfo = ({
   spin, 
   compact = false 
 }: EnhancedSongInfoProps) => {
-  const { spotifyData } = useSpotifyData(spin.artist, spin.song);
-
-  // Use Spotify data if available, otherwise fall back to original
-  const displayTitle = spotifyData?.trackName || spin.song;
-  const displayArtist = spotifyData?.artistName || spin.artist;
-  const displayAlbum = spotifyData?.albumName || spin.release;
+  // Use the original data from spin
+  const displayTitle = spin.song;
+  const displayArtist = spin.artist;
+  const displayAlbum = spin.release;
 
   return (
     <div className="flex-1 min-w-0">

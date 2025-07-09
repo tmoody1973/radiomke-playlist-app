@@ -2,7 +2,6 @@ import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Play } from 'lucide-react';
 import { EnhancedAlbumArtwork } from './EnhancedAlbumArtwork';
-import { AudioPreviewButton } from './AudioPreviewButton';
 import { LazyYouTubePreviewButton } from './LazyYouTubePreviewButton';
 
 interface Spin {
@@ -17,7 +16,7 @@ interface Spin {
   image?: string;
 }
 
-interface AudioPlayer {
+interface YouTubePlayer {
   currentlyPlaying: string | null;
   isLoading: string | null;
   playVideo: (embedUrl: string, trackId: string) => void;
@@ -29,10 +28,10 @@ interface GridItemProps {
   index: number;
   isCurrentlyPlaying: boolean;
   formatTime: (dateString: string) => string;
-  audioPlayer: AudioPlayer;
+  youtubePlayer: YouTubePlayer;
 }
 
-export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, audioPlayer }: GridItemProps) => {
+export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, youtubePlayer }: GridItemProps) => {
   const trackId = `${spin.artist}-${spin.song}-${spin.id}`;
 
   return (
@@ -57,9 +56,9 @@ export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, audioPla
             artist={spin.artist}
             song={spin.song}
             trackId={trackId}
-            currentlyPlaying={audioPlayer.currentlyPlaying}
-            isLoading={audioPlayer.isLoading}
-            onPlay={audioPlayer.playVideo}
+            currentlyPlaying={youtubePlayer.currentlyPlaying}
+            isLoading={youtubePlayer.isLoading}
+            onPlay={youtubePlayer.playVideo}
             size="sm"
           />
         </div>

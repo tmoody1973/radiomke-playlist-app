@@ -4,7 +4,6 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Clock } from 'lucide-react';
 import { EnhancedAlbumArtwork } from './EnhancedAlbumArtwork';
 import { EnhancedSongInfo } from './EnhancedSongInfo';
-import { AudioPreviewButton } from './AudioPreviewButton';
 import { LazyYouTubePreviewButton } from './LazyYouTubePreviewButton';
 import { ArtistEvents } from './ArtistEvents';
 
@@ -21,7 +20,7 @@ interface Spin {
   station_id?: string;
 }
 
-interface AudioPlayer {
+interface YouTubePlayer {
   currentlyPlaying: string | null;
   isLoading: string | null;
   playVideo: (embedUrl: string, trackId: string) => void;
@@ -35,7 +34,7 @@ interface ListItemProps {
   compact: boolean;
   formatTime: (dateString: string) => string;
   formatDate: (dateString: string) => string;
-  audioPlayer: AudioPlayer;
+  youtubePlayer: YouTubePlayer;
   stationId?: string;
 }
 
@@ -46,7 +45,7 @@ export const ListItem = ({
   compact, 
   formatTime, 
   formatDate,
-  audioPlayer,
+  youtubePlayer,
   stationId
 }: ListItemProps) => {
   const trackId = `${spin.artist}-${spin.song}-${spin.id}`;
@@ -55,7 +54,7 @@ export const ListItem = ({
   console.log(`🎵 Rendering ListItem for ${spin.artist} - ${spin.song}`, {
     trackId,
     spinId: spin.id,
-    audioPlayer: !!audioPlayer
+    youtubePlayer: !!youtubePlayer
   });
 
   return (
@@ -88,9 +87,9 @@ export const ListItem = ({
                   artist={spin.artist}
                   song={spin.song}
                   trackId={trackId}
-                  currentlyPlaying={audioPlayer.currentlyPlaying}
-                  isLoading={audioPlayer.isLoading}
-                  onPlay={audioPlayer.playVideo}
+                  currentlyPlaying={youtubePlayer.currentlyPlaying}
+                  isLoading={youtubePlayer.isLoading}
+                  onPlay={youtubePlayer.playVideo}
                   size={compact ? 'sm' : 'md'}
                 />
               </div>

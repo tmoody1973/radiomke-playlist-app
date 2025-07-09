@@ -18,13 +18,6 @@ interface Spin {
   station_id?: string;
 }
 
-interface AudioPlayer {
-  currentlyPlaying: string | null;
-  isLoading: string | null;
-  playVideo: (embedUrl: string, trackId: string) => void;
-  stopVideo: () => void;
-}
-
 interface YouTubePlayer {
   currentlyPlaying: string | null;
   isLoading: string | null;
@@ -58,7 +51,6 @@ interface PlaylistContainerProps {
   isCurrentlyPlaying: (spin: any, index: number) => boolean;
   formatTime: (dateString: string) => string;
   formatDate: (dateString: string) => string;
-  audioPlayer: AudioPlayer;
   youtubePlayer: YouTubePlayer;
   hasMoreSpins: boolean;
   loadingMore: boolean;
@@ -80,7 +72,6 @@ export const PlaylistContainer = ({
   isCurrentlyPlaying,
   formatTime,
   formatDate,
-  audioPlayer,
   youtubePlayer,
   hasMoreSpins,
   loadingMore,
@@ -117,7 +108,6 @@ export const PlaylistContainer = ({
         isCurrentlyPlaying={isCurrentlyPlaying}
         formatTime={formatTime}
         formatDate={formatDate}
-        audioPlayer={audioPlayer}
         youtubePlayer={youtubePlayer}
       />
 
