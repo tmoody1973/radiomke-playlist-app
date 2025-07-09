@@ -1,7 +1,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Play, Pause, Loader2 } from 'lucide-react';
-import { useSpotifyData } from '@/hooks/useSpotifyData';
+import { useOptimizedSpotifyData } from '@/hooks/useOptimizedSpotifyData';
 
 interface AudioPreviewButtonProps {
   artist: string;
@@ -22,7 +22,7 @@ export const AudioPreviewButton = ({
   onPlay,
   size = 'sm'
 }: AudioPreviewButtonProps) => {
-  const { spotifyData, loading } = useSpotifyData(artist, song);
+  const { spotifyData, loading } = useOptimizedSpotifyData(artist, song);
 
   // Debug logging
   console.log(`AudioPreviewButton for ${artist} - ${song}:`, {

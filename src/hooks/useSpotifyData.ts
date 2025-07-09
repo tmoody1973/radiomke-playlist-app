@@ -36,8 +36,8 @@ export const useSpotifyData = (artist: string, song: string) => {
           const cachedData: CachedSpotifyData = JSON.parse(cached);
           const cacheAge = Date.now() - new Date(cachedData.lastFetched).getTime();
           
-          // Use cached data if less than 24 hours old
-          if (cacheAge < 24 * 60 * 60 * 1000) {
+          // Use cached data if less than 7 days old (increased from 24 hours)
+          if (cacheAge < 7 * 24 * 60 * 60 * 1000) {
             console.log(`Using cached Spotify data for: ${artist} - ${song}`, cachedData);
             setSpotifyData(cachedData);
             setLoading(false);
@@ -91,8 +91,8 @@ export const useSpotifyData = (artist: string, song: string) => {
       }
     };
 
-    // Debounce the API call
-    const timeoutId = setTimeout(fetchSpotifyData, 300);
+    // Increased debounce from 300ms to 1000ms to reduce API calls
+    const timeoutId = setTimeout(fetchSpotifyData, 1000);
     return () => clearTimeout(timeoutId);
   }, [artist, song]);
 

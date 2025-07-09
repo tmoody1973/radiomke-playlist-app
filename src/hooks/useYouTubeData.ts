@@ -92,8 +92,8 @@ export const useYouTubeData = (artist: string, song: string) => {
       }
     };
 
-    // Debounce the API call to avoid too many requests
-    const timeoutId = setTimeout(fetchYouTubeData, 100);
+    // Increased debounce from 100ms to 800ms to reduce API calls
+    const timeoutId = setTimeout(fetchYouTubeData, 800);
     return () => clearTimeout(timeoutId);
   }, [artist, song]);
 

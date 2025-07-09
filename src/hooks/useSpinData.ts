@@ -212,13 +212,13 @@ export const useSpinData = ({
   return useQuery({
     queryKey: ['spins', stationId, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate, dateSearchEnabled, hasActiveFilters],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate && !hasActiveFilters ? 3000 : false, // Faster updates (3 seconds) to catch missed songs
-    staleTime: hasActiveFilters ? 30000 : 0,
-    gcTime: hasActiveFilters ? 300000 : 10000, // Shorter cache time for live data
-    refetchOnWindowFocus: !hasActiveFilters,
+    refetchInterval: autoUpdate && !hasActiveFilters ? 30000 : false, // Reduced from 3s to 30s (10x reduction)
+    staleTime: hasActiveFilters ? 300000 : 15000, // Increased staleTime: 5min for filters, 15s for live
+    gcTime: hasActiveFilters ? 600000 : 60000, // Longer cache time: 10min for filters, 1min for live
+    refetchOnWindowFocus: false, // Disabled to reduce unnecessary calls
     refetchOnMount: true,
     refetchIntervalInBackground: autoUpdate && !hasActiveFilters,
-    networkMode: 'always', // Always try to fetch, even if offline
+    networkMode: 'always',
     retry: (failureCount, error) => {
       // Retry API failures up to 2 times, then fall back to database
       if (failureCount < 2) return true;

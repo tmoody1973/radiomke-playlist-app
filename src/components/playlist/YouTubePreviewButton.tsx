@@ -1,7 +1,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Play, Pause, Loader2 } from 'lucide-react';
-import { useYouTubeData } from '@/hooks/useYouTubeData';
+import { useOptimizedYouTubeData } from '@/hooks/useOptimizedYouTubeData';
 
 interface YouTubePreviewButtonProps {
   artist: string;
@@ -22,7 +22,7 @@ export const YouTubePreviewButton = ({
   onPlay,
   size = 'sm'
 }: YouTubePreviewButtonProps) => {
-  const { youtubeData, loading } = useYouTubeData(artist, song);
+  const { youtubeData, loading } = useOptimizedYouTubeData(artist, song);
 
   // Show loading state while fetching YouTube data
   if (loading) {
