@@ -180,8 +180,7 @@ const Guide = () => {
                   <code className="bg-gray-100 px-2 py-1 rounded">https://playlist.radiomilwaukee.org/admin</code>
                 </p>
                 <div className="bg-amber-50 p-4 rounded">
-                  <p className="text-sm"><strong>Password:</strong> playlist2024</p>
-                  <p className="text-xs text-amber-700 mt-1">Share this password only with authorized team members.</p>
+                  <p className="text-sm">Password will be shared separately with authorized team members.</p>
                 </div>
               </CardContent>
             </Card>
@@ -203,7 +202,7 @@ const Guide = () => {
                   <h4 className="font-semibold mb-2">Step-by-Step Instructions for DJs:</h4>
                   <ol className="text-sm list-decimal ml-6 space-y-2">
                     <li>Go to: <code className="bg-gray-100 px-1 rounded">https://playlist.radiomilwaukee.org/admin</code></li>
-                    <li>Enter password: <strong>playlist2024</strong></li>
+                    <li>Enter the admin password (provided separately)</li>
                     <li>Click on "Custom Events" tab</li>
                     <li>Click "Add Event" button</li>
                     <li>Fill in required fields:
