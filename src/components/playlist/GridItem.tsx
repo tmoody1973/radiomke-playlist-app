@@ -3,7 +3,7 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Play } from 'lucide-react';
 import { EnhancedAlbumArtwork } from './EnhancedAlbumArtwork';
 import { AudioPreviewButton } from './AudioPreviewButton';
-import { YouTubePreviewButton } from './YouTubePreviewButton';
+import { LazyYouTubePreviewButton } from './LazyYouTubePreviewButton';
 
 interface Spin {
   id: number;
@@ -53,7 +53,7 @@ export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, audioPla
         
         {/* YouTube Preview Button */}
         <div className="absolute top-2 right-2 z-10">
-          <YouTubePreviewButton
+          <LazyYouTubePreviewButton
             artist={spin.artist}
             song={spin.song}
             trackId={trackId}

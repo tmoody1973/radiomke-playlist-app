@@ -5,7 +5,7 @@ import { Clock } from 'lucide-react';
 import { EnhancedAlbumArtwork } from './EnhancedAlbumArtwork';
 import { EnhancedSongInfo } from './EnhancedSongInfo';
 import { AudioPreviewButton } from './AudioPreviewButton';
-import { YouTubePreviewButton } from './YouTubePreviewButton';
+import { LazyYouTubePreviewButton } from './LazyYouTubePreviewButton';
 import { ArtistEvents } from './ArtistEvents';
 
 interface Spin {
@@ -84,7 +84,7 @@ export const ListItem = ({
             {/* YouTube Preview Button Overlay */}
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-md">
               <div className="debug-youtube-button">
-                <YouTubePreviewButton
+                <LazyYouTubePreviewButton
                   artist={spin.artist}
                   song={spin.song}
                   trackId={trackId}
