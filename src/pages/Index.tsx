@@ -8,7 +8,6 @@ import { useState } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 const Index = () => {
-  console.log('🏠 Index page loading...');
   const [selectedStation, setSelectedStation] = useState('hyfin');
   return <div className="min-h-screen bg-background">
       <Navigation />
@@ -18,7 +17,7 @@ const Index = () => {
           <div className="mb-6 flex flex-col items-center">
             <img alt="Radio Milwaukee Logo" className="h-20 w-auto mb-4 drop-shadow-lg" src="/lovable-uploads/20bccfb4-9c8c-4656-9dec-b9faa8c61d04.png" />
             <div className="bg-gradient-to-r from-gray-600 to-gray-800 bg-clip-text text-transparent">
-              <h2 className="text-2xl font-semibold mb-4">Playlist App v.0.5 beta</h2>
+              <h2 className="text-2xl font-semibold mb-4">Playlist App v.0.8 beta</h2>
             </div>
           </div>
           
