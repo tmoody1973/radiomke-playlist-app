@@ -176,7 +176,9 @@ const Guide = () => {
                 <CardTitle>Admin Access</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm mb-4">Access the admin panel at <code className="bg-gray-100 px-2 py-1 rounded">/admin</code></p>
+                <p className="text-sm mb-4">Access the admin panel at: <br />
+                  <code className="bg-gray-100 px-2 py-1 rounded">https://playlist.radiomilwaukee.org/admin</code>
+                </p>
                 <div className="bg-amber-50 p-4 rounded">
                   <p className="text-sm"><strong>Password:</strong> playlist2024</p>
                   <p className="text-xs text-amber-700 mt-1">Share this password only with authorized team members.</p>
@@ -188,34 +190,60 @@ const Guide = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Plus className="h-5 w-5" />
-                  Adding Custom Events
+                  Adding Custom Events (For DJs & Staff)
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="bg-purple-50 p-4 rounded mb-4">
+                  <h5 className="font-semibold text-sm mb-2">What are Custom Events?</h5>
+                  <p className="text-sm">Custom events are for shows and concerts that Ticketmaster doesn't typically pull in - often bigger venues, special events, or local shows that need to be highlighted in our playlist system.</p>
+                </div>
+
                 <div>
-                  <h4 className="font-semibold mb-2">Step-by-Step Process:</h4>
+                  <h4 className="font-semibold mb-2">Step-by-Step Instructions for DJs:</h4>
                   <ol className="text-sm list-decimal ml-6 space-y-2">
-                    <li>Go to Admin → Custom Events tab</li>
+                    <li>Go to: <code className="bg-gray-100 px-1 rounded">https://playlist.radiomilwaukee.org/admin</code></li>
+                    <li>Enter password: <strong>playlist2024</strong></li>
+                    <li>Click on "Custom Events" tab</li>
                     <li>Click "Add Event" button</li>
                     <li>Fill in required fields:
-                      <ul className="list-disc ml-6 mt-1">
-                        <li><strong>Artist Name:</strong> Start typing to see suggestions from our database</li>
-                        <li><strong>Event Title:</strong> Concert or show name</li>
-                        <li><strong>Event Date:</strong> Required field</li>
+                      <ul className="list-disc ml-6 mt-1 space-y-1">
+                        <li><strong>Artist Name:</strong> Start typing to see suggestions from our database
+                          <div className="bg-red-50 p-2 rounded text-xs mt-1">
+                            <strong>IMPORTANT:</strong> Artist names are case-sensitive! Make sure spelling and capitalization match exactly how they appear in our playlist.
+                          </div>
+                        </li>
+                        <li><strong>Event Title:</strong> Concert or show name (e.g., "Summer Festival 2024")</li>
+                        <li><strong>Event Date:</strong> Required field - when the show is happening</li>
                       </ul>
                     </li>
-                    <li>Optional fields: Venue, time, ticket URL, prices, description</li>
-                    <li>Choose which stations should show this event (or leave blank for both)</li>
+                    <li>Optional but recommended fields:
+                      <ul className="list-disc ml-6 mt-1">
+                        <li>Venue name (especially for bigger venues like Fiserv Forum, American Family Insurance Amphitheater)</li>
+                        <li>Event time</li>
+                        <li>Ticket URL (direct link to purchase tickets)</li>
+                        <li>Price range (min/max ticket prices)</li>
+                        <li>Event description</li>
+                      </ul>
+                    </li>
+                    <li>Choose station targeting:
+                      <ul className="list-disc ml-6 mt-1">
+                        <li>Leave blank = appears on both HYFIN and 88Nine</li>
+                        <li>Select specific station = only appears for that station's playlist</li>
+                      </ul>
+                    </li>
                     <li>Click "Create Event"</li>
                   </ol>
                 </div>
 
                 <div className="bg-blue-50 p-4 rounded">
-                  <h5 className="font-semibold text-sm">Pro Tips:</h5>
+                  <h5 className="font-semibold text-sm">Pro Tips for DJs:</h5>
                   <ul className="text-sm list-disc ml-4 mt-2 space-y-1">
-                    <li>Use the artist search - it pulls from our song database</li>
-                    <li>Events automatically hide after the event date passes</li>
-                    <li>Station-specific events only show for that station's playlist</li>
+                    <li><strong>Artist matching:</strong> Use the artist search dropdown - it pulls from our song database</li>
+                    <li><strong>Bigger venues:</strong> Focus on venues like Fiserv Forum, Miller High Life Theatre, American Family Insurance Amphitheater, The Rave, etc.</li>
+                    <li><strong>Special events:</strong> Add festivals, special concerts, or unique shows Ticketmaster might miss</li>
+                    <li><strong>Auto-cleanup:</strong> Events automatically hide after the event date passes</li>
+                    <li><strong>Station targeting:</strong> Use station-specific events for genre-appropriate shows</li>
                   </ul>
                 </div>
               </CardContent>
@@ -364,10 +392,33 @@ const Guide = () => {
           </Card>
         </section>
 
+        {/* Support Contact Section */}
+        <section className="mb-12">
+          <Card>
+            <CardHeader>
+              <CardTitle>Need Help or Support?</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-2">For Technical Issues or Questions:</h4>
+                  <ul className="text-sm space-y-2">
+                    <li>• <strong>Slack:</strong> Message me directly on Slack</li>
+                    <li>• <strong>Email:</strong> <a href="mailto:digital@radiomilwaukee.org" className="text-blue-600 hover:underline">digital@radiomilwaukee.org</a></li>
+                  </ul>
+                </div>
+                <div className="bg-gray-50 p-3 rounded text-sm">
+                  <strong>When contacting support:</strong> Include details about what you were trying to do, any error messages, and which browser/device you're using.
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* Footer */}
         <div className="text-center py-8 border-t">
           <p className="text-sm text-muted-foreground mb-4">
-            Need to make changes to this guide or have questions about the app?
+            Radio Milwaukee Playlist App Guide - Updated for team workflow
           </p>
           <div className="flex justify-center gap-4">
             <Button variant="outline" asChild>
