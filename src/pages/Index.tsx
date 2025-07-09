@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 const Index = () => {
+  console.log('🏠 Index page loading...');
   const [selectedStation, setSelectedStation] = useState('hyfin');
   return <div className="min-h-screen bg-background">
       <Navigation />

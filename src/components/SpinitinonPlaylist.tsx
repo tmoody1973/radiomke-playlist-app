@@ -68,6 +68,16 @@ const SpinitinonPlaylist = ({
     lastUpdate: new Date() // Add current date as lastUpdate
   };
 
+  console.log('🎵 SpinitinonPlaylist about to render, isLoading:', isLoading, 'error:', error, 'spins:', displayedSpins.length);
+  
+  if (isLoading) {
+    return <div className="text-center p-8">Loading playlist...</div>;
+  }
+  
+  if (error) {
+    return <div className="text-center p-8 text-red-500">Error: {error.message}</div>;
+  }
+
   return (
     <PlaylistContainer
       displayedSpins={displayedSpins}
