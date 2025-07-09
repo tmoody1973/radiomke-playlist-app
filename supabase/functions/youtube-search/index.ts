@@ -32,39 +32,163 @@ function cleanSearchTerm(term: string): string {
     .replace(/\(.*?\)/g, '') // Remove content in parentheses
     .replace(/\[.*?\]/g, '') // Remove content in brackets
     .replace(/feat\.|ft\.|featuring/gi, '') // Remove featuring indicators
+    .replace(/[^\w\s]/g, ' ') // Remove special characters except word chars and spaces
     .replace(/\s+/g, ' ') // Normalize whitespace
     .trim();
+}
+
+// Helper function to create abbreviated artist names
+function getArtistVariations(artist: string): string[] {
+  const variations = [artist];
+  const cleanArtist = cleanSearchTerm(artist);
+  
+  if (cleanArtist !== artist) {
+    variations.push(cleanArtist);
+  }
+  
+  // Try abbreviated versions (J. Cole -> J Cole, The Beatles -> Beatles)
+  const abbreviated = artist.replace(/\./g, '').replace(/^The\s+/i, '');
+  if (abbreviated !== artist) {
+    variations.push(abbreviated);
+  }
+  
+  return [...new Set(variations)];
 }
 
 // Generate multiple search variations to improve matching
 function generateSearchQueries(artist: string, song: string): string[] {
   const cleanArtist = cleanSearchTerm(artist);
   const cleanSong = cleanSearchTerm(song);
+  const artistVariations = getArtistVariations(artist);
   
   const queries = [
-    `${cleanArtist} ${cleanSong}`, // Primary clean search
-    `${artist} ${song}`, // Original search
-    `${cleanSong} ${cleanArtist}`, // Reversed order
-    `${cleanSong}`, // Song only
+    // Primary searches with original and clean versions
+    `${cleanArtist} ${cleanSong}`,
+    `${artist} ${song}`,
+    `${cleanSong} ${cleanArtist}`,
+    
+    // Enhanced searches with YouTube-specific terms
+    `${cleanArtist} ${cleanSong} official`,
+    `${cleanArtist} ${cleanSong} music video`,
+    `${cleanArtist} ${cleanSong} audio`,
+    `${cleanArtist} ${cleanSong} lyrics`,
+    `${cleanArtist} ${cleanSong} live`,
+    
+    // Try different artist variations
+    ...artistVariations.map(artistVar => `${artistVar} ${cleanSong}`),
+    
+    // Song-only searches with modifiers
+    `${cleanSong} official audio`,
+    `${cleanSong} music video`,
+    `${cleanSong}`,
+    
+    // Reversed order attempts
+    `${cleanSong} by ${cleanArtist}`,
+    `${cleanSong} ${cleanArtist} official`
   ];
   
   // Remove duplicates and empty queries
   return [...new Set(queries)].filter(q => q.trim().length > 0);
 }
 
-// Check if a video title is a reasonable match
-function isReasonableMatch(videoTitle: string, artist: string, song: string): boolean {
+// Check if a channel is likely an official music channel
+function isOfficialMusicChannel(channelTitle: string): boolean {
+  const channel = channelTitle.toLowerCase();
+  return channel.includes('vevo') || 
+         channel.includes('records') || 
+         channel.includes('music') ||
+         channel.includes('official') ||
+         channel.endsWith(' - topic') ||
+         channel.includes('label');
+}
+
+// Calculate a score for video quality/relevance
+function calculateVideoScore(videoTitle: string, channelTitle: string, artist: string, song: string): number {
   const title = videoTitle.toLowerCase();
-  const artistLower = artist.toLowerCase();
-  const songLower = song.toLowerCase();
+  const channel = channelTitle.toLowerCase();
+  const artistLower = cleanSearchTerm(artist).toLowerCase();
+  const songLower = cleanSearchTerm(song).toLowerCase();
   
-  // Check if both artist and song appear in title (flexible matching)
-  const hasArtist = title.includes(artistLower) || 
-                   artistLower.split(' ').some(word => word.length > 2 && title.includes(word));
-  const hasSong = title.includes(songLower) || 
-                 songLower.split(' ').some(word => word.length > 2 && title.includes(word));
+  let score = 0;
   
-  return hasArtist && hasSong;
+  // Base points for content matching
+  if (title.includes(artistLower)) score += 3;
+  if (title.includes(songLower)) score += 3;
+  
+  // Bonus for exact matches
+  if (title.includes(`${artistLower} ${songLower}`) || title.includes(`${songLower} ${artistLower}`)) score += 2;
+  
+  // Official channel bonuses
+  if (isOfficialMusicChannel(channelTitle)) score += 3;
+  if (channel.includes('vevo')) score += 2;
+  if (channel.endsWith(' - topic')) score += 2;
+  
+  // Content quality indicators
+  if (title.includes('official')) score += 2;
+  if (title.includes('music video')) score += 1;
+  if (title.includes('audio')) score += 1;
+  if (title.includes('hd') || title.includes('high quality')) score += 1;
+  
+  // Penalties for less desirable content
+  if (title.includes('cover') && !title.includes('official')) score -= 2;
+  if (title.includes('remix') && !title.includes('official')) score -= 1;
+  if (title.includes('karaoke')) score -= 3;
+  if (title.includes('instrumental')) score -= 2;
+  if (title.includes('lyrics') && !title.includes('official')) score -= 1;
+  
+  return Math.max(0, score);
+}
+
+// Enhanced matching with fuzzy logic and multiple criteria
+function isReasonableMatch(videoTitle: string, artist: string, song: string, channelTitle?: string): boolean {
+  const title = videoTitle.toLowerCase();
+  const artistLower = cleanSearchTerm(artist).toLowerCase();
+  const songLower = cleanSearchTerm(song).toLowerCase();
+  
+  // Helper function for fuzzy word matching
+  const fuzzyMatch = (text: string, word: string): boolean => {
+    if (text.includes(word)) return true;
+    // Check for partial matches (minimum 3 characters)
+    if (word.length >= 3) {
+      const words = text.split(/\s+/);
+      return words.some(w => w.includes(word) || word.includes(w));
+    }
+    return false;
+  };
+
+  // Check artist presence with variations
+  const artistWords = artistLower.split(' ').filter(w => w.length > 1);
+  const hasArtist = fuzzyMatch(title, artistLower) || 
+                   artistWords.some(word => fuzzyMatch(title, word)) ||
+                   getArtistVariations(artist).some(variation => 
+                     fuzzyMatch(title, variation.toLowerCase()));
+
+  // Check song presence with variations  
+  const songWords = songLower.split(' ').filter(w => w.length > 1);
+  const hasSong = fuzzyMatch(title, songLower) ||
+                 songWords.some(word => fuzzyMatch(title, word));
+
+  // Basic match requirement
+  if (!hasArtist && !hasSong) return false;
+
+  // Enhanced scoring system
+  let score = 0;
+  if (hasArtist) score += 3;
+  if (hasSong) score += 3;
+  
+  // Bonus points for official indicators
+  if (title.includes('official')) score += 2;
+  if (title.includes('music video')) score += 1;
+  if (title.includes('audio')) score += 1;
+  if (channelTitle && isOfficialMusicChannel(channelTitle)) score += 2;
+  
+  // Penalty for likely covers/remixes unless no better options
+  if (title.includes('cover') || title.includes('remix')) score -= 1;
+  if (title.includes('karaoke') || title.includes('instrumental')) score -= 2;
+  
+  // Accept if we have reasonable confidence (score >= 4)
+  // or if we have both artist and song (even with lower score)
+  return score >= 4 || (hasArtist && hasSong);
 }
 
 serve(async (req) => {
@@ -165,21 +289,21 @@ serve(async (req) => {
 
     // Generate multiple search queries
     const searchQueries = generateSearchQueries(artist, song);
-    console.log('Generated search queries:', searchQueries);
+    console.log(`Generated ${searchQueries.length} search queries:`, searchQueries.slice(0, 5));
 
     let bestVideo = null;
+    let bestScore = 0;
     let searchAttempts = 0;
+    let candidateVideos = [];
 
-    // Try each search query until we find a good match
+    // Try each search query to find the best match
     for (const query of searchQueries) {
-      if (bestVideo) break; // Found a good match, stop searching
-      
       searchAttempts++;
       const searchQuery = encodeURIComponent(query);
-      console.log(`Search attempt ${searchAttempts}: "${query}"`);
+      console.log(`Search attempt ${searchAttempts}/${Math.min(searchQueries.length, 8)}: "${query}"`);
       
       const searchResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${searchQuery}&type=video&maxResults=5&key=${youtubeApiKey}`,
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${searchQuery}&type=video&maxResults=15&videoDuration=medium&order=relevance&key=${youtubeApiKey}`,
         {
           headers: {
             'Accept': 'application/json'
@@ -196,26 +320,61 @@ serve(async (req) => {
       console.log(`Search attempt ${searchAttempts} results:`, searchData.items?.length || 0, 'videos found');
       
       if (searchData.items && searchData.items.length > 0) {
-        // Find the best matching video from the results
+        // Evaluate all videos and keep track of candidates
         for (const video of searchData.items) {
-          if (isReasonableMatch(video.snippet.title, artist, song)) {
-            console.log(`Found reasonable match: "${video.snippet.title}" by ${video.snippet.channelTitle}`);
-            bestVideo = video;
-            break;
+          if (isReasonableMatch(video.snippet.title, artist, song, video.snippet.channelTitle)) {
+            const isOfficial = isOfficialMusicChannel(video.snippet.channelTitle);
+            const score = calculateVideoScore(video.snippet.title, video.snippet.channelTitle, artist, song);
+            
+            candidateVideos.push({
+              video,
+              score,
+              isOfficial,
+              query,
+              searchAttempt: searchAttempts
+            });
+
+            console.log(`Found candidate: "${video.snippet.title}" by ${video.snippet.channelTitle} (score: ${score}, official: ${isOfficial})`);
+            
+            // If this is a high-quality match, consider it as best
+            if (score > bestScore) {
+              bestVideo = video;
+              bestScore = score;
+            }
           }
         }
         
-        // If no reasonable match found but we have results, take the first one as fallback
-        if (!bestVideo && searchAttempts === 1) {
-          console.log('No perfect match found, using first result as fallback');
-          bestVideo = searchData.items[0];
+        // Stop early if we found an excellent match (high score + official channel)
+        if (bestScore >= 8 && candidateVideos.some(c => c.isOfficial && c.score >= 8)) {
+          console.log('Found excellent official match, stopping search early');
+          break;
         }
+      }
+      
+      // Limit search attempts to avoid hitting API limits
+      if (searchAttempts >= 8) {
+        console.log('Reached maximum search attempts, stopping');
+        break;
       }
       
       // Add small delay between API calls to be respectful
       if (searchAttempts < searchQueries.length) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 150));
       }
+    }
+
+    // If we have candidates but no bestVideo, pick the best scoring candidate
+    if (!bestVideo && candidateVideos.length > 0) {
+      // Sort by score descending, then by official channel preference
+      candidateVideos.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if (b.isOfficial !== a.isOfficial) return b.isOfficial ? 1 : -1;
+        return 0;
+      });
+      
+      bestVideo = candidateVideos[0].video;
+      bestScore = candidateVideos[0].score;
+      console.log(`Selected best candidate with score ${bestScore}`);
     }
 
     if (!bestVideo) {
