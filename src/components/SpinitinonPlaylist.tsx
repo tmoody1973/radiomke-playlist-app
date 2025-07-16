@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { PlaylistContainer } from './playlist/PlaylistContainer';
-import { MostPlayedChart } from './playlist/MostPlayedChart';
 import { usePlaylistData } from '@/hooks/usePlaylistData';
 import { usePreviewSpinData } from '@/hooks/usePreviewSpinData';
 import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
@@ -17,8 +16,6 @@ interface SpinitinonPlaylistProps {
   endDate?: string;
   layout?: 'list' | 'grid';
   previewMode?: boolean;
-  embedMode?: string;
-  mostPlayedPeriod?: string;
 }
 
 const SpinitinonPlaylist = ({ 
@@ -30,23 +27,9 @@ const SpinitinonPlaylist = ({
   startDate = '',
   endDate = '',
   layout = 'list',
-  previewMode = false,
-  embedMode = 'live',
-  mostPlayedPeriod = '7d'
+  previewMode = false
 }: SpinitinonPlaylistProps) => {
-  console.log(`🎵 SpinitinonPlaylist rendering for station: ${stationId}, showSearch: ${showSearch}, embedMode: ${embedMode}`);
-
-  // Handle most played mode
-  if (embedMode === 'most-played') {
-    return (
-      <div className="p-4">
-        <MostPlayedChart 
-          stationId={stationId} 
-          showStationFilter={false}
-        />
-      </div>
-    );
-  }
+  console.log(`🎵 SpinitinonPlaylist rendering for station: ${stationId}, showSearch: ${showSearch}`);
 
   // Use preview data for fast loading in demo mode
   const previewData = usePreviewSpinData({

@@ -11,7 +11,6 @@ import OptimizedEmbed from "./pages/OptimizedEmbed";
 import TechnicalArticle from "./pages/TechnicalArticle";
 import Admin from "./pages/Admin";
 import Guide from "./pages/Guide";
-import MostPlayed from "./pages/MostPlayed";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,7 +24,6 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/guide" element={<Guide />} />
-          <Route path="/most-played" element={<MostPlayed />} />
           <Route path="/demo" element={<EmbedDemo />} />
           <Route path="/embed" element={<Embed />} />
           <Route path="/embed-preview" element={<OptimizedEmbed />} />

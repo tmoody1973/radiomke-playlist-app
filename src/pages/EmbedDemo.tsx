@@ -53,10 +53,6 @@ const EmbedDemo = () => {
             setStartDate={embedState.setStartDate}
             endDate={embedState.endDate}
             setEndDate={embedState.setEndDate}
-            embedMode={embedState.embedMode}
-            setEmbedMode={embedState.setEmbedMode}
-            mostPlayedPeriod={embedState.mostPlayedPeriod}
-            setMostPlayedPeriod={embedState.setMostPlayedPeriod}
             embedConfig={embedState.embedConfig}
           />
 

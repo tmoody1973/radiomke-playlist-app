@@ -34,10 +34,6 @@ interface EmbedConfigurationProps {
   setStartDate: (value: Date | undefined) => void;
   endDate?: Date;
   setEndDate: (value: Date | undefined) => void;
-  embedMode: string;
-  setEmbedMode: (value: string) => void;
-  mostPlayedPeriod: string;
-  setMostPlayedPeriod: (value: string) => void;
 }
 
 const EmbedConfiguration = ({
@@ -66,10 +62,6 @@ const EmbedConfiguration = ({
   setStartDate,
   endDate,
   setEndDate,
-  embedMode,
-  setEmbedMode,
-  mostPlayedPeriod,
-  setMostPlayedPeriod,
 }: EmbedConfigurationProps) => {
   return (
     <div className="space-y-6">
@@ -87,10 +79,6 @@ const EmbedConfiguration = ({
         setUnlimitedSongs={setUnlimitedSongs}
         compact={compact}
         setCompact={setCompact}
-        embedMode={embedMode}
-        setEmbedMode={setEmbedMode}
-        mostPlayedPeriod={mostPlayedPeriod}
-        setMostPlayedPeriod={setMostPlayedPeriod}
       />
 
       <DisplayConfiguration

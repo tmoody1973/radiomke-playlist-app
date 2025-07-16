@@ -23,10 +23,6 @@ interface BasicConfigurationProps {
   setUnlimitedSongs: (value: boolean) => void;
   compact: boolean;
   setCompact: (value: boolean) => void;
-  embedMode: string;
-  setEmbedMode: (value: string) => void;
-  mostPlayedPeriod: string;
-  setMostPlayedPeriod: (value: string) => void;
 }
 
 const BasicConfiguration = ({
@@ -43,10 +39,6 @@ const BasicConfiguration = ({
   setUnlimitedSongs,
   compact,
   setCompact,
-  embedMode,
-  setEmbedMode,
-  mostPlayedPeriod,
-  setMostPlayedPeriod,
 }: BasicConfigurationProps) => {
   return (
     <div className="space-y-6">
@@ -65,35 +57,6 @@ const BasicConfiguration = ({
           </SelectContent>
         </Select>
       </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="embedMode">Widget Mode</Label>
-        <Select value={embedMode} onValueChange={setEmbedMode}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="live">Live Playlist</SelectItem>
-            <SelectItem value="most-played">Most Played Songs</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {embedMode === 'most-played' && (
-        <div className="space-y-2">
-          <Label htmlFor="mostPlayedPeriod">Time Period</Label>
-          <Select value={mostPlayedPeriod} onValueChange={setMostPlayedPeriod}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">Last 7 Days</SelectItem>
-              <SelectItem value="30d">Last 30 Days</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      )}
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">

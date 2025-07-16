@@ -12,8 +12,6 @@ interface EmbedConfig {
   enableDateSearch: boolean;
   startDate?: Date;
   endDate?: Date;
-  embedMode?: string;
-  mostPlayedPeriod?: string;
   customColors?: {
     backgroundColor: string;
     textColor: string;
@@ -42,12 +40,6 @@ export const generateEmbedUrl = (config: EmbedConfig): string => {
   if (config.layout !== 'list') params.append('layout', config.layout);
   if (config.enableDateSearch && config.startDate) params.append('startDate', config.startDate.toISOString());
   if (config.enableDateSearch && config.endDate) params.append('endDate', config.endDate.toISOString());
-  
-  // Add most played mode parameters
-  if (config.embedMode === 'most-played') {
-    params.append('mode', 'most-played');
-    if (config.mostPlayedPeriod) params.append('period', config.mostPlayedPeriod);
-  }
   
   // Add a cache-busting parameter to ensure iframe reloads when theme changes
   params.append('_t', Date.now().toString());

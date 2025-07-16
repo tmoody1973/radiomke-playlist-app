@@ -28,8 +28,6 @@ export const useEmbedDemoState = () => {
   const [endDate, setEndDate] = useState<Date | undefined>(
     savedConfig?.endDate ? new Date(savedConfig.endDate) : undefined
   );
-  const [embedMode, setEmbedMode] = useState(savedConfig?.embedMode || 'live');
-  const [mostPlayedPeriod, setMostPlayedPeriod] = useState(savedConfig?.mostPlayedPeriod || '7d');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,8 +75,6 @@ export const useEmbedDemoState = () => {
     enableDateSearch,
     startDate,
     endDate,
-    embedMode,
-    mostPlayedPeriod,
   };
 
   // Auto-save configuration changes
@@ -114,10 +110,6 @@ export const useEmbedDemoState = () => {
     setStartDate,
     endDate,
     setEndDate,
-    embedMode,
-    setEmbedMode,
-    mostPlayedPeriod,
-    setMostPlayedPeriod,
     loading,
     error,
     embedConfig,
