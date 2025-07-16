@@ -45,5 +45,10 @@ export const generateEmbedUrl = (config: EmbedConfig): string => {
   params.append('_t', Date.now().toString());
 
   const baseUrl = window.location.origin;
-  return `${baseUrl}/embed?${params.toString()}`;
+  
+  // Use optimized embed for preview mode (when cache busting param is present and small item count)
+  const isPreview = params.has('_t') && parseInt(params.get('maxItems') || '20') <= 10;
+  const embedPath = isPreview ? '/embed-preview' : '/embed';
+  
+  return `${baseUrl}${embedPath}?${params.toString()}`;
 };

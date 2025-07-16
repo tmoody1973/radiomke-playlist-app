@@ -2,6 +2,7 @@
 import React from 'react';
 import { PlaylistContainer } from './playlist/PlaylistContainer';
 import { usePlaylistData } from '@/hooks/usePlaylistData';
+import { usePreviewSpinData } from '@/hooks/usePreviewSpinData';
 import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
 import { createPlaylistHandlers } from './playlist/PlaylistHandlers';
 
@@ -14,6 +15,7 @@ interface SpinitinonPlaylistProps {
   startDate?: string;
   endDate?: string;
   layout?: 'list' | 'grid';
+  previewMode?: boolean;
 }
 
 const SpinitinonPlaylist = ({ 
@@ -24,10 +26,26 @@ const SpinitinonPlaylist = ({
   compact = false,
   startDate = '',
   endDate = '',
-  layout = 'list'
+  layout = 'list',
+  previewMode = false
 }: SpinitinonPlaylistProps) => {
   console.log(`🎵 SpinitinonPlaylist rendering for station: ${stationId}, showSearch: ${showSearch}`);
 
+  // Use preview data for fast loading in demo mode
+  const previewData = usePreviewSpinData({
+    stationId,
+    maxItems: previewMode ? Math.min(maxItems, 10) : 0,
+  });
+
+  const playlistDataHook = usePlaylistData({
+    stationId,
+    autoUpdate: previewMode ? false : autoUpdate,
+    maxItems,
+    initialStartDate: startDate,
+    initialEndDate: endDate
+  });
+
+  // Choose data source based on mode
   const { 
     playlistState, 
     spins, 
@@ -39,13 +57,35 @@ const SpinitinonPlaylist = ({
     loadMore, 
     isLoadingMore,
     checkForPrefetch 
-  } = usePlaylistData({
-    stationId,
-    autoUpdate,
-    maxItems,
-    initialStartDate: startDate,
-    initialEndDate: endDate
-  });
+  } = previewMode ? 
+    // Transform preview data to match expected structure
+    {
+      playlistState: {
+        allSpins: previewData.spins,
+        displayCount: previewData.spins.length,
+        searchTerm: '',
+        dateSearchEnabled: false,
+        startDate: '',
+        endDate: '',
+        setSearchTerm: () => {},
+        setDateSearchEnabled: () => {},
+        setStartDate: () => {},
+        setEndDate: () => {},
+        debouncedSearchTerm: '',
+        setDisplayCount: () => {},
+        filteredSpins: previewData.spins,
+        lastUpdate: new Date()
+      },
+      spins: previewData.spins,
+      isLoading: previewData.isLoading,
+      error: previewData.error ? { message: previewData.error } : null,
+      refetch: () => Promise.resolve(),
+      hasActiveFilters: false,
+      hasMore: false,
+      loadMore: () => Promise.resolve(),
+      isLoadingMore: false,
+      checkForPrefetch: () => {}
+    } : playlistDataHook;
 
   const youtubePlayer = useYouTubePlayer();
   const handlers = createPlaylistHandlers(playlistState, refetch, loadMore, checkForPrefetch);
@@ -75,8 +115,8 @@ const SpinitinonPlaylist = ({
   // Create extended playlist state with missing properties
   const extendedPlaylistState = {
     ...playlistState,
-    filteredSpins: playlistState.allSpins, // Use allSpins as filteredSpins
-    lastUpdate: new Date() // Add current date as lastUpdate
+    filteredSpins: playlistState.allSpins,
+    lastUpdate: new Date()
   };
 
   console.log('🎵 SpinitinonPlaylist about to render, isLoading:', isLoading, 'error:', error, 'spins:', displayedSpins.length);

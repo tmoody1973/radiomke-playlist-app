@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useConfigCache } from './useEmbedCache';
 
 interface Station {
   id: string;
@@ -8,19 +9,25 @@ interface Station {
 }
 
 export const useEmbedDemoState = () => {
+  const { savedConfig, saveConfig } = useConfigCache();
+  
   const [stations, setStations] = useState<Station[]>([]);
-  const [selectedStation, setSelectedStation] = useState('hyfin');
-  const [autoUpdate, setAutoUpdate] = useState(true);
-  const [showSearch, setShowSearch] = useState(true);
-  const [maxItems, setMaxItems] = useState(20);
-  const [unlimitedSongs, setUnlimitedSongs] = useState(false);
-  const [compact, setCompact] = useState(false);
-  const [height, setHeight] = useState('600');
-  const [theme, setTheme] = useState('light');
-  const [layout, setLayout] = useState('list');
-  const [enableDateSearch, setEnableDateSearch] = useState(false);
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
+  const [selectedStation, setSelectedStation] = useState(savedConfig?.selectedStation || 'hyfin');
+  const [autoUpdate, setAutoUpdate] = useState(savedConfig?.autoUpdate ?? true);
+  const [showSearch, setShowSearch] = useState(savedConfig?.showSearch ?? true);
+  const [maxItems, setMaxItems] = useState(savedConfig?.maxItems || 20);
+  const [unlimitedSongs, setUnlimitedSongs] = useState(savedConfig?.unlimitedSongs || false);
+  const [compact, setCompact] = useState(savedConfig?.compact || false);
+  const [height, setHeight] = useState(savedConfig?.height || '600');
+  const [theme, setTheme] = useState(savedConfig?.theme || 'light');
+  const [layout, setLayout] = useState(savedConfig?.layout || 'list');
+  const [enableDateSearch, setEnableDateSearch] = useState(savedConfig?.enableDateSearch || false);
+  const [startDate, setStartDate] = useState<Date | undefined>(
+    savedConfig?.startDate ? new Date(savedConfig.startDate) : undefined
+  );
+  const [endDate, setEndDate] = useState<Date | undefined>(
+    savedConfig?.endDate ? new Date(savedConfig.endDate) : undefined
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,6 +76,13 @@ export const useEmbedDemoState = () => {
     startDate,
     endDate,
   };
+
+  // Auto-save configuration changes
+  useEffect(() => {
+    if (!loading && stations.length > 0) {
+      saveConfig(embedConfig);
+    }
+  }, [embedConfig, loading, stations.length, saveConfig]);
 
   return {
     stations,

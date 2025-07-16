@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import EmbedConfiguration from './EmbedConfiguration';
 import EmbedCodeTabs from './EmbedCodeTabs';
-import EmbedPreview from './EmbedPreview';
+import OptimizedEmbedPreview from './OptimizedEmbedPreview';
 
 interface Station {
   id: string;
@@ -138,7 +138,7 @@ const EmbedDemoContent = ({
       </Card>
 
       {/* Preview Panel */}
-      <EmbedPreview config={embedConfig} />
+      <OptimizedEmbedPreview config={embedConfig} />
     </div>
   );
 };
