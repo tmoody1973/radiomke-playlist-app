@@ -1,7 +1,7 @@
 
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Code, ExternalLink, FileText, Home, Settings, BookOpen } from 'lucide-react';
+import { Code, ExternalLink, FileText, Home, Settings, BookOpen, TrendingUp } from 'lucide-react';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -55,6 +55,20 @@ const Navigation = () => {
                 >
                   <BookOpen className="h-4 w-4 mr-2" />
                   Team Guide
+                </NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
+
+            <NavigationMenuItem>
+              <Link to="/most-played">
+                <NavigationMenuLink
+                  className={cn(
+                    "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
+                    isActive('/most-played') && "bg-accent text-accent-foreground"
+                  )}
+                >
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Most Played
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>

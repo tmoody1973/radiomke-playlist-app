@@ -23,6 +23,8 @@ interface EmbedConfig {
   enableDateSearch: boolean;
   startDate?: Date;
   endDate?: Date;
+  embedMode: string;
+  mostPlayedPeriod: string;
 }
 
 interface EmbedDemoContentProps {
@@ -51,6 +53,10 @@ interface EmbedDemoContentProps {
   setStartDate: (value: Date | undefined) => void;
   endDate?: Date;
   setEndDate: (value: Date | undefined) => void;
+  embedMode: string;
+  setEmbedMode: (value: string) => void;
+  mostPlayedPeriod: string;
+  setMostPlayedPeriod: (value: string) => void;
   embedConfig: EmbedConfig;
 }
 
@@ -80,6 +86,10 @@ const EmbedDemoContent = ({
   setStartDate,
   endDate,
   setEndDate,
+  embedMode,
+  setEmbedMode,
+  mostPlayedPeriod,
+  setMostPlayedPeriod,
   embedConfig,
 }: EmbedDemoContentProps) => {
   const { toast } = useToast();
@@ -126,6 +136,10 @@ const EmbedDemoContent = ({
             setStartDate={setStartDate}
             endDate={endDate}
             setEndDate={setEndDate}
+            embedMode={embedMode}
+            setEmbedMode={setEmbedMode}
+            mostPlayedPeriod={mostPlayedPeriod}
+            setMostPlayedPeriod={setMostPlayedPeriod}
           />
 
           <div className="mt-6">

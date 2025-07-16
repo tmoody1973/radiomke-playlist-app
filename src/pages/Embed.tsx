@@ -16,6 +16,8 @@ const Embed = () => {
   const theme = searchParams.get('theme') || 'light';
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
+  const mode = searchParams.get('mode') || 'live';
+  const period = searchParams.get('period') || '7d';
   
   const layoutParam = searchParams.get('layout');
   const layout: 'list' | 'grid' = layoutParam === 'grid' ? 'grid' : 'list';
@@ -191,6 +193,8 @@ const Embed = () => {
           startDate={startDate}
           endDate={endDate}
           layout={layout}
+          embedMode={mode}
+          mostPlayedPeriod={period}
         />
       </div>
     </div>
