@@ -37,15 +37,21 @@ const OptimizedEmbed = () => {
   // Notify parent when loaded
   useEffect(() => {
     const notifyLoaded = () => {
+      console.log('OptimizedEmbed: Attempting to notify parent of load');
       if (window.parent !== window) {
+        console.log('OptimizedEmbed: Sending embed-loaded message');
         window.parent.postMessage({
           type: 'embed-loaded'
         }, '*');
+      } else {
+        console.log('OptimizedEmbed: No parent window detected');
       }
     };
 
-    // Notify when component mounts
-    setTimeout(notifyLoaded, 100);
+    // Notify when component mounts and after data might be loaded
+    const timeouts = [100, 500, 1000, 2000].map(delay => 
+      setTimeout(notifyLoaded, delay)
+    );
 
     // Set up error handling
     const handleError = () => {
@@ -58,7 +64,11 @@ const OptimizedEmbed = () => {
     };
 
     window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
+    
+    return () => {
+      timeouts.forEach(clearTimeout);
+      window.removeEventListener('error', handleError);
+    };
   }, []);
 
   // Use current config from postMessage if available, otherwise use URL params

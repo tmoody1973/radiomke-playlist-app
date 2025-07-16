@@ -74,7 +74,7 @@ export const generatePreviewUrl = (config: EmbedConfig): string => {
   params.append('preview', 'true');
 
   const baseUrl = window.location.origin;
-  const embedPath = '/embed';
+  const embedPath = '/embed-preview'; // Use preview route for cache-busted preview URLs
   
   return `${baseUrl}${embedPath}?${params.toString()}`;
 };

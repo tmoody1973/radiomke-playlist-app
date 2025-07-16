@@ -71,10 +71,13 @@ const OptimizedEmbedPreview = ({ config }: EmbedPreviewProps) => {
   // Listen for messages from iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      console.log('Preview received message:', event.data);
       if (event.data.type === 'embed-loaded') {
+        console.log('Embed loaded successfully');
         setIsLoading(false);
         setError(null);
       } else if (event.data.type === 'embed-error') {
+        console.log('Embed error:', event.data.message);
         setError(event.data.message || 'Failed to load preview');
         setIsLoading(false);
       }
@@ -170,12 +173,14 @@ const OptimizedEmbedPreview = ({ config }: EmbedPreviewProps) => {
             loading="eager"
             scrolling="yes"
             onLoad={() => {
-              // Fallback in case postMessage doesn't work
+              console.log('Iframe onLoad fired');
+              // Fallback in case postMessage doesn't work - reduced to 3 seconds
               setTimeout(() => {
                 if (isLoading) {
+                  console.log('Fallback: forcing loading to false');
                   setIsLoading(false);
                 }
-              }, 2000);
+              }, 3000);
             }}
           />
         </div>
