@@ -1,4 +1,5 @@
 
+// Optimized embed loader - automatically falls back to the bundled version
 (function() {
   'use strict';
   
@@ -7,40 +8,58 @@
     return;
   }
   window.SpinitinonEmbedInitialized = true;
-  
-  // Load dependencies in order
-  function loadScript(src, callback) {
-    const script = document.createElement('script');
-    script.src = src;
-    script.async = true;
-    script.onload = callback;
-    script.onerror = function() {
-      console.error('Failed to load script:', src);
-      if (callback) callback(new Error('Script load failed'));
-    };
-    document.head.appendChild(script);
-  }
 
-  // Get base URL for loading other scripts
+  // Get base URL for loading scripts
   const SCRIPT_TAG = document.querySelector('script[src*="embed.js"]');
   const SCRIPT_SRC = SCRIPT_TAG ? SCRIPT_TAG.src : '';
   const BASE_PATH = SCRIPT_SRC ? SCRIPT_SRC.replace('embed.js', '') : window.location.origin + '/';
 
-  // Load all dependencies with error handling
-  function loadDependencies(callback) {
+  // Try to load optimized bundle first, fallback to individual scripts
+  function loadOptimizedScript() {
+    const script = document.createElement('script');
+    script.src = BASE_PATH + 'embed-optimized.js';
+    script.async = true;
+    
+    script.onload = function() {
+      console.log('Spinitron optimized embed loaded successfully');
+    };
+    
+    script.onerror = function() {
+      console.warn('Optimized embed failed, falling back to individual scripts');
+      loadLegacyScripts();
+    };
+    
+    document.head.appendChild(script);
+  }
+
+  // Fallback to individual script loading
+  function loadLegacyScripts() {
     let loadedCount = 0;
     const totalScripts = 5;
     const errors = [];
+    
+    function loadScript(src, callback) {
+      const script = document.createElement('script');
+      script.src = src;
+      script.async = true;
+      script.onload = callback;
+      script.onerror = function() {
+        console.error('Failed to load script:', src);
+        if (callback) callback(new Error('Script load failed'));
+      };
+      document.head.appendChild(script);
+    }
     
     function scriptLoaded(error) {
       if (error) errors.push(error);
       loadedCount++;
       
       if (loadedCount === totalScripts) {
-        if (errors.length > 0) {
-          console.error('Some scripts failed to load:', errors);
+        if (errors.length === 0) {
+          initializeLegacyWidget();
+        } else {
+          console.error('Failed to load Spinitron widget dependencies');
         }
-        callback(errors.length === 0);
       }
     }
     
@@ -51,14 +70,7 @@
     loadScript(BASE_PATH + 'embed-widget.js', scriptLoaded);
   }
 
-  // Initialize widget when all dependencies are loaded
-  function initializeWidget(success) {
-    if (!success) {
-      console.error('Failed to load Spinitron widget dependencies');
-      return;
-    }
-    
-    // Check if required objects are available
+  function initializeLegacyWidget() {
     if (!window.EmbedConfig || !window.SpinitinonWidget) {
       console.error('Spinitron widget dependencies not properly loaded');
       return;
@@ -77,11 +89,9 @@
         new window.SpinitinonWidget('spinitron-playlist-widget', config, BASE_URL);
       }
       
-      // Initialize when DOM is ready
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', createWidget);
       } else {
-        // DOM is already ready, but give a small delay for WordPress/Elementor
         setTimeout(createWidget, 100);
       }
     } catch (error) {
@@ -89,6 +99,6 @@
     }
   }
 
-  // Load dependencies and initialize
-  loadDependencies(initializeWidget);
+  // Start with optimized loader
+  loadOptimizedScript();
 })();

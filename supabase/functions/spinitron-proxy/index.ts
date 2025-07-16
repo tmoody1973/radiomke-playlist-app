@@ -296,7 +296,8 @@ serve(async (req) => {
         headers: { 
           ...corsHeaders, 
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate'
+          'Cache-Control': 'public, max-age=60, s-maxage=60',
+          'CDN-Cache-Control': 'max-age=60'
         }
       }
     );
