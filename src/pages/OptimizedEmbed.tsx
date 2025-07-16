@@ -189,7 +189,6 @@ const OptimizedEmbed = () => {
           startDate={effectiveConfig.startDate}
           endDate={effectiveConfig.endDate}
           layout={effectiveConfig.layout}
-          previewMode={isPreview}
         />
       </div>
     </div>
