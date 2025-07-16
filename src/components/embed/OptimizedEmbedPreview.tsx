@@ -174,13 +174,13 @@ const OptimizedEmbedPreview = ({ config }: EmbedPreviewProps) => {
             scrolling="yes"
             onLoad={() => {
               console.log('Iframe onLoad fired');
-              // Fallback in case postMessage doesn't work - reduced to 3 seconds
+              // Reduced fallback timeout to 1 second
               setTimeout(() => {
                 if (isLoading) {
-                  console.log('Fallback: forcing loading to false');
+                  console.log('Fallback: forcing loading to false after 1 second');
                   setIsLoading(false);
                 }
-              }, 3000);
+              }, 1000);
             }}
           />
         </div>
