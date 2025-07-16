@@ -19,6 +19,14 @@ export interface UseSpinDataProps {
   dateSearchEnabled: boolean;
   autoUpdate: boolean;
   hasActiveFilters: boolean;
+  offset?: number;
+}
+
+export interface PaginatedSpinData {
+  spins: Spin[];
+  totalCount: number;
+  hasMore: boolean;
+  nextOffset: number;
 }
 
 export interface SpinDatabaseRecord {

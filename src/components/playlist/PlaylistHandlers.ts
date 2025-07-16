@@ -1,6 +1,8 @@
 export const createPlaylistHandlers = (
   playlistState: any,
-  refetch: () => void
+  refetch: () => void,
+  loadMore?: () => void,
+  checkForPrefetch?: (index: number) => void
 ) => {
   const handleDateChange = (newStartDate: string, newEndDate: string) => {
     playlistState.setStartDate(newStartDate);
@@ -32,28 +34,22 @@ export const createPlaylistHandlers = (
   const handleLoadMore = () => {
     console.log('🔄 Load more clicked, current display count:', playlistState.displayCount, 'total spins:', playlistState.allSpins.length);
     
-    // Early return if already loading
-    if (playlistState.loadingMore) {
-      console.log('Already loading, ignoring click');
-      return;
-    }
-    
-    // Early return if no more spins to load
-    if (playlistState.displayCount >= playlistState.allSpins.length) {
-      console.log('No more spins to load');
-      return;
-    }
-    
-    // Set loading state
-    playlistState.setLoadingMore(true);
-    
-    // Update display count with a small delay for UX
-    setTimeout(() => {
+    // Check if we have more cached spins to display
+    if (playlistState.displayCount < playlistState.allSpins.length) {
+      // Display more from cached data
       const newCount = Math.min(playlistState.displayCount + 15, playlistState.allSpins.length);
-      console.log('🔄 Updating display count from', playlistState.displayCount, 'to', newCount);
+      console.log('🔄 Showing more cached spins from', playlistState.displayCount, 'to', newCount);
       playlistState.setDisplayCount(newCount);
-      playlistState.setLoadingMore(false);
-    }, 200);
+      
+      // Trigger prefetch check for intelligent loading
+      if (checkForPrefetch) {
+        checkForPrefetch(newCount - 1);
+      }
+    } else if (loadMore) {
+      // Load more data from server
+      console.log('🔄 Loading more data from server');
+      loadMore();
+    }
   };
 
   const handleManualRefresh = () => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSpinData } from '@/hooks/useSpinData';
+import { usePaginatedSpins } from '@/hooks/usePaginatedSpins';
 import { usePlaylistState } from '@/hooks/usePlaylistState';
 
 interface UsePlaylistDataProps {
@@ -41,9 +41,18 @@ export const usePlaylistData = ({
     hasActiveFilters
   });
 
-  const { data: spins = [], isLoading, error, refetch, dataUpdatedAt } = useSpinData({
+  const { 
+    data: spins = [], 
+    isLoading, 
+    error, 
+    hasMore, 
+    loadMore, 
+    isLoadingMore,
+    refetch, 
+    checkForPrefetch 
+  } = usePaginatedSpins({
     stationId,
-    maxItems,
+    initialMaxItems: maxItems,
     debouncedSearchTerm: playlistState.debouncedSearchTerm,
     startDate: effectiveStartDate,
     endDate: effectiveEndDate,
@@ -52,40 +61,32 @@ export const usePlaylistData = ({
     hasActiveFilters
   });
 
-  // Track the last update time for better debugging
-  const lastUpdateRef = React.useRef<number>(0);
-  
-  // Update playlist state when new data comes in - using dataUpdatedAt for better tracking
+  // Update playlist state when new data comes in
   React.useEffect(() => {
-    if (spins && spins.length > 0 && dataUpdatedAt !== lastUpdateRef.current) {
+    if (spins && spins.length > 0) {
       console.log(`🔄 Fresh data received for station ${stationId}:`, {
         songsCount: spins.length,
         hasActiveFilters,
         lastSong: spins[0]?.artist + ' - ' + spins[0]?.song,
-        updateTime: new Date(dataUpdatedAt).toISOString(),
         currentDisplayCount: playlistState.displayCount
       });
-      
-      lastUpdateRef.current = dataUpdatedAt;
       
       // Always update with fresh data, ensuring component re-renders
       playlistState.setAllSpins([...spins]); // Create new array reference to trigger re-render
       
-      // Only reset display count for live data if it's currently at the default (15)
-      // This preserves "Load More" state when new live data comes in
-      if (!hasActiveFilters && playlistState.displayCount === 15) {
-        console.log('🔄 Keeping display count at 15 for fresh live data');
-        playlistState.setDisplayCount(15);
-      } else if (!hasActiveFilters && playlistState.displayCount > 15) {
-        console.log('🔄 Preserving display count', playlistState.displayCount, 'for load more state');
-        // Don't reset - user has clicked "Load More" so keep their current view
+      // For paginated data, we want to show all loaded data by default
+      // Only limit display count for the initial view
+      if (playlistState.displayCount === 15 && spins.length > 15) {
+        playlistState.setDisplayCount(15); // Keep initial limit
+      } else if (spins.length <= playlistState.displayCount) {
+        playlistState.setDisplayCount(spins.length); // Show all available data
       }
     } else if (!isLoading && !hasActiveFilters && spins.length === 0) {
       // If no spins and not loading and no filters, clear the state
       console.log(`🧹 Clearing playlist state for station ${stationId} - no spins received`);
       playlistState.setAllSpins([]);
     }
-  }, [spins, hasActiveFilters, isLoading, dataUpdatedAt, playlistState.setAllSpins, playlistState.setDisplayCount, playlistState.displayCount, stationId]);
+  }, [spins, hasActiveFilters, isLoading, playlistState.setAllSpins, playlistState.setDisplayCount, playlistState.displayCount, stationId]);
 
   return {
     playlistState,
@@ -93,7 +94,10 @@ export const usePlaylistData = ({
     isLoading,
     error,
     refetch,
-    dataUpdatedAt,
-    hasActiveFilters
+    hasActiveFilters,
+    hasMore,
+    loadMore,
+    isLoadingMore,
+    checkForPrefetch
   };
 };

@@ -29,7 +29,6 @@ export const usePlaylistState = ({ spins, hasActiveFilters, initialStartDate, in
   const [currentTime, setCurrentTime] = useState(new Date());
   const [allSpins, setAllSpins] = useState<Spin[]>([]);
   const [displayCount, setDisplayCount] = useState(15);
-  const [loadingMore, setLoadingMore] = useState(false);
 
   // Initialize date search if dates were provided via props
   useEffect(() => {
@@ -97,8 +96,6 @@ export const usePlaylistState = ({ spins, hasActiveFilters, initialStartDate, in
     allSpins,
     setAllSpins: setAllSpinsCallback,
     displayCount,
-    setDisplayCount: setDisplayCountCallback,
-    loadingMore,
-    setLoadingMore
+    setDisplayCount: setDisplayCountCallback
   };
 };

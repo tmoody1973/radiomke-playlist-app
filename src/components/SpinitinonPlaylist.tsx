@@ -28,7 +28,18 @@ const SpinitinonPlaylist = ({
 }: SpinitinonPlaylistProps) => {
   console.log(`🎵 SpinitinonPlaylist rendering for station: ${stationId}, showSearch: ${showSearch}`);
 
-  const { playlistState, spins, isLoading, error, refetch, hasActiveFilters } = usePlaylistData({
+  const { 
+    playlistState, 
+    spins, 
+    isLoading, 
+    error, 
+    refetch, 
+    hasActiveFilters, 
+    hasMore, 
+    loadMore, 
+    isLoadingMore,
+    checkForPrefetch 
+  } = usePlaylistData({
     stationId,
     autoUpdate,
     maxItems,
@@ -37,13 +48,13 @@ const SpinitinonPlaylist = ({
   });
 
   const youtubePlayer = useYouTubePlayer();
-  const handlers = createPlaylistHandlers(playlistState, refetch);
+  const handlers = createPlaylistHandlers(playlistState, refetch, loadMore, checkForPrefetch);
 
   // Calculate displayed spins
   const displayedSpins = playlistState.allSpins.slice(0, playlistState.displayCount);
   
-  // Check if there are more spins to load
-  const hasMoreSpins = playlistState.displayCount < playlistState.allSpins.length;
+  // Check if there are more spins to load (either cached or from server)
+  const hasMoreSpins = playlistState.displayCount < playlistState.allSpins.length || hasMore;
 
   // Helper functions
   const isCurrentlyPlaying = (spin: any, index: number) => {
@@ -90,9 +101,9 @@ const SpinitinonPlaylist = ({
       formatTime={formatTime}
       formatDate={formatDate}
       youtubePlayer={youtubePlayer}
-      hasMoreSpins={hasMoreSpins}
-      loadingMore={playlistState.loadingMore}
-      onLoadMore={handlers.handleLoadMore}
+        hasMoreSpins={hasMoreSpins}
+        loadingMore={isLoadingMore}
+        onLoadMore={handlers.handleLoadMore}
       playlistState={extendedPlaylistState}
       onDateChange={handlers.handleDateChange}
       onDateClear={handlers.handleDateClear}

@@ -33,7 +33,6 @@ interface PlaylistState {
   displayCount: number;
   allSpins: Spin[];
   filteredSpins: Spin[];
-  loadingMore: boolean;
   lastUpdate: Date;
   setSearchTerm: (term: string) => void;
   setDateSearchEnabled: (enabled: boolean) => void;

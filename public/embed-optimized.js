@@ -350,8 +350,8 @@
       const playlistDiv = this.container.querySelector('#spinitron-playlist');
 
       try {
-        // Load smaller initial batch for faster first paint
-        const loadCount = isInitial ? 5 : (this.config.maxItems === 'unlimited' ? 20 : parseInt(this.config.maxItems) || 8);
+        // Load smaller initial batch for faster first paint with pagination support
+        const loadCount = isInitial ? 5 : (this.config.maxItems === 'unlimited' ? 15 : parseInt(this.config.maxItems) || 8);
         const songs = await fetchSongs(this.config, 0, loadCount);
         
         this.songs = songs;

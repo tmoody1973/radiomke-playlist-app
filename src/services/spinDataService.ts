@@ -194,7 +194,8 @@ export class SpinDataService {
     startDate: string,
     endDate: string,
     dateSearchEnabled: boolean,
-    hasActiveFilters: boolean
+    hasActiveFilters: boolean,
+    offset: number = 0
   ): Promise<Spin[]> {
     // If we have active filters (search term or date filters), search the database
     if (hasActiveFilters) {
@@ -208,11 +209,14 @@ export class SpinDataService {
       );
     }
 
-    // For live data, always fetch from API and merge with recent database entries
+    // For live data, use pagination-aware fetching
     try {
+      // Reduce initial fetch to 100 songs instead of 1000 for better performance
+      const effectiveMaxItems = Math.min(maxItems, 100);
+      
       const apiSpins = await this.fetchApiSpins(
         stationId,
-        maxItems,
+        effectiveMaxItems,
         debouncedSearchTerm,
         startDate,
         endDate,
@@ -221,7 +225,7 @@ export class SpinDataService {
 
       const recentDbSpins = await this.getRecentDatabaseSpins(stationId);
 
-      return this.mergeApiAndDatabaseSpins(apiSpins, recentDbSpins, maxItems);
+      return this.mergeApiAndDatabaseSpins(apiSpins, recentDbSpins, effectiveMaxItems);
     } catch (apiError) {
       // Fallback to database if API fails
       return this.getDatabaseFallback(stationId, maxItems);
