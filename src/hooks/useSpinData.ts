@@ -31,10 +31,10 @@ export const useSpinData = ({
   return useQuery({
     queryKey: ['spins', stationId, maxItems, debouncedSearchTerm, effectiveStartDate, effectiveEndDate, dateSearchEnabled, hasActiveFilters],
     queryFn: fetchSpins,
-    refetchInterval: autoUpdate && !hasActiveFilters ? 15000 : false, // Optimized: 15s for live data
-    staleTime: hasActiveFilters ? 300000 : 45000, // Optimized: 5min for filters, 45s for live (increased from 15s)
-    gcTime: hasActiveFilters ? 600000 : 120000, // Optimized: 10min for filters, 2min for live
-    refetchOnWindowFocus: !hasActiveFilters, // Re-enabled for live data to get fresh updates
+    refetchInterval: autoUpdate && !hasActiveFilters ? 30000 : false, // Reduced from 3s to 30s (10x reduction)
+    staleTime: hasActiveFilters ? 300000 : 15000, // Increased staleTime: 5min for filters, 15s for live
+    gcTime: hasActiveFilters ? 600000 : 60000, // Longer cache time: 10min for filters, 1min for live
+    refetchOnWindowFocus: false, // Disabled to reduce unnecessary calls
     refetchOnMount: true,
     refetchIntervalInBackground: autoUpdate && !hasActiveFilters,
     networkMode: 'always',

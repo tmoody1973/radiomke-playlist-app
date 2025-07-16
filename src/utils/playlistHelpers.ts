@@ -18,66 +18,34 @@ export const isCurrentlyPlaying = (spin: Spin, index: number, currentTime: Date,
   const startTime = new Date(spin.start);
   const timeSinceStart = currentTime.getTime() - startTime.getTime();
   
-  // Enhanced logic: Check multiple recent songs (first 3) for "now playing"
-  if (index < 3) {
-    // Increased tolerance: 5 minutes in future for clock drift
-    const fiveMinutesInMs = 5 * 60 * 1000;
-    if (timeSinceStart < -fiveMinutesInMs) {
+  // For live playlist, be more lenient about "now playing"
+  // Only show as currently playing if:
+  // 1. It's the most recent song (index 0)
+  // 2. It started within a reasonable time window
+  // 3. The start time is not in the future
+  if (index === 0) {
+    // Don't show songs that haven't started yet (more than 2 minutes in future to account for clock drift)
+    const twoMinutesInMs = 2 * 60 * 1000;
+    if (timeSinceStart < -twoMinutesInMs) {
       return false;
     }
     
-    // If we have duration info, use it with enhanced padding
+    // If we have duration info, use it with some padding
     if (spin.duration && spin.duration > 0) {
       const songDurationMs = spin.duration * 1000;
-      const paddingMs = 60 * 1000; // 1 minute padding for transitions
+      const paddingMs = 30 * 1000; // 30 seconds padding for transitions
       const maxTimeWindow = songDurationMs + paddingMs;
       
       // Show as playing if within the song duration + padding
-      const isWithinWindow = timeSinceStart >= -fiveMinutesInMs && timeSinceStart <= maxTimeWindow;
-      
-      // For non-first songs, only show as playing if they started recently (within last 30 seconds)
-      if (index > 0) {
-        return isWithinWindow && timeSinceStart >= 0 && timeSinceStart <= 30 * 1000;
-      }
-      
-      return isWithinWindow;
+      return timeSinceStart >= -twoMinutesInMs && timeSinceStart <= maxTimeWindow;
     }
     
-    // If no duration info, use a generous window (most songs are under 10 minutes)
-    const defaultMaxDurationMs = 10 * 60 * 1000; // 10 minutes
-    const isWithinWindow = timeSinceStart >= -fiveMinutesInMs && timeSinceStart <= defaultMaxDurationMs;
-    
-    // For non-first songs, be more restrictive
-    if (index > 0) {
-      return isWithinWindow && timeSinceStart >= 0 && timeSinceStart <= 30 * 1000;
-    }
-    
-    return isWithinWindow;
+    // If no duration info, use a generous window (most songs are under 8 minutes)
+    const defaultMaxDurationMs = 8 * 60 * 1000; // 8 minutes
+    return timeSinceStart >= -twoMinutesInMs && timeSinceStart <= defaultMaxDurationMs;
   }
   
   return false;
-};
-
-export const getSongProgress = (spin: Spin, currentTime: Date): { progress: number; timeRemaining: number } => {
-  if (!spin.duration || spin.duration <= 0) {
-    return { progress: 0, timeRemaining: 0 };
-  }
-  
-  const startTime = new Date(spin.start);
-  const timeSinceStart = currentTime.getTime() - startTime.getTime();
-  const songDurationMs = spin.duration * 1000;
-  
-  const progress = Math.max(0, Math.min(1, timeSinceStart / songDurationMs));
-  const timeRemaining = Math.max(0, songDurationMs - timeSinceStart);
-  
-  return { progress, timeRemaining };
-};
-
-export const shouldUpdateSoon = (spin: Spin, currentTime: Date): boolean => {
-  if (!spin.duration || spin.duration <= 0) return false;
-  
-  const { progress } = getSongProgress(spin, currentTime);
-  return progress > 0.8; // Update more frequently when song is 80% complete
 };
 
 export const formatTime = (dateString: string) => {

@@ -75,8 +75,8 @@ const SpinitinonPlaylist = ({
   // Create extended playlist state with missing properties
   const extendedPlaylistState = {
     ...playlistState,
-    filteredSpins: playlistState.allSpins,
-    lastUpdate: new Date()
+    filteredSpins: playlistState.allSpins, // Use allSpins as filteredSpins
+    lastUpdate: new Date() // Add current date as lastUpdate
   };
 
   console.log('🎵 SpinitinonPlaylist about to render, isLoading:', isLoading, 'error:', error, 'spins:', displayedSpins.length);
@@ -101,17 +101,14 @@ const SpinitinonPlaylist = ({
       formatTime={formatTime}
       formatDate={formatDate}
       youtubePlayer={youtubePlayer}
-      hasMoreSpins={hasMoreSpins}
-      loadingMore={isLoadingMore}
-      onLoadMore={handlers.handleLoadMore}
+        hasMoreSpins={hasMoreSpins}
+        loadingMore={isLoadingMore}
+        onLoadMore={handlers.handleLoadMore}
       playlistState={extendedPlaylistState}
       onDateChange={handlers.handleDateChange}
       onDateClear={handlers.handleDateClear}
       onDateSearchToggle={handlers.handleDateSearchToggle}
       onManualRefresh={handlers.handleManualRefresh}
-      lastUpdated={extendedPlaylistState.lastUpdate}
-      onRefresh={refetch}
-      isLoading={isLoading}
     />
   );
 };

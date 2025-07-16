@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import EmbedDemo from "./pages/EmbedDemo";
 import Embed from "./pages/Embed";
-import OptimizedEmbed from "./pages/OptimizedEmbed";
 import TechnicalArticle from "./pages/TechnicalArticle";
 import Admin from "./pages/Admin";
 import Guide from "./pages/Guide";
@@ -26,7 +25,6 @@ const App = () => (
           <Route path="/guide" element={<Guide />} />
           <Route path="/demo" element={<EmbedDemo />} />
           <Route path="/embed" element={<Embed />} />
-          <Route path="/embed-preview" element={<OptimizedEmbed />} />
           <Route path="/article" element={<TechnicalArticle />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<NotFound />} />
