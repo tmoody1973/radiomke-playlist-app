@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { generateEmbedUrl } from './EmbedCodeGenerator';
+import { generatePreviewUrl } from './EmbedCodeGenerator';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -84,12 +84,12 @@ const OptimizedEmbedPreview = ({ config }: EmbedPreviewProps) => {
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // Generate preview URL with optimization flags
-  const embedUrl = generateEmbedUrl({
+  // Generate preview URL with optimization flags and cache-busting
+  const embedUrl = generatePreviewUrl({
     ...config,
     maxItems: Math.min(config.maxItems, 10), // Limit to 10 items for preview
     autoUpdate: false, // Disable auto-update in preview
-  }) + '&preview=true';
+  });
 
   const iframeHeight = parseInt(config.height) || 600;
 
