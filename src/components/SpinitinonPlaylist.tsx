@@ -141,14 +141,17 @@ const SpinitinonPlaylist = ({
       formatTime={formatTime}
       formatDate={formatDate}
       youtubePlayer={youtubePlayer}
-        hasMoreSpins={hasMoreSpins}
-        loadingMore={isLoadingMore}
-        onLoadMore={handlers.handleLoadMore}
+      hasMoreSpins={hasMoreSpins}
+      loadingMore={isLoadingMore}
+      onLoadMore={handlers.handleLoadMore}
       playlistState={extendedPlaylistState}
       onDateChange={handlers.handleDateChange}
       onDateClear={handlers.handleDateClear}
       onDateSearchToggle={handlers.handleDateSearchToggle}
       onManualRefresh={handlers.handleManualRefresh}
+      lastUpdated={extendedPlaylistState.lastUpdate}
+      onRefresh={refetch}
+      isLoading={isLoading}
     />
   );
 };

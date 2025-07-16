@@ -59,6 +59,9 @@ interface PlaylistContainerProps {
   onDateClear: () => void;
   onDateSearchToggle: (enabled: boolean) => void;
   onManualRefresh: () => void;
+  lastUpdated?: Date;
+  onRefresh?: () => void;
+  isLoading?: boolean;
 }
 
 export const PlaylistContainer = ({
@@ -79,14 +82,17 @@ export const PlaylistContainer = ({
   onDateChange,
   onDateClear,
   onDateSearchToggle,
-  onManualRefresh
+  onManualRefresh,
+  lastUpdated,
+  onRefresh,
+  isLoading
 }: PlaylistContainerProps) => {
   return (
     <div className="space-y-4">
       <PlaylistHeader
         title={`${stationId.toUpperCase()} Recent Spins`}
         compact={compact}
-        isLoading={false}
+        isLoading={isLoading || false}
         showSearch={showSearch}
         searchTerm={playlistState.searchTerm}
         setSearchTerm={playlistState.setSearchTerm}
@@ -97,6 +103,9 @@ export const PlaylistContainer = ({
         onDateChange={onDateChange}
         onDateClear={onDateClear}
         formatDate={formatDate}
+        lastUpdated={lastUpdated}
+        onRefresh={onRefresh}
+        hasActiveFilters={hasActiveFilters}
       />
 
       <PlaylistContent
