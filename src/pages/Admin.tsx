@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CustomEventsAdmin } from '@/components/admin/CustomEventsAdmin';
+import { ManualSongsAdmin } from '@/components/admin/ManualSongsAdmin';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Lock } from 'lucide-react';
 
 // Simple password protection for admin access
@@ -67,7 +69,18 @@ export default function Admin() {
           <p className="text-gray-600">Manage custom events for both station playlists</p>
         </div>
         
-        <CustomEventsAdmin />
+        <Tabs defaultValue="events" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="events">Custom Events</TabsTrigger>
+            <TabsTrigger value="songs">Manual Songs</TabsTrigger>
+          </TabsList>
+          <TabsContent value="events" className="mt-6">
+            <CustomEventsAdmin />
+          </TabsContent>
+          <TabsContent value="songs" className="mt-6">
+            <ManualSongsAdmin />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

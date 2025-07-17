@@ -73,46 +73,67 @@ export type Database = {
       }
       songs: {
         Row: {
+          added_by_user_id: string | null
           artist: string
           created_at: string
           duration: number | null
+          enhanced_metadata: Json | null
           episode_title: string | null
           id: string
           image: string | null
+          is_manual: boolean
           label: string | null
+          manual_added_at: string | null
           release: string | null
           song: string
           spinitron_id: number
+          spotify_album_id: string | null
+          spotify_artist_id: string | null
+          spotify_track_id: string | null
           start_time: string
           station_id: string
           updated_at: string
         }
         Insert: {
+          added_by_user_id?: string | null
           artist: string
           created_at?: string
           duration?: number | null
+          enhanced_metadata?: Json | null
           episode_title?: string | null
           id?: string
           image?: string | null
+          is_manual?: boolean
           label?: string | null
+          manual_added_at?: string | null
           release?: string | null
           song: string
           spinitron_id: number
+          spotify_album_id?: string | null
+          spotify_artist_id?: string | null
+          spotify_track_id?: string | null
           start_time: string
           station_id: string
           updated_at?: string
         }
         Update: {
+          added_by_user_id?: string | null
           artist?: string
           created_at?: string
           duration?: number | null
+          enhanced_metadata?: Json | null
           episode_title?: string | null
           id?: string
           image?: string | null
+          is_manual?: boolean
           label?: string | null
+          manual_added_at?: string | null
           release?: string | null
           song?: string
           spinitron_id?: number
+          spotify_album_id?: string | null
+          spotify_artist_id?: string | null
+          spotify_track_id?: string | null
           start_time?: string
           station_id?: string
           updated_at?: string
@@ -258,7 +279,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_song_time_conflict: {
+        Args: {
+          p_start_time: string
+          p_duration: number
+          p_station_id: string
+          p_exclude_id?: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

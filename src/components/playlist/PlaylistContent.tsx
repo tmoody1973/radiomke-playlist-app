@@ -14,6 +14,7 @@ interface Spin {
   release?: string;
   image?: string;
   station_id?: string;
+  is_manual?: boolean;
 }
 
 interface YouTubePlayer {

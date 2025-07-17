@@ -18,6 +18,7 @@ interface Spin {
   release?: string;
   image?: string;
   station_id?: string;
+  is_manual?: boolean;
 }
 
 interface YouTubePlayer {
@@ -100,12 +101,19 @@ export const ListItem = ({
           <div className="flex-1 min-w-0">
             <div className="flex justify-between items-start">
               <EnhancedSongInfo spin={spin} compact={compact} />
-              <div className="flex flex-col items-end ml-2">
-                {isCurrentlyPlaying && (
-                  <Badge variant="secondary" className={compact ? "text-xs px-2 py-0" : ""}>
-                    Now Playing
-                  </Badge>
-                )}
+                 <div className="flex flex-col items-end ml-2">
+                 <div className="flex flex-col gap-1">
+                   {isCurrentlyPlaying && (
+                     <Badge variant="secondary" className={compact ? "text-xs px-2 py-0" : ""}>
+                       Now Playing
+                     </Badge>
+                   )}
+                   {spin.is_manual && (
+                     <Badge variant="outline" className={compact ? "text-xs px-2 py-0" : "text-xs"}>
+                       Manual
+                     </Badge>
+                   )}
+                 </div>
                 <div className={`text-right mt-1 ${compact ? "text-xs" : "text-sm"}`}>
                   <div className="flex items-center text-muted-foreground">
                     <Clock className="h-3 w-3 mr-1" />
