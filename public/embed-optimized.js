@@ -6,7 +6,6 @@
     return;
   }
   window.SpinitinonEmbedInitialized = true;
-  window.SpinitinonEmbedDebug = false; // Enable for troubleshooting
 
   // ============= CONFIGURATION =============
   const defaultConfig = {
@@ -20,24 +19,11 @@
     layout: 'list'
   };
 
-  // Hardcoded Supabase URL for API calls - this is the primary source of truth
-  const SUPABASE_URL = 'https://ftrivovjultfayttemce.supabase.co';
-
-  // Get base URL for API calls - ALWAYS use hardcoded Supabase URL for API requests
-  function getBaseUrl() {
-    // CRITICAL: Always return the hardcoded Supabase URL for API calls
-    // This prevents issues when the widget is embedded on external sites
-    if (window.SpinitinonEmbedDebug) {
-      console.log('Spinitron Embed: Using hardcoded Supabase URL for API calls:', SUPABASE_URL);
-    }
-    return SUPABASE_URL;
-  }
-
-  const BASE_URL = getBaseUrl();
-  
-  if (window.SpinitinonEmbedDebug) {
-    console.log('Spinitron Embed: Base URL determined as', BASE_URL);
-  }
+  // Get base URL for API calls
+  const SCRIPT_TAG = document.querySelector('script[src*="embed-optimized.js"]') || 
+                     document.querySelector('script[src*="embed.js"]');
+  const SCRIPT_SRC = SCRIPT_TAG ? SCRIPT_TAG.src : '';
+  const BASE_URL = SCRIPT_SRC ? new URL(SCRIPT_SRC).origin : 'https://ftrivovjultfayttemce.supabase.co';
 
   // ============= UTILITIES =============
   const isInIframe = window !== window.parent;
@@ -57,19 +43,11 @@
   }
 
   function formatDate(dateString) {
-    if (!dateString) return '';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } catch (e) {
-      console.error('Error formatting date:', e);
-      return '';
-    }
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
   function createSongElement(song, config) {
-    if (!song) return document.createElement('div');
-    
     const songDiv = document.createElement('div');
     songDiv.className = 'spinitron-song';
     
@@ -94,11 +72,6 @@
   // ============= API =============
   async function fetchSongs(config, offset = 0, limit = 8, searchQuery = '') {
     try {
-      if (window.SpinitinonEmbedDebug) {
-        console.log('Spinitron Embed: Fetching songs with config:', config);
-        console.log('Spinitron Embed: Using API URL:', BASE_URL);
-      }
-
       const requestBody = {
         endpoint: 'spins',
         station: config.station,
@@ -112,86 +85,34 @@
       if (config.startDate) requestBody.start = config.startDate;
       if (config.endDate) requestBody.end = config.endDate;
 
-      // Add more detailed logging
-      if (window.SpinitinonEmbedDebug) {
-        console.log('Spinitron Embed: API request to', `${BASE_URL}/functions/v1/spinitron-proxy`);
-        console.log('Spinitron Embed: Request body:', requestBody);
-      }
+      const response = await fetch(`${BASE_URL}/functions/v1/spinitron-proxy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0cml2b3ZqdWx0ZmF5dHRlbWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwMjU3NjYsImV4cCI6MjA2NTYwMTc2Nn0.OUZf7nDHHrEBPXmfgX88UBtPd0YV88l-fXme_13nm8o'
+        },
+        body: JSON.stringify(requestBody)
+      });
 
-      // Implement retry logic for API calls
-      let retries = 0;
-      const maxRetries = 3;
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
       
-      while (retries < maxRetries) {
-        try {
-          const response = await fetch(`${BASE_URL}/functions/v1/spinitron-proxy`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0cml2b3ZqdWx0ZmF5dHRlbWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwMjU3NjYsImV4cCI6MjA2NTYwMTc2Nn0.OUZf7nDHHrEBPXmfgX88UBtPd0YV88l-fXme_13nm8o'
-            },
-            body: JSON.stringify(requestBody)
-          });
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`API request failed: ${response.status} - ${errorText}`);
-          }
-          
-          const data = await response.json();
-          
-          if (window.SpinitinonEmbedDebug) {
-            console.log('Spinitron Embed: API response received:', data);
-          }
-          
-          if (!data || !data.items || !Array.isArray(data.items)) {
-            throw new Error('Invalid API response format: ' + JSON.stringify(data));
-          }
-          
-          return (data.items || []).map(item => ({
-            id: item.id,
-            song: item.song,
-            artist: item.artist,
-            start_time: item.start,
-            duration: item.duration,
-            image: item.image,
-            release: item.release,
-            label: item.label
-          }));
-        } catch (error) {
-          retries++;
-          console.error(`Spinitron Embed: Request failed (attempt ${retries}/${maxRetries}):`, error);
-          
-          if (retries >= maxRetries) {
-            throw error;
-          }
-          
-          // Exponential backoff
-          const delay = Math.min(1000 * Math.pow(2, retries), 8000);
-          console.log(`Spinitron Embed: Retrying in ${delay}ms...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-      }
+      const data = await response.json();
+      
+      return (data.items || []).map(item => ({
+        id: item.id,
+        song: item.song,
+        artist: item.artist,
+        start_time: item.start,
+        duration: item.duration,
+        image: item.image,
+        release: item.release,
+        label: item.label
+      }));
     } catch (error) {
       console.error('Error fetching songs:', error);
       throw error;
-    }
-  }
-
-  // Add retry mechanism with exponential backoff
-  async function fetchWithRetry(fn, maxRetries = 3) {
-    let retries = 0;
-    while (retries < maxRetries) {
-      try {
-        return await fn();
-      } catch (error) {
-        retries++;
-        if (retries >= maxRetries) throw error;
-        
-        const delay = Math.min(1000 * Math.pow(2, retries), 10000);
-        console.warn(`Retrying in ${delay}ms... (${retries}/${maxRetries})`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
     }
   }
 
@@ -211,8 +132,7 @@
       inputPlaceholder: isDark ? '#94a3b8' : '#9ca3af',
       hover: isDark ? '#334155' : '#f8fafc',
       accent: '#3b82f6',
-      accentHover: isDark ? '#2563eb' : '#1d4ed8',
-      error: isDark ? '#f87171' : '#dc2626'
+      accentHover: isDark ? '#2563eb' : '#1d4ed8'
     };
     
     const css = `
@@ -316,30 +236,9 @@
       .spinitron-error {
         text-align: center;
         padding: 32px 16px;
-        color: ${colors.error};
+        color: ${isDark ? '#f87171' : '#dc2626'};
         background-color: ${colors.background};
         font-size: 14px;
-      }
-      
-      .spinitron-error-actions {
-        margin-top: 16px;
-        text-align: center;
-      }
-      
-      .spinitron-error-actions button {
-        background-color: ${colors.accent};
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 500;
-        transition: all 0.2s ease;
-      }
-      
-      .spinitron-error-actions button:hover {
-        background-color: ${colors.accentHover};
       }
       
       .spinitron-load-more-inline {
@@ -377,17 +276,7 @@
       .spinitron-widget::-webkit-scrollbar-thumb:hover { background: ${colors.accent}; }
     `;
     
-    // Create a unique ID for the style element to avoid duplicates
-    const styleId = 'spinitron-embed-styles-' + Math.random().toString(36).substring(2, 9);
-    
-    // Remove any existing styles to prevent duplicates
-    const existingStyle = document.getElementById(styleId);
-    if (existingStyle) {
-      existingStyle.remove();
-    }
-    
     const style = document.createElement('style');
-    style.id = styleId;
     style.textContent = css;
     document.head.appendChild(style);
   }
@@ -396,14 +285,7 @@
   class SpinitinonWidget {
     constructor(containerId, config, baseUrl) {
       this.container = document.getElementById(containerId);
-      
-      if (!this.container) {
-        console.error(`Spinitron Widget: Container element not found with ID: ${containerId}`);
-        return;
-      }
-      
-      // Merge configuration from defaults and passed config
-      this.config = Object.assign({}, defaultConfig, config || {});
+      this.config = Object.assign({}, defaultConfig, config);
       this.baseUrl = baseUrl || BASE_URL;
       this.songs = [];
       this.filteredSongs = [];
@@ -411,14 +293,10 @@
       this.searchQuery = '';
       this.loading = false;
       this.hasLoadedInitial = false;
-      this.retryCount = 0;
-      this.maxRetries = 3;
-      this.lastError = null;
       
-      if (window.SpinitinonEmbedDebug) {
-        console.log(`Spinitron Widget: Initializing widget with ID: ${containerId}`);
-        console.log('Spinitron Widget: Configuration:', this.config);
-        console.log('Spinitron Widget: Base URL:', this.baseUrl);
+      if (!this.container) {
+        console.error('Spinitron Widget: Container element not found');
+        return;
       }
       
       this.init();
@@ -432,12 +310,7 @@
       this.renderLoading();
       
       // Load initial songs with smaller batch
-      try {
-        await this.loadSongs(true);
-      } catch (error) {
-        console.error('Failed to load initial songs:', error);
-        this.showError(`Failed to load playlist: ${this.getErrorMessage(error)}`, true);
-      }
+      await this.loadSongs(true);
       
       // Send initial height update
       setTimeout(sendHeightUpdate, 100);
@@ -448,42 +321,25 @@
       }
     }
 
-    getErrorMessage(error) {
-      if (!error) return 'Unknown error';
-      
-      // Extract specific error messages
-      if (error.message && error.message.includes('404')) {
-        return 'The playlist API endpoint was not found. This may be due to incorrect URL configuration.';
-      }
-      
-      if (error.message && error.message.includes('Failed to fetch')) {
-        return 'Network error. Please check your internet connection.';
-      }
-      
-      return error.message || 'Unknown error';
-    }
-
     renderLoading() {
       this.container.className = 'spinitron-widget';
       this.container.innerHTML = `
         ${this.config.showSearch ? `
           <div class="spinitron-search">
-            <input type="text" placeholder="Search songs..." id="${this.container.id}-search-input">
+            <input type="text" placeholder="Search songs..." id="spinitron-search-input">
           </div>
         ` : ''}
-        <div class="spinitron-playlist" id="${this.container.id}-playlist">
+        <div class="spinitron-playlist" id="spinitron-playlist">
           <div class="spinitron-loading">Loading playlist...</div>
         </div>
       `;
 
       if (this.config.showSearch) {
-        const searchInput = this.container.querySelector(`#${this.container.id}-search-input`);
-        if (searchInput) {
-          searchInput.addEventListener('input', (e) => {
-            this.searchQuery = e.target.value;
-            this.filterSongs();
-          });
-        }
+        const searchInput = this.container.querySelector('#spinitron-search-input');
+        searchInput.addEventListener('input', (e) => {
+          this.searchQuery = e.target.value;
+          this.filterSongs();
+        });
       }
     }
 
@@ -491,83 +347,30 @@
       if (this.loading) return;
       
       this.loading = true;
-      const playlistDiv = this.container.querySelector(`#${this.container.id}-playlist`);
-      if (!playlistDiv) {
-        console.error('Playlist div not found');
-        this.loading = false;
-        return;
-      }
+      const playlistDiv = this.container.querySelector('#spinitron-playlist');
 
       try {
         // Load smaller initial batch for faster first paint with pagination support
         const loadCount = isInitial ? 5 : (this.config.maxItems === 'unlimited' ? 15 : parseInt(this.config.maxItems) || 8);
-        
-        console.log('Spinitron Widget: Loading songs with base URL:', this.baseUrl);
-        const songs = await fetchWithRetry(() => fetchSongs(this.config, 0, loadCount, this.searchQuery));
+        const songs = await fetchSongs(this.config, 0, loadCount);
         
         this.songs = songs;
         this.hasLoadedInitial = true;
-        this.lastError = null;
         this.filterSongs();
-        this.retryCount = 0; // Reset retry count on successful load
       } catch (error) {
         console.error('Failed to load songs:', error);
-        this.lastError = error;
+        playlistDiv.innerHTML = '<div class="spinitron-error">Failed to load playlist. Please try again later.</div>';
         
-        // Show error with retry button and detailed message
-        this.showError(this.getErrorMessage(error), true);
-        
-        // Auto-retry with exponential backoff if it's the initial load
-        if (!this.hasLoadedInitial && this.retryCount < this.maxRetries) {
-          this.retryCount++;
-          const delay = Math.min(1000 * Math.pow(2, this.retryCount), 10000);
-          
-          setTimeout(() => {
-            if (!this.hasLoadedInitial) {
-              this.loadSongs(isInitial);
-            }
-          }, delay);
-        }
+        // Retry after 5 seconds
+        setTimeout(() => {
+          if (!this.hasLoadedInitial) {
+            this.loadSongs(isInitial);
+          }
+        }, 5000);
       }
       
       this.loading = false;
       setTimeout(sendHeightUpdate, 100);
-    }
-
-    showError(message, showRetry = false) {
-      const playlistDiv = this.container.querySelector(`#${this.container.id}-playlist`);
-      if (!playlistDiv) return;
-      
-      // Create a more user-friendly error message
-      let errorHtml = `
-        <div class="spinitron-error">
-          <p><strong>Unable to load playlist</strong></p>
-          <p style="margin-top: 0.5rem; font-size: 0.875rem;">${message}</p>
-          <p style="margin-top: 1rem; font-size: 0.75rem; opacity: 0.8;">
-            Technical details: Error connecting to ${this.baseUrl}
-          </p>
-        </div>
-      `;
-      
-      if (showRetry) {
-        errorHtml += `
-          <div class="spinitron-error-actions">
-            <button id="${this.container.id}-retry-btn">Try Again</button>
-          </div>
-        `;
-      }
-      
-      playlistDiv.innerHTML = errorHtml;
-      
-      if (showRetry) {
-        const retryBtn = this.container.querySelector(`#${this.container.id}-retry-btn`);
-        if (retryBtn) {
-          retryBtn.addEventListener('click', () => {
-            playlistDiv.innerHTML = '<div class="spinitron-loading">Loading playlist...</div>';
-            this.loadSongs(true);
-          });
-        }
-      }
     }
 
     filterSongs() {
@@ -592,15 +395,10 @@
     }
 
     updateDisplay() {
-      const playlistDiv = this.container.querySelector(`#${this.container.id}-playlist`);
-      if (!playlistDiv) return;
+      const playlistDiv = this.container.querySelector('#spinitron-playlist');
       
       if (this.filteredSongs.length === 0) {
-        if (this.lastError) {
-          this.showError(this.getErrorMessage(this.lastError), true);
-        } else {
-          playlistDiv.innerHTML = '<div class="spinitron-loading">No songs found</div>';
-        }
+        playlistDiv.innerHTML = '<div class="spinitron-loading">No songs found</div>';
         setTimeout(sendHeightUpdate, 100);
         return;
       }
@@ -617,15 +415,13 @@
         const loadMoreDiv = document.createElement('div');
         loadMoreDiv.className = 'spinitron-load-more-inline';
         loadMoreDiv.innerHTML = `
-          <button id="${this.container.id}-load-more-btn" ${this.loading ? 'disabled' : ''}>
+          <button id="spinitron-load-more-btn" ${this.loading ? 'disabled' : ''}>
             ${this.loading ? 'Loading...' : 'Load More'}
           </button>
         `;
         
-        const loadMoreBtn = loadMoreDiv.querySelector(`#${this.container.id}-load-more-btn`);
-        if (loadMoreBtn) {
-          loadMoreBtn.addEventListener('click', () => this.loadMore());
-        }
+        const loadMoreBtn = loadMoreDiv.querySelector('#spinitron-load-more-btn');
+        loadMoreBtn.addEventListener('click', () => this.loadMore());
         
         playlistDiv.appendChild(loadMoreDiv);
       }
@@ -636,23 +432,14 @@
 
   // ============= INITIALIZATION =============
   function createWidget() {
-    // Look for all containers with IDs matching the pattern
     const containers = document.querySelectorAll('[id*="spinitron-playlist-widget"]');
     
-    if (window.SpinitinonEmbedDebug) {
-      console.log(`Spinitron Embed: Found ${containers.length} widget containers`);
-    }
-    
     containers.forEach(container => {
-      if (container.dataset.initialized === 'true') {
-        if (window.SpinitinonEmbedDebug) {
-          console.log(`Spinitron Embed: Container ${container.id} already initialized, skipping`);
-        }
-        return;
-      }
+      if (container.dataset.initialized) return;
       
       // Get configuration from data attributes or use defaults
       const config = {
+        ...defaultConfig,
         station: container.dataset.station || defaultConfig.station,
         autoUpdate: container.dataset.autoUpdate !== 'false',
         showSearch: container.dataset.showSearch !== 'false',
@@ -665,48 +452,13 @@
         endDate: container.dataset.endDate
       };
       
-      // Get any explicit API URL configuration from the container
-      const apiUrl = container.dataset.apiUrl || BASE_URL;
-      
-      if (window.SpinitinonEmbedDebug) {
-        console.log(`Spinitron Embed: Initializing container ${container.id} with config:`, config);
-        console.log(`Spinitron Embed: Using API URL:`, apiUrl);
-      }
-      
       container.dataset.initialized = 'true';
-      new SpinitinonWidget(container.id, config, apiUrl);
+      new SpinitinonWidget(container.id, config, BASE_URL);
     });
-    
-    // Process any queued widgets
-    if (window.SpinitinonEmbedQueue && Array.isArray(window.SpinitinonEmbedQueue)) {
-      window.SpinitinonEmbedQueue.forEach(widgetConfig => {
-        if (!document.getElementById(widgetConfig.containerId)) {
-          console.warn(`Spinitron Embed: Container with ID ${widgetConfig.containerId} not found for queued widget`);
-          return;
-        }
-        
-        const container = document.getElementById(widgetConfig.containerId);
-        if (container.dataset.initialized === 'true') return;
-        
-        container.dataset.initialized = 'true';
-        new SpinitinonWidget(
-          widgetConfig.containerId, 
-          widgetConfig.config, 
-          widgetConfig.baseUrl || BASE_URL
-        );
-      });
-      
-      // Clear the queue
-      window.SpinitinonEmbedQueue = [];
-    }
     
     // Fallback for legacy containers
     const legacyContainer = document.getElementById('spinitron-playlist-widget');
-    if (legacyContainer && legacyContainer.dataset.initialized !== 'true') {
-      if (window.SpinitinonEmbedDebug) {
-        console.log('Spinitron Embed: Initializing legacy container');
-      }
-      
+    if (legacyContainer && !legacyContainer.dataset.initialized) {
       const config = Object.assign({}, defaultConfig, window.SpinitinonConfig || {});
       legacyContainer.dataset.initialized = 'true';
       new SpinitinonWidget('spinitron-playlist-widget', config, BASE_URL);
@@ -716,64 +468,15 @@
   // Initialize when DOM is ready with improved timing
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', createWidget);
+  } else if (document.readyState === 'interactive') {
+    // DOM is ready but resources may still be loading
+    setTimeout(createWidget, 50);
   } else {
-    // DOM is already ready
-    setTimeout(createWidget, 0);
-  }
-
-  // Process any queued widgets immediately
-  if (window.SpinitinonEmbedQueue && Array.isArray(window.SpinitinonEmbedQueue)) {
-    window.SpinitinonEmbedQueue.forEach(widgetConfig => {
-      if (!document.getElementById(widgetConfig.containerId)) {
-        console.warn(`Spinitron Embed: Container with ID ${widgetConfig.containerId} not found for queued widget`);
-        return;
-      }
-      
-      const container = document.getElementById(widgetConfig.containerId);
-      if (container.dataset.initialized === 'true') return;
-      
-      container.dataset.initialized = 'true';
-      new SpinitinonWidget(
-        widgetConfig.containerId, 
-        widgetConfig.config, 
-        widgetConfig.baseUrl || BASE_URL
-      );
-    });
-    
-    // Clear the queue
-    window.SpinitinonEmbedQueue = [];
+    // DOM and resources are ready
+    createWidget();
   }
 
   // Export for manual initialization if needed
   window.SpinitinonWidget = SpinitinonWidget;
-  window.SpinitinonEmbedInit = function(widgetConfig) {
-    if (!widgetConfig || !widgetConfig.containerId) {
-      console.error('Spinitron Embed: Invalid widget configuration, containerId is required');
-      return;
-    }
-    
-    const container = document.getElementById(widgetConfig.containerId);
-    if (!container) {
-      console.error(`Spinitron Embed: Container with ID ${widgetConfig.containerId} not found`);
-      return;
-    }
-    
-    if (container.dataset.initialized === 'true') {
-      console.warn(`Spinitron Embed: Container ${widgetConfig.containerId} already initialized, skipping`);
-      return;
-    }
-    
-    container.dataset.initialized = 'true';
-    new SpinitinonWidget(
-      widgetConfig.containerId, 
-      widgetConfig.config, 
-      widgetConfig.baseUrl || BASE_URL
-    );
-  };
-  
-  // Add debug toggle function
-  window.SpinitinonEmbedDebugMode = function(enable) {
-    window.SpinitinonEmbedDebug = enable === true;
-    console.log(`Spinitron Embed: Debug mode ${window.SpinitinonEmbedDebug ? 'enabled' : 'disabled'}`);
-  };
+  window.SpinitinonEmbedInit = createWidget;
 })();
