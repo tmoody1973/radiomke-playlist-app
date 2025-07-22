@@ -1,37 +1,51 @@
-import { EmbedConfig } from '@/types';
+interface EmbedConfig {
+  selectedStation: string;
+  autoUpdate: boolean;
+  showSearch: boolean;
+  maxItems: number;
+  unlimitedSongs: boolean;
+  compact: boolean;
+  height: string;
+  theme: string;
+  layout: string;
+  enableDateSearch: boolean;
+  startDate?: Date;
+  endDate?: Date;
+  containerId?: string;
+}
 
 export class JavaScriptCodeGenerator {
   public generatePreviewCode(config: EmbedConfig): string {
     const container = config.containerId || 'spinitron-playlist-widget';
-    return `<div id="${container}" data-station="${config.station}" data-auto-update="${config.autoUpdate}" data-show-search="${config.showSearch}" data-max-items="${config.maxItems}" data-compact="${config.compact}" data-height="${config.height}" data-theme="${config.theme}" data-layout="${config.layout}" ${config.enableDateSearch ? `data-start-date="${config.startDate || ''}" data-end-date="${config.endDate || ''}"` : ''}><p>Loading playlist...</p></div>`;
+    return `<div id="${container}" data-station="${config.selectedStation}" data-auto-update="${config.autoUpdate}" data-show-search="${config.showSearch}" data-max-items="${config.maxItems}" data-compact="${config.compact}" data-height="${config.height}" data-theme="${config.theme}" data-layout="${config.layout}" ${config.enableDateSearch ? `data-start-date="${config.startDate || ''}" data-end-date="${config.endDate || ''}"` : ''}><p>Loading playlist...</p></div>`;
   }
 
   public generateReactCode(config: EmbedConfig): string {
-    return `<SpinitronPlaylistWidget station="${config.station}" autoUpdate={${config.autoUpdate}} showSearch={${config.showSearch}} maxItems={${config.maxItems}} compact={${config.compact}} height="${config.height}" theme="${config.theme}" layout="${config.layout}" />`;
+    return `<SpinitronPlaylistWidget station="${config.selectedStation}" autoUpdate={${config.autoUpdate}} showSearch={${config.showSearch}} maxItems={${config.maxItems}} compact={${config.compact}} height="${config.height}" theme="${config.theme}" layout="${config.layout}" />`;
   }
 
   public generateVueCode(config: EmbedConfig): string {
-    return `<spinitron-playlist-widget station="${config.station}" :auto-update="${config.autoUpdate}" :show-search="${config.showSearch}" :max-items="${config.maxItems}" :compact="${config.compact}" height="${config.height}" theme="${config.theme}" layout="${config.layout}"></spinitron-playlist-widget>`;
+    return `<spinitron-playlist-widget station="${config.selectedStation}" :auto-update="${config.autoUpdate}" :show-search="${config.showSearch}" :max-items="${config.maxItems}" :compact="${config.compact}" height="${config.height}" theme="${config.theme}" layout="${config.layout}"></spinitron-playlist-widget>`;
   }
 
   public generateSvelteCode(config: EmbedConfig): string {
-    return `<SpinitronPlaylistWidget station="${config.station}" autoUpdate={${config.autoUpdate}} showSearch={${config.showSearch}} maxItems={${config.maxItems}} compact={${config.compact}} height="${config.height}" theme="${config.theme}" layout="${config.layout}" />`;
+    return `<SpinitronPlaylistWidget station="${config.selectedStation}" autoUpdate={${config.autoUpdate}} showSearch={${config.showSearch}} maxItems={${config.maxItems}} compact={${config.compact}} height="${config.height}" theme="${config.theme}" layout="${config.layout}" />`;
   }
 
   public generateAngularCode(config: EmbedConfig): string {
-    return `<app-spinitron-playlist-widget station="${config.station}" [autoUpdate]="${config.autoUpdate}" [showSearch]="${config.showSearch}" [maxItems]="${config.maxItems}" [compact]="${config.compact}" height="${config.height}" theme="${config.theme}" layout="${config.layout}"></app-spinitron-playlist-widget>`;
+    return `<app-spinitron-playlist-widget station="${config.selectedStation}" [autoUpdate]="${config.autoUpdate}" [showSearch]="${config.showSearch}" [maxItems]="${config.maxItems}" [compact]="${config.compact}" height="${config.height}" theme="${config.theme}" layout="${config.layout}"></app-spinitron-playlist-widget>`;
   }
 
   public generateHTMLCode(config: EmbedConfig): string {
     const container = config.containerId || 'spinitron-playlist-widget';
-    return `<div id="${container}" data-station="${config.station}" data-auto-update="${config.autoUpdate}" data-show-search="${config.showSearch}" data-max-items="${config.maxItems}" data-compact="${config.compact}" data-height="${config.height}" data-theme="${config.theme}" data-layout="${config.layout}"><p>Loading playlist...</p></div>
+    return `<div id="${container}" data-station="${config.selectedStation}" data-auto-update="${config.autoUpdate}" data-show-search="${config.showSearch}" data-max-items="${config.maxItems}" data-compact="${config.compact}" data-height="${config.height}" data-theme="${config.theme}" data-layout="${config.layout}"><p>Loading playlist...</p></div>
 <script src="https://ftrivovjultfayttemce.supabase.co/embed.js"></script>`;
   }
 
   public generateIFrameCode(config: EmbedConfig): string {
     const container = config.containerId || 'spinitron-playlist-widget';
     const baseUrl = 'https://ftrivovjultfayttemce.supabase.co'; // Replace with your actual base URL
-    const iframeSrc = `${baseUrl}/embed-iframe.html?station=${config.station}&autoUpdate=${config.autoUpdate}&showSearch=${config.showSearch}&maxItems=${config.maxItems}&compact=${config.compact}&height=${config.height}&theme=${config.theme}&layout=${config.layout}`;
+    const iframeSrc = `${baseUrl}/embed-iframe.html?station=${config.selectedStation}&autoUpdate=${config.autoUpdate}&showSearch=${config.showSearch}&maxItems=${config.maxItems}&compact=${config.compact}&height=${config.height}&theme=${config.theme}&layout=${config.layout}`;
 
     return `<iframe
   src="${iframeSrc}"
@@ -43,7 +57,7 @@ export class JavaScriptCodeGenerator {
   }
 
   public generateWordPressShortcode(config: EmbedConfig): string {
-    return `[spinitron_playlist station="${config.station}" auto_update="${config.autoUpdate}" show_search="${config.showSearch}" max_items="${config.maxItems}" compact="${config.compact}" height="${config.height}" theme="${config.theme}" layout="${config.layout}"]`;
+    return `[spinitron_playlist station="${config.selectedStation}" auto_update="${config.autoUpdate}" show_search="${config.showSearch}" max_items="${config.maxItems}" compact="${config.compact}" height="${config.height}" theme="${config.theme}" layout="${config.layout}"]`;
   }
 
   public generateWordPressCode(config: EmbedConfig): string {
@@ -51,7 +65,7 @@ export class JavaScriptCodeGenerator {
     return `<!-- Spinitron Playlist Widget -->
 <div id="${container}" 
   class="spinitron-playlist-widget"
-  data-station="${config.station}"
+  data-station="${config.selectedStation}"
   data-auto-update="${config.autoUpdate}"
   data-show-search="${config.showSearch}"
   data-max-items="${config.maxItems}"
@@ -126,7 +140,7 @@ export class JavaScriptCodeGenerator {
 <!-- Spinitron Playlist Widget -->
 <div id="${container}" 
   class="spinitron-playlist-widget"
-  data-station="${config.station}"
+  data-station="${config.selectedStation}"
   data-auto-update="${config.autoUpdate}"
   data-show-search="${config.showSearch}"
   data-max-items="${config.maxItems}"
@@ -198,3 +212,8 @@ export class JavaScriptCodeGenerator {
 <!-- End Spinitron Playlist Widget -->`;
   }
 }
+
+export const generateJavaScriptCode = (config: EmbedConfig): string => {
+  const generator = new JavaScriptCodeGenerator();
+  return generator.generateCode(config);
+};
