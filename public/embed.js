@@ -13,40 +13,10 @@
   // Hardcoded Supabase URL for API calls - this is the primary source of truth
   const SUPABASE_URL = 'https://ftrivovjultfayttemce.supabase.co';
 
-  // Get base URL for loading scripts
+  // Get base URL - ALWAYS use hardcoded Supabase URL for both scripts and API
   function getBaseUrl() {
-    // First, check if an API URL is explicitly set in the widget config
-    const widgetContainer = document.querySelector('.spinitron-playlist-widget');
-    if (widgetContainer && widgetContainer.dataset.apiUrl) {
-      if (window.SpinitinonEmbedDebug) {
-        console.log('Spinitron Embed: Using explicitly configured API URL:', widgetContainer.dataset.apiUrl);
-      }
-      return widgetContainer.dataset.apiUrl;
-    }
-
-    // Next, try to get it from the embed script tag
-    const scriptTag = document.querySelector('script[src*="embed.js"]');
-    if (scriptTag && scriptTag.src) {
-      try {
-        const scriptOrigin = new URL(scriptTag.src).origin;
-        
-        // Only use the script origin if it's from our Supabase domain
-        if (scriptOrigin.includes('ftrivovjultfayttemce.supabase.co')) {
-          if (window.SpinitinonEmbedDebug) {
-            console.log('Spinitron Embed: Using script URL origin:', scriptOrigin);
-          }
-          return scriptOrigin;
-        } else {
-          if (window.SpinitinonEmbedDebug) {
-            console.log('Spinitron Embed: Script is hosted on external domain, using hardcoded URL');
-          }
-        }
-      } catch (e) {
-        console.error('Error parsing script URL:', e);
-      }
-    }
-    
-    // Fallback to the hardcoded Supabase URL
+    // CRITICAL: Always return the hardcoded Supabase URL 
+    // This prevents issues when embedded on external WordPress sites
     if (window.SpinitinonEmbedDebug) {
       console.log('Spinitron Embed: Using hardcoded Supabase URL:', SUPABASE_URL);
     }
