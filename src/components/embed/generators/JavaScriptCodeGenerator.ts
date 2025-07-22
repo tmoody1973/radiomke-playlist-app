@@ -143,10 +143,13 @@ export const generateJavaScriptCode = (config: EmbedConfig): string => {
     config: ${JSON.stringify(embedConfig, null, 2)}
   };
   
+  // Initialize widget queue if not already present
+  window.SpinitinonEmbedQueue = window.SpinitinonEmbedQueue || [];
+  window.SpinitinonEmbedQueue.push(widgetConfig);
+  
   // Check if the embed script is already loading/loaded
   if (!window.SpinitinonEmbedLoading) {
     window.SpinitinonEmbedLoading = true;
-    window.SpinitinonEmbedQueue = [];
     
     // Load the optimized embed script
     const script = document.createElement('script');
@@ -155,28 +158,23 @@ export const generateJavaScriptCode = (config: EmbedConfig): string => {
     
     script.onload = function() {
       console.log('✅ Spinitron embed script loaded successfully');
-      // Process any queued widgets
-      if (window.SpinitinonEmbedQueue) {
-        window.SpinitinonEmbedQueue.forEach(config => {
-          if (window.SpinitinonEmbedInit) {
-            window.SpinitinonEmbedInit(config);
-          }
-        });
-        window.SpinitinonEmbedQueue = [];
-      }
     };
     
     script.onerror = function() {
-      console.warn('⚠️ Optimized embed failed, trying fallback...');
+      console.warn('⚠️ Failed to load embed script, trying fallback...');
+      
       // Fallback to the basic embed script
       const fallbackScript = document.createElement('script');
       fallbackScript.src = '${baseUrl}/embed.js';
       fallbackScript.async = true;
+      
       fallbackScript.onload = function() {
         console.log('✅ Fallback embed script loaded');
       };
+      
       fallbackScript.onerror = function() {
         console.error('❌ Failed to load Spinitron embed scripts');
+        
         // Show error message in the widget container
         const container = document.getElementById('${widgetId}');
         if (container) {
@@ -193,18 +191,11 @@ export const generateJavaScriptCode = (config: EmbedConfig): string => {
           \`;
         }
       };
+      
       document.head.appendChild(fallbackScript);
     };
     
     document.head.appendChild(script);
-  }
-  
-  // Queue this widget for initialization
-  if (window.SpinitinonEmbedQueue) {
-    window.SpinitinonEmbedQueue.push(widgetConfig);
-  } else if (window.SpinitinonEmbedInit) {
-    // Script already loaded, initialize immediately
-    window.SpinitinonEmbedInit(widgetConfig);
   }
 })();
 </script>
@@ -258,22 +249,18 @@ export const generateJavaScriptCode = (config: EmbedConfig): string => {
 </style>
 
 <!-- 
-  Implementation Notes:
+  Troubleshooting Tips:
   
-  1. PLACEMENT: Place this entire code block where you want the playlist to appear
+  1. If the widget doesn't load, check the console for error messages
   
-  2. MULTIPLE WIDGETS: You can add multiple widgets to the same page - each gets a unique ID
+  2. Common issues and solutions:
+     - CORS issues: The widget needs to load from ${baseUrl}
+     - Script loading: Ensure your site allows third-party scripts
+     - Content blockers: Disable any ad blockers that might interfere
   
-  3. CUSTOMIZATION: The widget will inherit your site's base font and colors
-     - Modify the CSS above to match your site's design
-     - The widget respects your site's dark/light mode preferences
+  3. Debug mode: Add this line to your page to enable debug logging:
+     <script>window.SpinitinonEmbedDebugMode = true;</script>
   
-  4. PERFORMANCE: The script loads asynchronously and won't block your page
-  
-  5. FALLBACKS: Includes graceful fallbacks for JavaScript disabled users
-  
-  6. SEO: Includes structured data and semantic HTML for search engines
-  
-  For questions or support, visit: ${baseUrl}
+  4. For additional help, visit ${baseUrl}
 -->`;
 };
