@@ -1,4 +1,3 @@
-
 (function() {
   'use strict';
   
@@ -21,9 +20,21 @@
     layout: 'list'
   };
 
-  // Determine base URL more reliably
+  // Hardcoded Supabase URL for API calls - this is the primary source of truth
+  const SUPABASE_URL = 'https://ftrivovjultfayttemce.supabase.co';
+
+  // Determine base URL more reliably for script loading
   function getBaseUrl() {
-    // First try to get it from the embed script tag
+    // First, check if an API URL is explicitly set in the widget config
+    const widgetContainer = document.querySelector('.spinitron-playlist-widget');
+    if (widgetContainer && widgetContainer.dataset.apiUrl) {
+      if (window.SpinitinonEmbedDebug) {
+        console.log('Spinitron Embed: Using explicitly configured API URL:', widgetContainer.dataset.apiUrl);
+      }
+      return widgetContainer.dataset.apiUrl;
+    }
+
+    // Next, try to get it from the embed script tag
     const scriptTags = [
       document.querySelector('script[src*="embed-optimized.js"]'),
       document.querySelector('script[src*="embed.js"]')
@@ -32,14 +43,29 @@
     if (scriptTags.length > 0) {
       const scriptSrc = scriptTags[0].src;
       try {
-        return new URL(scriptSrc).origin;
+        const scriptOrigin = new URL(scriptSrc).origin;
+        
+        // Only use the script origin if it's from our Supabase domain
+        if (scriptOrigin.includes('ftrivovjultfayttemce.supabase.co')) {
+          if (window.SpinitinonEmbedDebug) {
+            console.log('Spinitron Embed: Using script URL origin:', scriptOrigin);
+          }
+          return scriptOrigin;
+        } else {
+          if (window.SpinitinonEmbedDebug) {
+            console.log('Spinitron Embed: Script is hosted on external domain, using hardcoded URL');
+          }
+        }
       } catch (e) {
         console.error('Error parsing script URL:', e);
       }
     }
     
-    // Fallback to a hardcoded value if needed
-    return 'https://ftrivovjultfayttemce.supabase.co';
+    // Fallback to the hardcoded Supabase URL
+    if (window.SpinitinonEmbedDebug) {
+      console.log('Spinitron Embed: Using hardcoded Supabase URL:', SUPABASE_URL);
+    }
+    return SUPABASE_URL;
   }
 
   const BASE_URL = getBaseUrl();
@@ -105,6 +131,7 @@
     try {
       if (window.SpinitinonEmbedDebug) {
         console.log('Spinitron Embed: Fetching songs with config:', config);
+        console.log('Spinitron Embed: Using API URL:', BASE_URL);
       }
 
       const requestBody = {
@@ -126,40 +153,60 @@
         console.log('Spinitron Embed: Request body:', requestBody);
       }
 
-      const response = await fetch(`${BASE_URL}/functions/v1/spinitron-proxy`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0cml2b3ZqdWx0ZmF5dHRlbWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwMjU3NjYsImV4cCI6MjA2NTYwMTc2Nn0.OUZf7nDHHrEBPXmfgX88UBtPd0YV88l-fXme_13nm8o'
-        },
-        body: JSON.stringify(requestBody)
-      });
+      // Implement retry logic for API calls
+      let retries = 0;
+      const maxRetries = 3;
+      
+      while (retries < maxRetries) {
+        try {
+          const response = await fetch(`${BASE_URL}/functions/v1/spinitron-proxy`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0cml2b3ZqdWx0ZmF5dHRlbWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwMjU3NjYsImV4cCI6MjA2NTYwMTc2Nn0.OUZf7nDHHrEBPXmfgX88UBtPd0YV88l-fXme_13nm8o'
+            },
+            body: JSON.stringify(requestBody)
+          });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`API request failed: ${response.status} - ${errorText}`);
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`API request failed: ${response.status} - ${errorText}`);
+          }
+          
+          const data = await response.json();
+          
+          if (window.SpinitinonEmbedDebug) {
+            console.log('Spinitron Embed: API response received:', data);
+          }
+          
+          if (!data || !data.items || !Array.isArray(data.items)) {
+            throw new Error('Invalid API response format: ' + JSON.stringify(data));
+          }
+          
+          return (data.items || []).map(item => ({
+            id: item.id,
+            song: item.song,
+            artist: item.artist,
+            start_time: item.start,
+            duration: item.duration,
+            image: item.image,
+            release: item.release,
+            label: item.label
+          }));
+        } catch (error) {
+          retries++;
+          console.error(`Spinitron Embed: Request failed (attempt ${retries}/${maxRetries}):`, error);
+          
+          if (retries >= maxRetries) {
+            throw error;
+          }
+          
+          // Exponential backoff
+          const delay = Math.min(1000 * Math.pow(2, retries), 8000);
+          console.log(`Spinitron Embed: Retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
       }
-      
-      const data = await response.json();
-      
-      if (window.SpinitinonEmbedDebug) {
-        console.log('Spinitron Embed: API response received:', data);
-      }
-      
-      if (!data || !data.items || !Array.isArray(data.items)) {
-        throw new Error('Invalid API response format: ' + JSON.stringify(data));
-      }
-      
-      return (data.items || []).map(item => ({
-        id: item.id,
-        song: item.song,
-        artist: item.artist,
-        start_time: item.start,
-        duration: item.duration,
-        image: item.image,
-        release: item.release,
-        label: item.label
-      }));
     } catch (error) {
       console.error('Error fetching songs:', error);
       throw error;
@@ -401,6 +448,7 @@
       this.hasLoadedInitial = false;
       this.retryCount = 0;
       this.maxRetries = 3;
+      this.lastError = null;
       
       if (window.SpinitinonEmbedDebug) {
         console.log(`Spinitron Widget: Initializing widget with ID: ${containerId}`);
@@ -423,7 +471,7 @@
         await this.loadSongs(true);
       } catch (error) {
         console.error('Failed to load initial songs:', error);
-        this.showError('Failed to load playlist. Please try again later.', true);
+        this.showError(`Failed to load playlist: ${this.getErrorMessage(error)}`, true);
       }
       
       // Send initial height update
@@ -433,6 +481,21 @@
       if (this.config.autoUpdate) {
         setInterval(() => this.loadSongs(), 60000);
       }
+    }
+
+    getErrorMessage(error) {
+      if (!error) return 'Unknown error';
+      
+      // Extract specific error messages
+      if (error.message && error.message.includes('404')) {
+        return 'The playlist API endpoint was not found. This may be due to incorrect URL configuration.';
+      }
+      
+      if (error.message && error.message.includes('Failed to fetch')) {
+        return 'Network error. Please check your internet connection.';
+      }
+      
+      return error.message || 'Unknown error';
     }
 
     renderLoading() {
@@ -474,17 +537,20 @@
         // Load smaller initial batch for faster first paint with pagination support
         const loadCount = isInitial ? 5 : (this.config.maxItems === 'unlimited' ? 15 : parseInt(this.config.maxItems) || 8);
         
-        const songs = await fetchWithRetry(() => fetchSongs(this.config, 0, loadCount));
+        console.log('Spinitron Widget: Loading songs with base URL:', this.baseUrl);
+        const songs = await fetchWithRetry(() => fetchSongs(this.config, 0, loadCount, this.searchQuery));
         
         this.songs = songs;
         this.hasLoadedInitial = true;
+        this.lastError = null;
         this.filterSongs();
         this.retryCount = 0; // Reset retry count on successful load
       } catch (error) {
         console.error('Failed to load songs:', error);
+        this.lastError = error;
         
-        // Show error with retry button
-        this.showError('Failed to load playlist. Please try again.', true);
+        // Show error with retry button and detailed message
+        this.showError(this.getErrorMessage(error), true);
         
         // Auto-retry with exponential backoff if it's the initial load
         if (!this.hasLoadedInitial && this.retryCount < this.maxRetries) {
@@ -507,7 +573,16 @@
       const playlistDiv = this.container.querySelector(`#${this.container.id}-playlist`);
       if (!playlistDiv) return;
       
-      let errorHtml = `<div class="spinitron-error">${message}</div>`;
+      // Create a more user-friendly error message
+      let errorHtml = `
+        <div class="spinitron-error">
+          <p><strong>Unable to load playlist</strong></p>
+          <p style="margin-top: 0.5rem; font-size: 0.875rem;">${message}</p>
+          <p style="margin-top: 1rem; font-size: 0.75rem; opacity: 0.8;">
+            Technical details: Error connecting to ${this.baseUrl}
+          </p>
+        </div>
+      `;
       
       if (showRetry) {
         errorHtml += `
@@ -556,7 +631,11 @@
       if (!playlistDiv) return;
       
       if (this.filteredSongs.length === 0) {
-        playlistDiv.innerHTML = '<div class="spinitron-loading">No songs found</div>';
+        if (this.lastError) {
+          this.showError(this.getErrorMessage(this.lastError), true);
+        } else {
+          playlistDiv.innerHTML = '<div class="spinitron-loading">No songs found</div>';
+        }
         setTimeout(sendHeightUpdate, 100);
         return;
       }
@@ -621,13 +700,40 @@
         endDate: container.dataset.endDate
       };
       
+      // Get any explicit API URL configuration from the container
+      const apiUrl = container.dataset.apiUrl || BASE_URL;
+      
       if (window.SpinitinonEmbedDebug) {
         console.log(`Spinitron Embed: Initializing container ${container.id} with config:`, config);
+        console.log(`Spinitron Embed: Using API URL:`, apiUrl);
       }
       
       container.dataset.initialized = 'true';
-      new SpinitinonWidget(container.id, config, BASE_URL);
+      new SpinitinonWidget(container.id, config, apiUrl);
     });
+    
+    // Process any queued widgets
+    if (window.SpinitinonEmbedQueue && Array.isArray(window.SpinitinonEmbedQueue)) {
+      window.SpinitinonEmbedQueue.forEach(widgetConfig => {
+        if (!document.getElementById(widgetConfig.containerId)) {
+          console.warn(`Spinitron Embed: Container with ID ${widgetConfig.containerId} not found for queued widget`);
+          return;
+        }
+        
+        const container = document.getElementById(widgetConfig.containerId);
+        if (container.dataset.initialized === 'true') return;
+        
+        container.dataset.initialized = 'true';
+        new SpinitinonWidget(
+          widgetConfig.containerId, 
+          widgetConfig.config, 
+          widgetConfig.baseUrl || BASE_URL
+        );
+      });
+      
+      // Clear the queue
+      window.SpinitinonEmbedQueue = [];
+    }
     
     // Fallback for legacy containers
     const legacyContainer = document.getElementById('spinitron-playlist-widget');
@@ -662,7 +768,11 @@
       if (container.dataset.initialized === 'true') return;
       
       container.dataset.initialized = 'true';
-      new SpinitinonWidget(widgetConfig.containerId, widgetConfig.config, widgetConfig.baseUrl);
+      new SpinitinonWidget(
+        widgetConfig.containerId, 
+        widgetConfig.config, 
+        widgetConfig.baseUrl || BASE_URL
+      );
     });
     
     // Clear the queue
@@ -689,7 +799,11 @@
     }
     
     container.dataset.initialized = 'true';
-    new SpinitinonWidget(widgetConfig.containerId, widgetConfig.config, widgetConfig.baseUrl);
+    new SpinitinonWidget(
+      widgetConfig.containerId, 
+      widgetConfig.config, 
+      widgetConfig.baseUrl || BASE_URL
+    );
   };
   
   // Add debug toggle function

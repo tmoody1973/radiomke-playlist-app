@@ -10,17 +10,47 @@
   window.SpinitinonEmbedInitialized = true;
   window.SpinitinonEmbedDebug = false; // Set to true for debugging
 
+  // Hardcoded Supabase URL for API calls - this is the primary source of truth
+  const SUPABASE_URL = 'https://ftrivovjultfayttemce.supabase.co';
+
   // Get base URL for loading scripts
   function getBaseUrl() {
+    // First, check if an API URL is explicitly set in the widget config
+    const widgetContainer = document.querySelector('.spinitron-playlist-widget');
+    if (widgetContainer && widgetContainer.dataset.apiUrl) {
+      if (window.SpinitinonEmbedDebug) {
+        console.log('Spinitron Embed: Using explicitly configured API URL:', widgetContainer.dataset.apiUrl);
+      }
+      return widgetContainer.dataset.apiUrl;
+    }
+
+    // Next, try to get it from the embed script tag
     const scriptTag = document.querySelector('script[src*="embed.js"]');
     if (scriptTag && scriptTag.src) {
       try {
-        return new URL(scriptTag.src).origin;
+        const scriptOrigin = new URL(scriptTag.src).origin;
+        
+        // Only use the script origin if it's from our Supabase domain
+        if (scriptOrigin.includes('ftrivovjultfayttemce.supabase.co')) {
+          if (window.SpinitinonEmbedDebug) {
+            console.log('Spinitron Embed: Using script URL origin:', scriptOrigin);
+          }
+          return scriptOrigin;
+        } else {
+          if (window.SpinitinonEmbedDebug) {
+            console.log('Spinitron Embed: Script is hosted on external domain, using hardcoded URL');
+          }
+        }
       } catch (e) {
         console.error('Error parsing script URL:', e);
       }
     }
-    return window.location.origin;
+    
+    // Fallback to the hardcoded Supabase URL
+    if (window.SpinitinonEmbedDebug) {
+      console.log('Spinitron Embed: Using hardcoded Supabase URL:', SUPABASE_URL);
+    }
+    return SUPABASE_URL;
   }
 
   const BASE_PATH = getBaseUrl();
@@ -44,6 +74,10 @@
       if (window.SpinitinonEmbedQueue && Array.isArray(window.SpinitinonEmbedQueue)) {
         if (window.SpinitinonEmbedInit) {
           window.SpinitinonEmbedQueue.forEach(config => {
+            // Make sure the base URL is set correctly
+            if (!config.baseUrl) {
+              config.baseUrl = BASE_PATH;
+            }
             window.SpinitinonEmbedInit(config);
           });
           window.SpinitinonEmbedQueue = [];
@@ -86,6 +120,19 @@
           initializeLegacyWidget();
         } else {
           console.error('Failed to load Spinitron widget dependencies');
+          
+          // Show error in all widget containers
+          const containers = document.querySelectorAll('[id*="spinitron-playlist-widget"]');
+          containers.forEach(container => {
+            container.innerHTML = `
+              <div style="text-align: center; padding: 2rem; color: #dc2626;">
+                <p><strong>Unable to load playlist</strong></p>
+                <p style="font-size: 0.875rem; margin-top: 0.5rem;">
+                  Failed to load required scripts from ${BASE_PATH}
+                </p>
+              </div>
+            `;
+          });
         }
       }
     }
@@ -104,7 +151,7 @@
     }
     
     try {
-      const { config, BASE_URL } = window.EmbedConfig;
+      const { config } = window.EmbedConfig;
       
       function createWidget() {
         // Look for all containers with IDs matching the pattern
@@ -129,15 +176,18 @@
             layout: container.dataset.layout || config.layout
           };
           
+          // Get any explicit API URL configuration from the container
+          const apiUrl = container.dataset.apiUrl || BASE_PATH;
+          
           container.dataset.initialized = 'true';
-          new window.SpinitinonWidget(container.id, containerConfig, BASE_URL);
+          new window.SpinitinonWidget(container.id, containerConfig, apiUrl);
         });
         
         // Fallback for legacy container
         const legacyContainer = document.getElementById('spinitron-playlist-widget');
         if (legacyContainer && legacyContainer.dataset.initialized !== 'true') {
           legacyContainer.dataset.initialized = 'true';
-          new window.SpinitinonWidget('spinitron-playlist-widget', config, BASE_URL);
+          new window.SpinitinonWidget('spinitron-playlist-widget', config, BASE_PATH);
         }
       }
       
@@ -158,8 +208,11 @@
           const container = document.getElementById(widgetConfig.containerId);
           if (container.dataset.initialized === 'true') return;
           
+          // Make sure the base URL is set correctly
+          const apiUrl = widgetConfig.baseUrl || BASE_PATH;
+          
           container.dataset.initialized = 'true';
-          new window.SpinitinonWidget(widgetConfig.containerId, widgetConfig.config, widgetConfig.baseUrl);
+          new window.SpinitinonWidget(widgetConfig.containerId, widgetConfig.config, apiUrl);
         });
         
         // Clear the queue

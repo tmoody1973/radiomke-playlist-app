@@ -22,8 +22,12 @@ interface EmbedConfig {
 }
 
 export const generateJavaScriptCode = (config: EmbedConfig): string => {
-  // Use the actual base URL for external embeds
-  const baseUrl = window.location.origin;
+  // For script loading, use the current origin (where the embed code generator is running)
+  const scriptBaseUrl = window.location.origin;
+  
+  // For API calls, always use the hardcoded Supabase URL
+  const apiBaseUrl = 'https://ftrivovjultfayttemce.supabase.co';
+  
   const stationName = config.selectedStation === 'hyfin' ? 'HYFIN' : '88Nine';
   const widgetId = `spinitron-playlist-widget-${Date.now()}`;
   
@@ -80,6 +84,7 @@ export const generateJavaScriptCode = (config: EmbedConfig): string => {
     data-height="${embedConfig.height}"
     data-theme="${embedConfig.theme}"
     data-layout="${embedConfig.layout}"
+    data-api-url="${apiBaseUrl}"
     ${embedConfig.startDate ? `data-start-date="${embedConfig.startDate}"` : ''}
     ${embedConfig.endDate ? `data-end-date="${embedConfig.endDate}"` : ''}
     style="
@@ -97,7 +102,7 @@ export const generateJavaScriptCode = (config: EmbedConfig): string => {
       <noscript>
         <p style="color: #dc2626; margin-top: 1rem;">
           JavaScript is required to display the live playlist. 
-          <a href="${baseUrl}/embed?station=${config.selectedStation}&theme=${config.theme}" 
+          <a href="${apiBaseUrl}/embed?station=${config.selectedStation}&theme=${config.theme}" 
              target="_blank" 
              style="color: ${colors.linkColor};">
             View playlist in new window →
@@ -114,7 +119,7 @@ export const generateJavaScriptCode = (config: EmbedConfig): string => {
   "@context": "https://schema.org",
   "@type": "RadioStation",
   "name": "Radio Milwaukee - ${stationName}",
-  "url": "${baseUrl}",
+  "url": "${scriptBaseUrl}",
   "description": "Live playlist showing currently playing songs from Radio Milwaukee's ${stationName} station",
   "broadcastServiceTier": "FM",
   "parentService": {
@@ -126,7 +131,7 @@ export const generateJavaScriptCode = (config: EmbedConfig): string => {
   "inLanguage": "en-US",
   "potentialAction": {
     "@type": "ListenAction",
-    "target": "${baseUrl}/embed?station=${config.selectedStation}"
+    "target": "${apiBaseUrl}/embed?station=${config.selectedStation}"
   }
 }
 </script>
@@ -139,9 +144,13 @@ export const generateJavaScriptCode = (config: EmbedConfig): string => {
   // Configuration for this widget instance
   const widgetConfig = {
     containerId: '${widgetId}',
-    baseUrl: '${baseUrl}',
+    baseUrl: '${apiBaseUrl}', // API base URL - this is fixed to the Supabase URL
+    scriptUrl: '${scriptBaseUrl}', // URL for loading scripts
     config: ${JSON.stringify(embedConfig, null, 2)}
   };
+  
+  // Enable debug mode for easier troubleshooting
+  // window.SpinitinonEmbedDebugMode = true;
   
   // Initialize widget queue if not already present
   window.SpinitinonEmbedQueue = window.SpinitinonEmbedQueue || [];
@@ -153,7 +162,7 @@ export const generateJavaScriptCode = (config: EmbedConfig): string => {
     
     // Load the optimized embed script
     const script = document.createElement('script');
-    script.src = '${baseUrl}/embed-optimized.js';
+    script.src = '${apiBaseUrl}/embed-optimized.js';
     script.async = true;
     
     script.onload = function() {
@@ -161,11 +170,11 @@ export const generateJavaScriptCode = (config: EmbedConfig): string => {
     };
     
     script.onerror = function() {
-      console.warn('⚠️ Failed to load embed script, trying fallback...');
+      console.warn('⚠️ Failed to load embed script from primary source, trying fallback...');
       
       // Fallback to the basic embed script
       const fallbackScript = document.createElement('script');
-      fallbackScript.src = '${baseUrl}/embed.js';
+      fallbackScript.src = '${apiBaseUrl}/embed.js';
       fallbackScript.async = true;
       
       fallbackScript.onload = function() {
@@ -183,9 +192,12 @@ export const generateJavaScriptCode = (config: EmbedConfig): string => {
               <p><strong>Unable to load playlist</strong></p>
               <p style="font-size: 0.875rem; margin-top: 0.5rem;">
                 Please check your internet connection or 
-                <a href="${baseUrl}" target="_blank" style="color: ${colors.linkColor};">
+                <a href="${apiBaseUrl}" target="_blank" style="color: ${colors.linkColor};">
                   visit our website directly
                 </a>
+              </p>
+              <p style="font-size: 0.75rem; margin-top: 1rem; color: #94a3b8;">
+                Error details: Failed to load required scripts from ${apiBaseUrl}
               </p>
             </div>
           \`;
@@ -254,13 +266,13 @@ export const generateJavaScriptCode = (config: EmbedConfig): string => {
   1. If the widget doesn't load, check the console for error messages
   
   2. Common issues and solutions:
-     - CORS issues: The widget needs to load from ${baseUrl}
      - Script loading: Ensure your site allows third-party scripts
      - Content blockers: Disable any ad blockers that might interfere
+     - CORS issues: The widget makes API calls to ${apiBaseUrl}
   
-  3. Debug mode: Add this line to your page to enable debug logging:
+  3. Debug mode: Add this line before the widget initialization to enable debug logging:
      <script>window.SpinitinonEmbedDebugMode = true;</script>
   
-  4. For additional help, visit ${baseUrl}
+  4. For additional help, visit ${apiBaseUrl}
 -->`;
 };
