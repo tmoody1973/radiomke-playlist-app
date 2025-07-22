@@ -61,8 +61,10 @@
 
   // Try to load optimized bundle first, fallback to individual scripts
   function loadOptimizedScript() {
+    // WordPress compatibility mode - add timestamp to avoid caching issues
+    const cacheBuster = '?_t=' + new Date().getTime();
     const script = document.createElement('script');
-    script.src = BASE_PATH + '/embed-optimized.js';
+    script.src = BASE_PATH + '/embed-optimized.js' + cacheBuster;
     script.async = true;
     
     script.onload = function() {
@@ -85,8 +87,8 @@
       }
     };
     
-    script.onerror = function() {
-      console.warn('Optimized embed failed, falling back to individual scripts');
+    script.onerror = function(e) {
+      console.warn('Optimized embed failed, falling back to individual scripts', e);
       loadLegacyScripts();
     };
     
@@ -98,14 +100,15 @@
     let loadedCount = 0;
     const totalScripts = 5;
     const errors = [];
+    const cacheBuster = '?_t=' + new Date().getTime(); // Add timestamp to avoid WordPress caching issues
     
     function loadScript(src, callback) {
       const script = document.createElement('script');
-      script.src = src;
+      script.src = src + cacheBuster;
       script.async = true;
       script.onload = callback;
-      script.onerror = function() {
-        console.error('Failed to load script:', src);
+      script.onerror = function(e) {
+        console.error('Failed to load script:', src, e);
         if (callback) callback(new Error('Script load failed'));
       };
       document.head.appendChild(script);
@@ -119,7 +122,7 @@
         if (errors.length === 0) {
           initializeLegacyWidget();
         } else {
-          console.error('Failed to load Spinitron widget dependencies');
+          console.error('Failed to load Spinitron widget dependencies', errors);
           
           // Show error in all widget containers
           const containers = document.querySelectorAll('[id*="spinitron-playlist-widget"]');
@@ -129,6 +132,11 @@
                 <p><strong>Unable to load playlist</strong></p>
                 <p style="font-size: 0.875rem; margin-top: 0.5rem;">
                   Failed to load required scripts from ${BASE_PATH}
+                </p>
+                <p style="font-size: 0.75rem; margin-top: 1rem;">
+                  <a href="${SUPABASE_URL}/embed-demo" target="_blank" rel="noopener">
+                    Visit the embed configuration page
+                  </a>
                 </p>
               </div>
             `;
@@ -176,8 +184,8 @@
             layout: container.dataset.layout || config.layout
           };
           
-          // Get any explicit API URL configuration from the container
-          const apiUrl = container.dataset.apiUrl || BASE_PATH;
+          // Always use the hardcoded Supabase URL for API calls
+          const apiUrl = SUPABASE_URL;
           
           container.dataset.initialized = 'true';
           new window.SpinitinonWidget(container.id, containerConfig, apiUrl);
@@ -187,7 +195,7 @@
         const legacyContainer = document.getElementById('spinitron-playlist-widget');
         if (legacyContainer && legacyContainer.dataset.initialized !== 'true') {
           legacyContainer.dataset.initialized = 'true';
-          new window.SpinitinonWidget('spinitron-playlist-widget', config, BASE_PATH);
+          new window.SpinitinonWidget('spinitron-playlist-widget', config, SUPABASE_URL);
         }
       }
       
@@ -208,8 +216,8 @@
           const container = document.getElementById(widgetConfig.containerId);
           if (container.dataset.initialized === 'true') return;
           
-          // Make sure the base URL is set correctly
-          const apiUrl = widgetConfig.baseUrl || BASE_PATH;
+          // Always use the hardcoded Supabase URL for API calls
+          const apiUrl = SUPABASE_URL;
           
           container.dataset.initialized = 'true';
           new window.SpinitinonWidget(widgetConfig.containerId, widgetConfig.config, apiUrl);

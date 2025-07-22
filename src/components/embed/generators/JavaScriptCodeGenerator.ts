@@ -1,278 +1,200 @@
+import { EmbedConfig } from '@/types';
 
-interface EmbedConfig {
-  selectedStation: string;
-  autoUpdate: boolean;
-  showSearch: boolean;
-  maxItems: number;
-  unlimitedSongs: boolean;
-  compact: boolean;
-  height: string;
-  theme: string;
-  layout: string;
-  enableDateSearch: boolean;
-  startDate?: Date;
-  endDate?: Date;
-  customColors?: {
-    backgroundColor: string;
-    textColor: string;
-    headingColor: string;
-    linkColor: string;
-    borderColor: string;
-  };
-}
+export class JavaScriptCodeGenerator {
+  public generatePreviewCode(config: EmbedConfig): string {
+    const container = config.containerId || 'spinitron-playlist-widget';
+    return `<div id="${container}" data-station="${config.station}" data-auto-update="${config.autoUpdate}" data-show-search="${config.showSearch}" data-max-items="${config.maxItems}" data-compact="${config.compact}" data-height="${config.height}" data-theme="${config.theme}" data-layout="${config.layout}" ${config.enableDateSearch ? `data-start-date="${config.startDate || ''}" data-end-date="${config.endDate || ''}"` : ''}><p>Loading playlist...</p></div>`;
+  }
 
-export const generateJavaScriptCode = (config: EmbedConfig): string => {
-  // For script loading, use the current origin (where the embed code generator is running)
-  const scriptBaseUrl = window.location.origin;
-  
-  // For API calls, always use the hardcoded Supabase URL
-  const apiBaseUrl = 'https://ftrivovjultfayttemce.supabase.co';
-  
-  const stationName = config.selectedStation === 'hyfin' ? 'HYFIN' : '88Nine';
-  const widgetId = `spinitron-playlist-widget-${Date.now()}`;
-  
-  const embedConfig = {
-    station: config.selectedStation,
-    autoUpdate: config.autoUpdate,
-    showSearch: config.showSearch,
-    maxItems: config.unlimitedSongs ? 'unlimited' : Math.min(config.maxItems, 20),
-    compact: config.compact,
-    height: config.height,
-    theme: config.theme,
-    layout: config.layout,
-    ...(config.enableDateSearch && config.startDate && { startDate: config.startDate.toISOString() }),
-    ...(config.enableDateSearch && config.endDate && { endDate: config.endDate.toISOString() })
-  };
+  public generateReactCode(config: EmbedConfig): string {
+    return `<SpinitronPlaylistWidget station="${config.station}" autoUpdate={${config.autoUpdate}} showSearch={${config.showSearch}} maxItems={${config.maxItems}} compact={${config.compact}} height="${config.height}" theme="${config.theme}" layout="${config.layout}" />`;
+  }
 
-  // Generate theme-aware styling
-  const isDark = config.theme === 'dark';
-  const colors = {
-    backgroundColor: isDark ? '#0f172a' : '#ffffff',
-    textColor: isDark ? '#cbd5e1' : '#1f2937',
-    headingColor: isDark ? '#f8fafc' : '#1f2937',
-    linkColor: '#3b82f6',
-    borderColor: isDark ? '#475569' : '#e5e7eb',
-    cardBg: isDark ? '#1e293b' : '#ffffff'
-  };
+  public generateVueCode(config: EmbedConfig): string {
+    return `<spinitron-playlist-widget station="${config.station}" :auto-update="${config.autoUpdate}" :show-search="${config.showSearch}" :max-items="${config.maxItems}" :compact="${config.compact}" height="${config.height}" theme="${config.theme}" layout="${config.layout}"></spinitron-playlist-widget>`;
+  }
 
-  return `<!-- Radio Milwaukee ${stationName} Playlist Widget - JavaScript Embed -->
-<!-- 
-  Seamless JavaScript embed for ${stationName} radio playlist
-  This embeds directly into your page without iframe boundaries
-  Automatically inherits your site's styling while maintaining functionality
--->
+  public generateSvelteCode(config: EmbedConfig): string {
+    return `<SpinitronPlaylistWidget station="${config.station}" autoUpdate={${config.autoUpdate}} showSearch={${config.showSearch}} maxItems={${config.maxItems}} compact={${config.compact}} height="${config.height}" theme="${config.theme}" layout="${config.layout}" />`;
+  }
 
-<!-- SEO-Friendly Content -->
-<div class="radio-milwaukee-embed-wrapper">
-  <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; font-weight: 600; color: ${colors.headingColor};">
-    Live Radio Playlist - ${stationName}
-  </h3>
-  <p style="margin: 0 0 1rem 0; color: ${colors.textColor}; line-height: 1.5; font-size: 0.875rem;">
-    Currently playing songs from Radio Milwaukee's ${stationName} station. 
-    Discover new music and see what's trending on Milwaukee radio.
-  </p>
-  
-  <!-- Widget Container -->
-  <div 
-    id="${widgetId}"
-    class="spinitron-playlist-widget"
-    data-station="${embedConfig.station}"
-    data-auto-update="${embedConfig.autoUpdate}"
-    data-show-search="${embedConfig.showSearch}"
-    data-max-items="${embedConfig.maxItems}"
-    data-compact="${embedConfig.compact}"
-    data-height="${embedConfig.height}"
-    data-theme="${embedConfig.theme}"
-    data-layout="${embedConfig.layout}"
-    data-api-url="${apiBaseUrl}"
-    ${embedConfig.startDate ? `data-start-date="${embedConfig.startDate}"` : ''}
-    ${embedConfig.endDate ? `data-end-date="${embedConfig.endDate}"` : ''}
-    style="
-      min-height: ${config.height !== 'auto' ? config.height + 'px' : '400px'}; 
-      background-color: ${colors.backgroundColor}; 
-      border: 1px solid ${colors.borderColor}; 
-      border-radius: 8px; 
-      padding: 1rem;
-      font-family: inherit;
-    "
+  public generateAngularCode(config: EmbedConfig): string {
+    return `<app-spinitron-playlist-widget station="${config.station}" [autoUpdate]="${config.autoUpdate}" [showSearch]="${config.showSearch}" [maxItems]="${config.maxItems}" [compact]="${config.compact}" height="${config.height}" theme="${config.theme}" layout="${config.layout}"></app-spinitron-playlist-widget>`;
+  }
+
+  public generateHTMLCode(config: EmbedConfig): string {
+    const container = config.containerId || 'spinitron-playlist-widget';
+    return `<div id="${container}" data-station="${config.station}" data-auto-update="${config.autoUpdate}" data-show-search="${config.showSearch}" data-max-items="${config.maxItems}" data-compact="${config.compact}" data-height="${config.height}" data-theme="${config.theme}" data-layout="${config.layout}"><p>Loading playlist...</p></div>
+<script src="https://ftrivovjultfayttemce.supabase.co/embed.js"></script>`;
+  }
+
+  public generateIFrameCode(config: EmbedConfig): string {
+    const container = config.containerId || 'spinitron-playlist-widget';
+    const baseUrl = 'https://ftrivovjultfayttemce.supabase.co'; // Replace with your actual base URL
+    const iframeSrc = `${baseUrl}/embed-iframe.html?station=${config.station}&autoUpdate=${config.autoUpdate}&showSearch=${config.showSearch}&maxItems=${config.maxItems}&compact=${config.compact}&height=${config.height}&theme=${config.theme}&layout=${config.layout}`;
+
+    return `<iframe
+  src="${iframeSrc}"
+  width="100%"
+  height="${config.height === 'auto' ? '400px' : config.height + 'px'}"
+  style="border: none;"
+  title="Spinitron Playlist Widget"
+></iframe>`;
+  }
+
+  public generateWordPressShortcode(config: EmbedConfig): string {
+    return `[spinitron_playlist station="${config.station}" auto_update="${config.autoUpdate}" show_search="${config.showSearch}" max_items="${config.maxItems}" compact="${config.compact}" height="${config.height}" theme="${config.theme}" layout="${config.layout}"]`;
+  }
+
+  public generateWordPressCode(config: EmbedConfig): string {
+    const container = config.containerId || 'spinitron-playlist-widget';
+    return `<!-- Spinitron Playlist Widget -->
+<div id="${container}" 
+  class="spinitron-playlist-widget"
+  data-station="${config.station}"
+  data-auto-update="${config.autoUpdate}"
+  data-show-search="${config.showSearch}"
+  data-max-items="${config.maxItems}"
+  data-compact="${config.compact}"
+  data-height="${config.height}"
+  data-theme="${config.theme}"
+  data-layout="${config.layout}"
+  ${config.enableDateSearch ? `data-start-date="${config.startDate || ''}" data-end-date="${config.endDate || ''}"` : ''}
   >
-    <!-- Loading placeholder -->
-    <div style="text-align: center; padding: 2rem; color: ${colors.textColor};">
-      <p>Loading ${stationName} playlist...</p>
-      <noscript>
-        <p style="color: #dc2626; margin-top: 1rem;">
-          JavaScript is required to display the live playlist. 
-          <a href="${apiBaseUrl}/embed?station=${config.selectedStation}&theme=${config.theme}" 
-             target="_blank" 
-             style="color: ${colors.linkColor};">
-            View playlist in new window →
-          </a>
-        </p>
-      </noscript>
-    </div>
-  </div>
+  <p>Loading playlist...</p>
 </div>
 
-<!-- Structured Data for SEO -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "RadioStation",
-  "name": "Radio Milwaukee - ${stationName}",
-  "url": "${scriptBaseUrl}",
-  "description": "Live playlist showing currently playing songs from Radio Milwaukee's ${stationName} station",
-  "broadcastServiceTier": "FM",
-  "parentService": {
-    "@type": "RadioChannel",
-    "name": "${stationName}",
-    "description": "Milwaukee's independent radio station"
-  },
-  "genre": ["Alternative", "Indie", "Local Music"],
-  "inLanguage": "en-US",
-  "potentialAction": {
-    "@type": "ListenAction",
-    "target": "${apiBaseUrl}/embed?station=${config.selectedStation}"
-  }
-}
-</script>
-
-<!-- Widget Initialization Script -->
 <script>
-(function() {
-  'use strict';
-  
-  // Configuration for this widget instance
-  const widgetConfig = {
-    containerId: '${widgetId}',
-    baseUrl: '${apiBaseUrl}', // API base URL - this is fixed to the Supabase URL
-    scriptUrl: '${scriptBaseUrl}', // URL for loading scripts
-    config: ${JSON.stringify(embedConfig, null, 2)}
-  };
-  
-  // Enable debug mode for easier troubleshooting
-  // window.SpinitinonEmbedDebugMode = true;
-  
-  // Initialize widget queue if not already present
+  // Define a queue for widgets if it doesn't exist yet
   window.SpinitinonEmbedQueue = window.SpinitinonEmbedQueue || [];
-  window.SpinitinonEmbedQueue.push(widgetConfig);
   
-  // Check if the embed script is already loading/loaded
-  if (!window.SpinitinonEmbedLoading) {
-    window.SpinitinonEmbedLoading = true;
+  // Load the Spinitron embed script
+  (function() {
+    // Check if script is already loaded
+    if (document.querySelector('script[src*="embed.js"]')) return;
     
-    // Load the optimized embed script
-    const script = document.createElement('script');
-    script.src = '${apiBaseUrl}/embed-optimized.js';
-    script.async = true;
-    
-    script.onload = function() {
-      console.log('✅ Spinitron embed script loaded successfully');
-    };
-    
-    script.onerror = function() {
-      console.warn('⚠️ Failed to load embed script from primary source, trying fallback...');
+    // Function to load script with fallback
+    function loadScript(primarySrc, fallbackSrc) {
+      // Create primary script element
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = primarySrc;
       
-      // Fallback to the basic embed script
-      const fallbackScript = document.createElement('script');
-      fallbackScript.src = '${apiBaseUrl}/embed.js';
-      fallbackScript.async = true;
-      
-      fallbackScript.onload = function() {
-        console.log('✅ Fallback embed script loaded');
-      };
-      
-      fallbackScript.onerror = function() {
-        console.error('❌ Failed to load Spinitron embed scripts');
+      // Handle primary script load error
+      script.onerror = function() {
+        console.warn("⚠️ Failed to load embed script from primary source, trying fallback...");
         
-        // Show error message in the widget container
-        const container = document.getElementById('${widgetId}');
-        if (container) {
-          container.innerHTML = \`
-            <div style="text-align: center; padding: 2rem; color: #dc2626;">
-              <p><strong>Unable to load playlist</strong></p>
-              <p style="font-size: 0.875rem; margin-top: 0.5rem;">
-                Please check your internet connection or 
-                <a href="${apiBaseUrl}" target="_blank" style="color: ${colors.linkColor};">
-                  visit our website directly
-                </a>
-              </p>
-              <p style="font-size: 0.75rem; margin-top: 1rem; color: #94a3b8;">
-                Error details: Failed to load required scripts from ${apiBaseUrl}
-              </p>
-            </div>
-          \`;
-        }
+        // Try fallback script on error
+        const fallbackScript = document.createElement('script');
+        fallbackScript.async = true;
+        fallbackScript.src = fallbackSrc;
+        
+        // Handle fallback script error
+        fallbackScript.onerror = function() {
+          console.error("❌ Failed to load Spinitron embed scripts");
+          document.getElementById("${container}").innerHTML = 
+            '<div style="text-align: center; padding: 2rem; color: #dc2626;">' +
+            '<p><strong>Unable to load playlist</strong></p>' +
+            '<p style="font-size: 0.875rem; margin-top: 0.5rem;">Please try again later.</p>' +
+            '</div>';
+        };
+        
+        document.head.appendChild(fallbackScript);
       };
       
-      document.head.appendChild(fallbackScript);
-    };
+      // Append the script to the head
+      document.head.appendChild(script);
+    }
     
-    document.head.appendChild(script);
-  }
-})();
+    // Try to load from primary source first, with fallback
+    loadScript(
+      "https://ftrivovjultfayttemce.supabase.co/embed.js", 
+      "https://ftrivovjultfayttemce.supabase.co/embed.js"
+    );
+  })();
 </script>
-
-<!-- Optional: Custom Styling for Seamless Integration -->
-<style>
-/* These styles help the widget blend seamlessly with your site */
-.radio-milwaukee-embed-wrapper {
-  margin: 1rem 0;
-  font-family: inherit; /* Inherits your site's font */
-}
-
-.radio-milwaukee-embed-wrapper h3 {
-  font-family: inherit;
-  margin: 0 0 0.5rem 0;
-}
-
-.radio-milwaukee-embed-wrapper p {
-  font-family: inherit;
-  margin: 0 0 1rem 0;
-}
-
-/* Widget container styling */
-.spinitron-playlist-widget {
-  transition: all 0.2s ease-in-out;
-}
-
-.spinitron-playlist-widget:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .radio-milwaukee-embed-wrapper {
-    margin: 0.5rem 0;
+<!-- End Spinitron Playlist Widget -->`;
   }
+
+  public generateCode(config: EmbedConfig): string {
+    const container = config.containerId || 'spinitron-playlist-widget';
+    
+    // Define the hardcoded Supabase URL - critical for ensuring API calls work correctly
+    const supabaseUrl = 'https://ftrivovjultfayttemce.supabase.co';
+    
+    return `
+<!-- Spinitron Playlist Widget -->
+<div id="${container}" 
+  class="spinitron-playlist-widget"
+  data-station="${config.station}"
+  data-auto-update="${config.autoUpdate}"
+  data-show-search="${config.showSearch}"
+  data-max-items="${config.maxItems}"
+  data-compact="${config.compact}"
+  data-height="${config.height}"
+  data-theme="${config.theme}"
+  data-layout="${config.layout}"
+  ${config.enableDateSearch ? `data-start-date="${config.startDate || ''}" data-end-date="${config.endDate || ''}"` : ''}
+  data-api-url="${supabaseUrl}">
+  <p>Loading playlist...</p>
+</div>
+
+<script>
+  // Define a queue for widgets if it doesn't exist yet
+  window.SpinitinonEmbedQueue = window.SpinitinonEmbedQueue || [];
   
-  .spinitron-playlist-widget {
-    padding: 0.75rem;
-    border-radius: 6px;
+  // Load the Spinitron embed script
+  (function() {
+    // Check if script is already loaded
+    if (document.querySelector('script[src*="embed.js"]')) return;
+    
+    // Function to load script with fallback
+    function loadScript(primarySrc, fallbackSrc) {
+      // Always use the hardcoded Supabase URL for reliability
+      const baseUrl = "https://ftrivovjultfayttemce.supabase.co";
+      
+      // Create primary script element
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = primarySrc;
+      
+      // Handle primary script load error
+      script.onerror = function() {
+        console.warn("⚠️ Failed to load embed script from primary source, trying fallback...");
+        
+        // Try fallback script on error
+        const fallbackScript = document.createElement('script');
+        fallbackScript.async = true;
+        fallbackScript.src = fallbackSrc;
+        
+        // Handle fallback script error
+        fallbackScript.onerror = function() {
+          console.error("❌ Failed to load Spinitron embed scripts");
+          document.getElementById("${container}").innerHTML = 
+            '<div style="text-align: center; padding: 2rem; color: #dc2626;">' +
+            '<p><strong>Unable to load playlist</strong></p>' +
+            '<p style="font-size: 0.875rem; margin-top: 0.5rem;">Please try again later.</p>' +
+            '</div>';
+        };
+        
+        document.head.appendChild(fallbackScript);
+      };
+      
+      // Add timestamp to avoid caching issues in WordPress
+      const cacheBuster = "?_t=" + new Date().getTime();
+      script.src = baseUrl + "/embed.js" + cacheBuster;
+      
+      // Append the script to the head
+      document.head.appendChild(script);
+    }
+    
+    // Try to load from primary source first, with fallback
+    loadScript(
+      "https://ftrivovjultfayttemce.supabase.co/embed.js", 
+      "https://ftrivovjultfayttemce.supabase.co/embed.js"
+    );
+  })();
+</script>
+<!-- End Spinitron Playlist Widget -->`;
   }
 }
-
-/* Dark theme support (if your site has dark mode) */
-@media (prefers-color-scheme: dark) {
-  .radio-milwaukee-embed-wrapper h3,
-  .radio-milwaukee-embed-wrapper p {
-    color: inherit; /* Use your site's dark mode colors */
-  }
-}
-</style>
-
-<!-- 
-  Troubleshooting Tips:
-  
-  1. If the widget doesn't load, check the console for error messages
-  
-  2. Common issues and solutions:
-     - Script loading: Ensure your site allows third-party scripts
-     - Content blockers: Disable any ad blockers that might interfere
-     - CORS issues: The widget makes API calls to ${apiBaseUrl}
-  
-  3. Debug mode: Add this line before the widget initialization to enable debug logging:
-     <script>window.SpinitinonEmbedDebugMode = true;</script>
-  
-  4. For additional help, visit ${apiBaseUrl}
--->`;
-};
