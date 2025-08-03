@@ -14,14 +14,14 @@ interface YouTubeData {
 // Global cache to share data between component instances
 const globalYouTubeCache = new Map<string, { data: YouTubeData | null; timestamp: number; loading: boolean }>();
 
-export const useOptimizedYouTubeData = (artist: string, song: string) => {
+export const useOptimizedYouTubeData = (artist: string, song: string, enabled: boolean = true) => {
   const [youtubeData, setYouTubeData] = useState<YouTubeData | null>(null);
   const [loading, setLoading] = useState(false);
   const { deduplicateRequest } = useRequestDeduplication();
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    if (!artist || !song) return;
+    if (!enabled || !artist || !song) return;
 
     const searchKey = `${artist}-${song}`.toLowerCase().replace(/[^a-z0-9]/g, '');
     
@@ -144,7 +144,7 @@ export const useOptimizedYouTubeData = (artist: string, song: string) => {
         abortControllerRef.current.abort();
       }
     };
-  }, [artist, song, deduplicateRequest]);
+  }, [artist, song, enabled, deduplicateRequest]);
 
   return { youtubeData, loading };
 };

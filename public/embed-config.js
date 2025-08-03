@@ -11,7 +11,8 @@
     compact: false,
     height: 'auto',
     theme: 'light',
-    layout: 'list'
+    layout: 'list',
+    enableYouTube: true
   };
 
   // Merge user config with defaults

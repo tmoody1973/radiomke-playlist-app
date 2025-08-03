@@ -9,10 +9,16 @@ interface LazyYouTubePreviewButtonProps {
   isLoading: string | null;
   onPlay: (embedUrl: string, trackId: string) => void;
   size?: 'sm' | 'md';
+  enabled?: boolean;
 }
 
 export const LazyYouTubePreviewButton = (props: LazyYouTubePreviewButtonProps) => {
   const [shouldLoad, setShouldLoad] = useState(false);
+
+  // If YouTube is disabled, don't render anything
+  if (!props.enabled) {
+    return null;
+  }
 
   // Only load YouTube data when user hovers or interacts
   const handleMouseEnter = () => {

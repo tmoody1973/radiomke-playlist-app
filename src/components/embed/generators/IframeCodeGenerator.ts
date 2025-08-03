@@ -12,6 +12,7 @@ interface EmbedConfig {
   theme: string;
   layout: string;
   enableDateSearch: boolean;
+  enableYouTube: boolean;
   startDate?: Date;
   endDate?: Date;
   customColors?: {

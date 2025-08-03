@@ -21,6 +21,7 @@ interface EmbedConfig {
   theme: string;
   layout: string;
   enableDateSearch: boolean;
+  enableYouTube: boolean;
   startDate?: Date;
   endDate?: Date;
 }
@@ -47,6 +48,8 @@ interface EmbedDemoContentProps {
   setLayout: (value: string) => void;
   enableDateSearch: boolean;
   setEnableDateSearch: (value: boolean) => void;
+  enableYouTube: boolean;
+  setEnableYouTube: (value: boolean) => void;
   startDate?: Date;
   setStartDate: (value: Date | undefined) => void;
   endDate?: Date;
@@ -76,6 +79,8 @@ const EmbedDemoContent = ({
   setLayout,
   enableDateSearch,
   setEnableDateSearch,
+  enableYouTube,
+  setEnableYouTube,
   startDate,
   setStartDate,
   endDate,
@@ -121,11 +126,13 @@ const EmbedDemoContent = ({
             layout={layout}
             setLayout={setLayout}
             enableDateSearch={enableDateSearch}
-            setEnableDateSearch={setEnableDateSearch}
-            startDate={startDate}
-            setStartDate={setStartDate}
-            endDate={endDate}
-            setEndDate={setEndDate}
+        setEnableDateSearch={setEnableDateSearch}
+        enableYouTube={enableYouTube}
+        setEnableYouTube={setEnableYouTube}
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
           />
 
           <div className="mt-6">

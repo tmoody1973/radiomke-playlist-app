@@ -23,6 +23,8 @@ interface BasicConfigurationProps {
   setUnlimitedSongs: (value: boolean) => void;
   compact: boolean;
   setCompact: (value: boolean) => void;
+  enableYouTube: boolean;
+  setEnableYouTube: (value: boolean) => void;
 }
 
 const BasicConfiguration = ({
@@ -39,6 +41,8 @@ const BasicConfiguration = ({
   setUnlimitedSongs,
   compact,
   setCompact,
+  enableYouTube,
+  setEnableYouTube,
 }: BasicConfigurationProps) => {
   return (
     <div className="space-y-6">

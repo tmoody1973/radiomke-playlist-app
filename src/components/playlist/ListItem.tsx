@@ -37,6 +37,7 @@ interface ListItemProps {
   formatDate: (dateString: string) => string;
   youtubePlayer: YouTubePlayer;
   stationId?: string;
+  enableYouTube?: boolean;
 }
 
 export const ListItem = ({ 
@@ -47,7 +48,8 @@ export const ListItem = ({
   formatTime, 
   formatDate,
   youtubePlayer,
-  stationId
+  stationId,
+  enableYouTube = true,
 }: ListItemProps) => {
   const trackId = `${spin.artist}-${spin.song}-${spin.id}`;
 
@@ -92,6 +94,7 @@ export const ListItem = ({
                   isLoading={youtubePlayer.isLoading}
                   onPlay={youtubePlayer.playVideo}
                   size={compact ? 'sm' : 'md'}
+                  enabled={enableYouTube}
                 />
               </div>
             </div>

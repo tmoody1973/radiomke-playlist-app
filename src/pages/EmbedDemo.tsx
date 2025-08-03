@@ -49,6 +49,8 @@ const EmbedDemo = () => {
             setLayout={embedState.setLayout}
             enableDateSearch={embedState.enableDateSearch}
             setEnableDateSearch={embedState.setEnableDateSearch}
+            enableYouTube={embedState.enableYouTube}
+            setEnableYouTube={embedState.setEnableYouTube}
             startDate={embedState.startDate}
             setStartDate={embedState.setStartDate}
             endDate={embedState.endDate}

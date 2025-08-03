@@ -59,6 +59,7 @@ interface PlaylistContainerProps {
   onDateClear: () => void;
   onDateSearchToggle: (enabled: boolean) => void;
   onManualRefresh: () => void;
+  enableYouTube?: boolean;
 }
 
 export const PlaylistContainer = ({
@@ -79,7 +80,8 @@ export const PlaylistContainer = ({
   onDateChange,
   onDateClear,
   onDateSearchToggle,
-  onManualRefresh
+  onManualRefresh,
+  enableYouTube = true
 }: PlaylistContainerProps) => {
   return (
     <div className="space-y-4">
@@ -108,6 +110,7 @@ export const PlaylistContainer = ({
         formatTime={formatTime}
         formatDate={formatDate}
         youtubePlayer={youtubePlayer}
+        enableYouTube={enableYouTube}
       />
 
       <LoadMoreButton

@@ -11,6 +11,7 @@ interface YouTubePreviewButtonProps {
   isLoading: string | null;
   onPlay: (embedUrl: string, trackId: string) => void;
   size?: 'sm' | 'md';
+  enabled?: boolean;
 }
 
 export const YouTubePreviewButton = ({
@@ -20,9 +21,15 @@ export const YouTubePreviewButton = ({
   currentlyPlaying,
   isLoading,
   onPlay,
-  size = 'sm'
+  size = 'sm',
+  enabled = true
 }: YouTubePreviewButtonProps) => {
-  const { youtubeData, loading } = useOptimizedYouTubeData(artist, song);
+  const { youtubeData, loading } = useOptimizedYouTubeData(artist, song, enabled);
+
+  // If YouTube is disabled, don't render anything
+  if (!enabled) {
+    return null;
+  }
 
   // Show loading state while fetching YouTube data
   if (loading) {

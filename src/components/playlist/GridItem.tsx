@@ -29,9 +29,10 @@ interface GridItemProps {
   isCurrentlyPlaying: boolean;
   formatTime: (dateString: string) => string;
   youtubePlayer: YouTubePlayer;
+  enableYouTube?: boolean;
 }
 
-export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, youtubePlayer }: GridItemProps) => {
+export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, youtubePlayer, enableYouTube = true }: GridItemProps) => {
   const trackId = `${spin.artist}-${spin.song}-${spin.id}`;
 
   return (
@@ -60,6 +61,7 @@ export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, youtubeP
             isLoading={youtubePlayer.isLoading}
             onPlay={youtubePlayer.playVideo}
             size="sm"
+            enabled={enableYouTube}
           />
         </div>
         

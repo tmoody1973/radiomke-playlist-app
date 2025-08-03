@@ -30,6 +30,8 @@ interface EmbedConfigurationProps {
   setLayout: (value: string) => void;
   enableDateSearch: boolean;
   setEnableDateSearch: (value: boolean) => void;
+  enableYouTube: boolean;
+  setEnableYouTube: (value: boolean) => void;
   startDate?: Date;
   setStartDate: (value: Date | undefined) => void;
   endDate?: Date;
@@ -58,6 +60,8 @@ const EmbedConfiguration = ({
   setLayout,
   enableDateSearch,
   setEnableDateSearch,
+  enableYouTube,
+  setEnableYouTube,
   startDate,
   setStartDate,
   endDate,
@@ -79,6 +83,8 @@ const EmbedConfiguration = ({
         setUnlimitedSongs={setUnlimitedSongs}
         compact={compact}
         setCompact={setCompact}
+        enableYouTube={enableYouTube}
+        setEnableYouTube={setEnableYouTube}
       />
 
       <DisplayConfiguration

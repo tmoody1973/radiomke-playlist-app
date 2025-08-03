@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ListItem } from './ListItem';
 import { GridItem } from './GridItem';
@@ -33,6 +32,7 @@ interface PlaylistContentProps {
   formatTime: (dateString: string) => string;
   formatDate: (dateString: string) => string;
   youtubePlayer: YouTubePlayer;
+  enableYouTube?: boolean;
 }
 
 export const PlaylistContent = ({
@@ -43,7 +43,8 @@ export const PlaylistContent = ({
   isCurrentlyPlaying,
   formatTime,
   formatDate,
-  youtubePlayer
+  youtubePlayer,
+  enableYouTube = true,
 }: PlaylistContentProps) => {
   if (layout === 'grid') {
     return (
@@ -56,6 +57,7 @@ export const PlaylistContent = ({
             isCurrentlyPlaying={isCurrentlyPlaying(spin, index)}
             formatTime={formatTime}
             youtubePlayer={youtubePlayer}
+            enableYouTube={enableYouTube}
           />
         ))}
       </div>
@@ -75,6 +77,7 @@ export const PlaylistContent = ({
           formatDate={formatDate}
           youtubePlayer={youtubePlayer}
           stationId={stationId}
+          enableYouTube={enableYouTube}
         />
       ))}
     </div>

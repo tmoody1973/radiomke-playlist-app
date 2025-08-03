@@ -14,6 +14,7 @@ interface SpinitinonPlaylistProps {
   startDate?: string;
   endDate?: string;
   layout?: 'list' | 'grid';
+  enableYouTube?: boolean;
 }
 
 const SpinitinonPlaylist = ({ 

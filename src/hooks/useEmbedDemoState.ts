@@ -19,6 +19,7 @@ export const useEmbedDemoState = () => {
   const [theme, setTheme] = useState('light');
   const [layout, setLayout] = useState('list');
   const [enableDateSearch, setEnableDateSearch] = useState(false);
+  const [enableYouTube, setEnableYouTube] = useState(true);
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [loading, setLoading] = useState(true);
@@ -66,6 +67,7 @@ export const useEmbedDemoState = () => {
     theme,
     layout,
     enableDateSearch,
+    enableYouTube,
     startDate,
     endDate,
   };
@@ -92,6 +94,8 @@ export const useEmbedDemoState = () => {
     setLayout,
     enableDateSearch,
     setEnableDateSearch,
+    enableYouTube,
+    setEnableYouTube,
     startDate,
     setStartDate,
     endDate,
