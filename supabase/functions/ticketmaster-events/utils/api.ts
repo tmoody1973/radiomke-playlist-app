@@ -12,12 +12,6 @@ export const buildTicketmasterUrl = (artistName: string, apiKey: string): string
 }
 
 export const fetchTicketmasterEvents = async (artistName: string, apiKey: string) => {
-  // Record this API call for rate limiting
-  if (!globalThis.ticketmasterRateLimit) {
-    globalThis.ticketmasterRateLimit = new Map()
-  }
-  globalThis.ticketmasterRateLimit.set(`ticketmaster:${artistName.toLowerCase()}`, Date.now())
-  
   const url = buildTicketmasterUrl(artistName, apiKey)
   
   console.log(`Making fresh API call to Ticketmaster for artist: ${artistName}`)

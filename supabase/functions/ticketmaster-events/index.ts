@@ -33,25 +33,6 @@ serve(async (req) => {
       )
     }
 
-// Simple in-memory rate limiting
-    const rateLimitKey = `ticketmaster:${artistName.toLowerCase()}`
-    const lastApiCall = globalThis.ticketmasterRateLimit?.get(rateLimitKey) || 0
-    const timeSinceLastCall = Date.now() - lastApiCall
-    
-    // If we called this artist's API less than 30 seconds ago, skip API call
-    if (timeSinceLastCall < 30000) {
-      console.log(`⏰ Rate limiting API call for ${artistName} (${Math.floor(timeSinceLastCall/1000)}s ago)`)
-      return new Response(
-        JSON.stringify({ events: [] }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Initialize rate limit cache if it doesn't exist
-    if (!globalThis.ticketmasterRateLimit) {
-      globalThis.ticketmasterRateLimit = new Map()
-    }
-
     // Initialize Supabase client for caching
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!

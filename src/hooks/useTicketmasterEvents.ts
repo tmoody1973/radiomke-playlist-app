@@ -31,9 +31,9 @@ interface TicketmasterEvent {
   }>;
 }
 
-export const useTicketmasterEvents = (artistName: string | null, enabled: boolean = true) => {
+export const useTicketmasterEvents = (artistName: string, enabled: boolean = true) => {
   const fetchEvents = async (): Promise<TicketmasterEvent[]> => {
-    if (!artistName?.trim()) return [];
+    if (!artistName.trim()) return [];
 
     console.log(`🎫 Checking for existing Ticketmaster events for: ${artistName}`);
     
@@ -159,7 +159,7 @@ export const useTicketmasterEvents = (artistName: string | null, enabled: boolea
   return useQuery({
     queryKey: ['ticketmaster-events', artistName],
     queryFn: fetchEvents,
-    enabled: enabled && !!artistName?.trim(),
+    enabled: enabled && !!artistName.trim(),
     staleTime: 1000 * 60 * 60 * 24 * 7, // Increased from 24h to 7 days
     gcTime: 1000 * 60 * 60 * 24 * 14, // Increased from 7 to 14 days
     retry: 1

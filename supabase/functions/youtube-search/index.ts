@@ -37,48 +37,6 @@ serve(async (req) => {
     // Create search key for caching
     const searchKey = createSearchKey(artist, song);
     
-    // Simple rate limiting - track per-artist requests in memory
-    const rateLimitKey = `youtube:${artist.toLowerCase()}-${song.toLowerCase()}`
-    if (!globalThis.youtubeRateLimit) {
-      globalThis.youtubeRateLimit = new Map()
-    }
-    
-    const lastRequest = globalThis.youtubeRateLimit.get(rateLimitKey) || 0
-    const timeSinceLastRequest = Date.now() - lastRequest
-    
-    // If we've searched this exact song recently (within 1 hour), skip API call
-    if (timeSinceLastRequest < 3600000) { // 1 hour
-      console.log(`Rate limited YouTube search for ${artist} - ${song} (${Math.floor(timeSinceLastRequest/60000)} minutes ago)`)
-      
-      // Return cached result if available, otherwise return "not found"
-      const cachedResult = await checkCache(supabase, searchKey);
-      if (cachedResult) {
-        return new Response(
-          JSON.stringify({
-            ...(cachedResult.found ? {
-              found: true,
-              videoId: cachedResult.video_id,
-              title: cachedResult.title,
-              channelTitle: cachedResult.channel_title,
-              thumbnail: cachedResult.thumbnail,
-              embedUrl: cachedResult.embed_url,
-            } : { found: false }),
-            fromCache: true,
-            rateLimited: true
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      return new Response(
-        JSON.stringify({ found: false, rateLimited: true }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    // Record this search attempt
-    globalThis.youtubeRateLimit.set(rateLimitKey, Date.now())
-
     // Check cache first
     const cachedResult = await checkCache(supabase, searchKey);
 
