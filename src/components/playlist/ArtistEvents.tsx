@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, ExternalLink, Loader2, Star } from 'lucide-react';
 import { useTicketmasterEvents } from '@/hooks/useTicketmasterEvents';
 import { useCustomEvents } from '@/hooks/useCustomEvents';
+import { useState } from 'react';
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import { formatDate } from '@/utils/playlistHelpers';
 
 interface ArtistEventsProps {
@@ -15,8 +17,15 @@ export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistE
   // Add debugging to ensure we're using the artist name
   console.log(`🎫 ArtistEvents component for: "${artistName}" with stationId: "${stationId}"`);
   
-  const { data: ticketmasterEvents, isLoading: ticketmasterLoading, error: ticketmasterError } = useTicketmasterEvents(artistName);
-  const { data: customEvents, isLoading: customLoading, error: customError } = useCustomEvents(artistName, stationId);
+  // Lazy loading - only fetch events when component becomes visible or user clicks
+  const [showEvents, setShowEvents] = useState(false);
+  const { ref, hasIntersected } = useIntersectionObserver();
+  
+  // Trigger event fetching when component is visible or user clicks
+  const shouldFetchEvents = showEvents || hasIntersected;
+  
+  const { data: ticketmasterEvents, isLoading: ticketmasterLoading, error: ticketmasterError } = useTicketmasterEvents(shouldFetchEvents ? artistName : null);
+  const { data: customEvents, isLoading: customLoading, error: customError } = useCustomEvents(shouldFetchEvents ? artistName : null, stationId);
 
   const isLoading = customLoading;
   const hasError = customError;
@@ -84,8 +93,24 @@ export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistE
     );
   }
 
-  if (hasError || !allEvents || allEvents.length === 0) {
-    return null; // Don't show anything if no events or error
+  if (hasError || (!showEvents && allEvents.length === 0)) {
+    return (
+      <div className="flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setShowEvents(true)}
+          className="text-xs"
+        >
+          <Calendar className="h-3 w-3 mr-1" />
+          Check for shows
+        </Button>
+      </div>
+    );
+  }
+
+  if (showEvents && (!allEvents || allEvents.length === 0)) {
+    return null; // Don't show anything if no events found after checking
   }
 
   const formatEventDate = (dateString: string, timeString?: string) => {
@@ -114,7 +139,8 @@ export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistE
   };
 
   return (
-    <Card className={`${compact ? 'text-xs' : 'text-sm'} border-slate-200 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 shadow-sm hover:shadow-md transition-shadow duration-200`}>
+    <div ref={ref}>
+      <Card className={`${compact ? 'text-xs' : 'text-sm'} border-slate-200 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 shadow-sm hover:shadow-md transition-shadow duration-200`}>
       <CardHeader className="pb-3 px-3 sm:px-6">
         <CardTitle className={`${compact ? 'text-sm' : 'text-base'} text-slate-800 flex items-center gap-2 font-semibold`}>
           <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
@@ -235,6 +261,7 @@ export const ArtistEvents = ({ artistName, compact = false, stationId }: ArtistE
           </div>
         )}
       </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 };

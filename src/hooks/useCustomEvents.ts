@@ -21,9 +21,9 @@ interface CustomEvent {
   updated_at: string;
 }
 
-export const useCustomEvents = (artistName: string, stationId?: string) => {
+export const useCustomEvents = (artistName: string | null, stationId?: string) => {
   const fetchCustomEvents = async (): Promise<CustomEvent[]> => {
-    if (!artistName.trim()) return [];
+    if (!artistName?.trim()) return [];
 
     console.log(`🎫 Fetching custom events for: "${artistName}" with stationId: "${stationId}"`);
     
@@ -73,7 +73,7 @@ export const useCustomEvents = (artistName: string, stationId?: string) => {
   return useQuery({
     queryKey: ['custom-events', artistName, stationId],
     queryFn: fetchCustomEvents,
-    enabled: !!artistName.trim(),
+    enabled: !!artistName?.trim(),
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
   });
