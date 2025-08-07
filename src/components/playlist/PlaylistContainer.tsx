@@ -1,9 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { PlaylistHeader } from './PlaylistHeader';
 import { PlaylistContent } from './PlaylistContent';
 import { LoadMoreButton } from './LoadMoreButton';
 import { PlaylistDebugInfo } from './PlaylistDebugInfo';
+import { TopSongsList } from './TopSongsList';
 
 interface Spin {
   id: number;
@@ -83,41 +85,73 @@ export const PlaylistContainer = ({
   onManualRefresh,
   enableYouTube = true
 }: PlaylistContainerProps) => {
+  const [viewMode, setViewMode] = useState<'recent' | 'top'>('recent');
+  const effectiveShowSearch = showSearch && viewMode === 'recent';
+
   return (
     <div className="space-y-4">
-      <PlaylistHeader
-        title={`${stationId.toUpperCase()} Recent Spins`}
-        compact={compact}
-        isLoading={false}
-        showSearch={showSearch}
-        searchTerm={playlistState.searchTerm}
-        setSearchTerm={playlistState.setSearchTerm}
-        dateSearchEnabled={playlistState.dateSearchEnabled}
-        setDateSearchEnabled={onDateSearchToggle}
-        startDate={playlistState.startDate}
-        endDate={playlistState.endDate}
-        onDateChange={onDateChange}
-        onDateClear={onDateClear}
-        formatDate={formatDate}
-      />
+      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'recent' | 'top')} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="recent">Recent</TabsTrigger>
+          <TabsTrigger value="top">Top 7 days</TabsTrigger>
+        </TabsList>
 
-      <PlaylistContent
-        displayedSpins={displayedSpins}
-        layout={layout}
-        compact={compact}
-        stationId={stationId}
-        isCurrentlyPlaying={isCurrentlyPlaying}
-        formatTime={formatTime}
-        formatDate={formatDate}
-        youtubePlayer={youtubePlayer}
-        enableYouTube={enableYouTube}
-      />
+        <TabsContent value="recent" className="space-y-4">
+          <PlaylistHeader
+            title={`${stationId.toUpperCase()} Recent Spins`}
+            compact={compact}
+            isLoading={false}
+            showSearch={effectiveShowSearch}
+            searchTerm={playlistState.searchTerm}
+            setSearchTerm={playlistState.setSearchTerm}
+            dateSearchEnabled={playlistState.dateSearchEnabled}
+            setDateSearchEnabled={onDateSearchToggle}
+            startDate={playlistState.startDate}
+            endDate={playlistState.endDate}
+            onDateChange={onDateChange}
+            onDateClear={onDateClear}
+            formatDate={formatDate}
+          />
 
-      <LoadMoreButton
-        hasMoreSpins={hasMoreSpins}
-        onLoadMore={onLoadMore}
-        loadingMore={loadingMore}
-      />
+          <PlaylistContent
+            displayedSpins={displayedSpins}
+            layout={layout}
+            compact={compact}
+            stationId={stationId}
+            isCurrentlyPlaying={isCurrentlyPlaying}
+            formatTime={formatTime}
+            formatDate={formatDate}
+            youtubePlayer={youtubePlayer}
+            enableYouTube={enableYouTube}
+          />
+
+          <LoadMoreButton
+            hasMoreSpins={hasMoreSpins}
+            onLoadMore={onLoadMore}
+            loadingMore={loadingMore}
+          />
+        </TabsContent>
+
+        <TabsContent value="top" className="space-y-4">
+          <PlaylistHeader
+            title={`${stationId.toUpperCase()} Top 20 (7 days)`}
+            compact={compact}
+            isLoading={false}
+            showSearch={false}
+            searchTerm={playlistState.searchTerm}
+            setSearchTerm={playlistState.setSearchTerm}
+            dateSearchEnabled={playlistState.dateSearchEnabled}
+            setDateSearchEnabled={onDateSearchToggle}
+            startDate={playlistState.startDate}
+            endDate={playlistState.endDate}
+            onDateChange={onDateChange}
+            onDateClear={onDateClear}
+            formatDate={formatDate}
+          />
+
+          <TopSongsList stationId={stationId} days={7} limit={20} />
+        </TabsContent>
+      </Tabs>
 
       <PlaylistDebugInfo
         hasActiveFilters={hasActiveFilters}
