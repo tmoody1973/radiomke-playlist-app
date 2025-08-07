@@ -191,7 +191,9 @@ export const StationEventsTab: React.FC<StationEventsTabProps> = ({ stationId })
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{e.title}</span>
-                  <Badge variant="secondary">{e.source}</Badge>
+                  {e.source === 'Custom' && (
+                    <Badge variant="secondary">{e.source}</Badge>
+                  )}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {e.artist_name}
