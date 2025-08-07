@@ -20,11 +20,15 @@ interface TopSongsShareDialogProps {
 
 export const TopSongsShareDialog: React.FC<TopSongsShareDialogProps> = ({ open, onOpenChange, items, days, stationId, analyzedCount }) => {
   const [format, setFormat] = useState<ShareFormat>('square')
-  const [theme, setTheme] = useState<'brand' | 'light' | 'dark'>('brand')
+  const [theme, setTheme] = useState<'brand' | 'light' | 'dark' | 'airbnb'>('airbnb')
   const [includeSpins, setIncludeSpins] = useState(true)
   const [stationName, setStationName] = useState(stationId.toUpperCase())
   const [accent, setAccent] = useState<string>('')
+  const [columns, setColumns] = useState<1 | 2>(2)
+  const [logoUrl, setLogoUrl] = useState<string>('')
+  const [logoPlacement, setLogoPlacement] = useState<'header' | 'watermark'>('header')
   const [isGenerating, setIsGenerating] = useState(false)
+
 
   const options: ShareOptions = useMemo(() => ({
     stationName,
@@ -35,7 +39,10 @@ export const TopSongsShareDialog: React.FC<TopSongsShareDialogProps> = ({ open, 
     format,
     analyzedCount,
     generatedAt: new Date(),
-  }), [stationName, days, includeSpins, theme, accent, format, analyzedCount])
+    columns,
+    logoUrl: logoUrl || undefined,
+    logoPlacement,
+  }), [stationName, days, includeSpins, theme, accent, format, analyzedCount, columns, logoUrl, logoPlacement])
 
   const handleDownload = async () => {
     try {
