@@ -56,9 +56,9 @@ export const TopSongsList: React.FC<TopSongsListProps> = ({ stationId, days = 7,
             </li>
           ))}
         </ol>
-        <div className="px-3 py-2 text-xs text-muted-foreground border-t">
-          Analyzed {data.analyzedCount.toLocaleString()} spins
-        </div>
+          <div className="px-3 py-2 text-xs text-muted-foreground border-t">
+            Analyzed {data.analyzedCount.toLocaleString()} spins{days > 7 && data.analyzedCount >= 25000 ? ' (cap reached)' : ''}
+          </div>
       </CardContent>
     </Card>
   );
