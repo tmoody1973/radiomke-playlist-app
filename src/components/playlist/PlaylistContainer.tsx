@@ -6,6 +6,7 @@ import { LoadMoreButton } from './LoadMoreButton';
 import { PlaylistDebugInfo } from './PlaylistDebugInfo';
 import { TopSongsList } from './TopSongsList';
 import StationEventsTab from './StationEventsTab';
+import AboutPlaylistTab from './AboutPlaylistTab';
 interface Spin {
   id: number;
   artist: string;
@@ -80,15 +81,16 @@ export const PlaylistContainer = ({
   onManualRefresh,
   enableYouTube = true
 }: PlaylistContainerProps) => {
-  const [viewMode, setViewMode] = useState<'recent' | 'top' | 'top30' | 'events'>('recent');
+  const [viewMode, setViewMode] = useState<'recent' | 'top' | 'top30' | 'events' | 'about'>('recent');
   const effectiveShowSearch = showSearch && viewMode === 'recent';
   return <div className="space-y-4">
-      <Tabs value={viewMode} onValueChange={v => setViewMode(v as 'recent' | 'top' | 'top30' | 'events')} className="space-y-4">
+      <Tabs value={viewMode} onValueChange={v => setViewMode(v as 'recent' | 'top' | 'top30' | 'events' | 'about')} className="space-y-4">
         <TabsList>
           <TabsTrigger value="recent">Recent</TabsTrigger>
           <TabsTrigger value="top">Top 20 Songs</TabsTrigger>
           <TabsTrigger value="top30">Top 20 (30 days)</TabsTrigger>
           <TabsTrigger value="events">Concerts</TabsTrigger>
+          <TabsTrigger value="about">About Us</TabsTrigger>
         </TabsList>
 
         <TabsContent value="recent" className="space-y-4">
@@ -115,6 +117,10 @@ export const PlaylistContainer = ({
           <PlaylistHeader title={`${stationId.toUpperCase()} Events from artists we play (next 60 days)`} compact={compact} isLoading={false} showSearch={false} searchTerm={playlistState.searchTerm} setSearchTerm={playlistState.setSearchTerm} dateSearchEnabled={playlistState.dateSearchEnabled} setDateSearchEnabled={onDateSearchToggle} startDate={playlistState.startDate} endDate={playlistState.endDate} onDateChange={onDateChange} onDateClear={onDateClear} formatDate={formatDate} />
 
           <StationEventsTab stationId={stationId} />
+        </TabsContent>
+
+        <TabsContent value="about" className="space-y-4">
+          <AboutPlaylistTab />
         </TabsContent>
       </Tabs>
 
