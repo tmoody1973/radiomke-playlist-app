@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { TopSong } from '@/hooks/useTopSongs'
-import { ShareFormat, ShareOptions, buildTopSongsCaption, downloadDataUrl, generateTopSongsImage } from '@/utils/topSongsShare'
+import { ShareFormat, ShareOptions, buildTopSongsCaption, downloadDataUrl, generateTopSongsImage, openDataUrlInNewTab, copyImageToClipboard } from '@/utils/topSongsShare'
 
 interface TopSongsShareDialogProps {
   open: boolean
@@ -68,6 +68,33 @@ export const TopSongsShareDialog: React.FC<TopSongsShareDialogProps> = ({ open, 
     }
   }
 
+  const handleOpenInNewTab = async () => {
+    try {
+      setIsGenerating(true)
+      const dataUrl = await generateTopSongsImage(items, options)
+      openDataUrlInNewTab(dataUrl)
+      toast.success('Opened image in new tab')
+    } catch (e) {
+      console.error(e)
+      toast.error('Failed to open image')
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const handleCopyImage = async () => {
+    try {
+      setIsGenerating(true)
+      const dataUrl = await generateTopSongsImage(items, options)
+      const rich = await copyImageToClipboard(dataUrl)
+      toast.success(rich ? 'Image copied to clipboard' : 'Image URL copied to clipboard')
+    } catch (e) {
+      console.error(e)
+      toast.error('Failed to copy image')
+    } finally {
+      setIsGenerating(false)
+    }
+  }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
@@ -110,6 +137,7 @@ export const TopSongsShareDialog: React.FC<TopSongsShareDialogProps> = ({ open, 
                   <SelectItem value="brand">Brand</SelectItem>
                   <SelectItem value="light">Light</SelectItem>
                   <SelectItem value="dark">Dark</SelectItem>
+                  <SelectItem value="airbnb">Airbnb</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -117,6 +145,38 @@ export const TopSongsShareDialog: React.FC<TopSongsShareDialogProps> = ({ open, 
               <Label htmlFor="accent">Accent color (optional)</Label>
               <Input id="accent" type="text" placeholder="#22d3ee" value={accent} onChange={(e) => setAccent(e.target.value)} />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Columns</Label>
+              <Select value={String(columns)} onValueChange={(v) => setColumns(Number(v) as 1 | 2)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select columns" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">One</SelectItem>
+                  <SelectItem value="2">Two</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Logo placement</Label>
+              <Select value={logoPlacement} onValueChange={(v) => setLogoPlacement(v as 'header' | 'watermark')}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select placement" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="header">Header</SelectItem>
+                  <SelectItem value="watermark">Watermark</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="logo">Station logo URL (optional)</Label>
+            <Input id="logo" type="url" placeholder="https://example.com/logo.png" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} />
           </div>
 
           <div className="flex items-center justify-between rounded-md border px-4 py-2">
@@ -128,12 +188,18 @@ export const TopSongsShareDialog: React.FC<TopSongsShareDialogProps> = ({ open, 
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Tip: You can post square images to Instagram and landscape images to X/Twitter.
+            Tip: Square for Instagram, Story for Reels, Landscape for X.
           </p>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-2">
+        <DialogFooter className="flex flex-wrap gap-2 sm:gap-2">
           <Button variant="secondary" onClick={handleCopyCaption} type="button">Copy caption</Button>
+          <Button variant="secondary" onClick={handleCopyImage} disabled={isGenerating} type="button">
+            {isGenerating ? 'Copying…' : 'Copy image'}
+          </Button>
+          <Button variant="outline" onClick={handleOpenInNewTab} disabled={isGenerating} type="button">
+            {isGenerating ? 'Opening…' : 'Open in new tab'}
+          </Button>
           <Button onClick={handleDownload} disabled={isGenerating} type="button">
             {isGenerating ? 'Generating…' : 'Download PNG'}
           </Button>

@@ -249,11 +249,53 @@ export function buildTopSongsCaption(items: TopSong[], opts: ShareOptions) {
   return [header, '', ...lines, analyzed].join('\n')
 }
 
-export function downloadDataUrl(dataUrl: string, filename: string) {
-  const a = document.createElement('a')
-  a.href = dataUrl
-  a.download = `${sanitizeFilename(filename)}.png`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
+export async function downloadDataUrl(dataUrl: string, filename: string) {
+  try {
+    const res = await fetch(dataUrl)
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${sanitizeFilename(filename)}.png`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 0)
+  } catch {
+    try {
+      window.open(dataUrl, '_blank')
+    } catch {
+      // no-op
+    }
+  }
+}
+
+export function openDataUrlInNewTab(dataUrl: string) {
+  try {
+    window.open(dataUrl, '_blank')
+  } catch {
+    // ignore
+  }
+}
+
+export async function copyImageToClipboard(dataUrl: string): Promise<boolean> {
+  try {
+    const res = await fetch(dataUrl)
+    const blob = await res.blob()
+    const ClipboardItemCtor: any = (window as any).ClipboardItem
+    if (navigator.clipboard && ClipboardItemCtor) {
+      const item = new ClipboardItemCtor({ [blob.type || 'image/png']: blob })
+      await navigator.clipboard.write([item])
+      return true
+    }
+  } catch {
+    // fall through to text copy
+  }
+  try {
+    await navigator.clipboard.writeText(dataUrl)
+    return false
+  } catch {
+    return false
+  }
 }
