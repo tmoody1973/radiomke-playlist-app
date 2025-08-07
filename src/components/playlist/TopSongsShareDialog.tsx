@@ -28,6 +28,12 @@ export const TopSongsShareDialog: React.FC<TopSongsShareDialogProps> = ({ open, 
   const [logoUrl, setLogoUrl] = useState<string>('')
   const [logoPlacement, setLogoPlacement] = useState<'header' | 'watermark'>('header')
   const [isGenerating, setIsGenerating] = useState(false)
+  const handleLogoUpload = (file: File | null) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => setLogoUrl(String(reader.result))
+    reader.readAsDataURL(file)
+  }
 
 
   const options: ShareOptions = useMemo(() => ({
@@ -175,8 +181,14 @@ export const TopSongsShareDialog: React.FC<TopSongsShareDialogProps> = ({ open, 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="logo">Station logo URL (optional)</Label>
+            <Label htmlFor="logo">Station logo</Label>
             <Input id="logo" type="url" placeholder="https://example.com/logo.png" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} />
+            <div className="flex items-center gap-2">
+              <Input id="logo-upload" type="file" accept="image/*" onChange={(e) => handleLogoUpload(e.target.files?.[0] ?? null)} />
+              {logoUrl ? (
+                <Button variant="ghost" type="button" onClick={() => setLogoUrl('')}>Clear</Button>
+              ) : null}
+            </div>
           </div>
 
           <div className="flex items-center justify-between rounded-md border px-4 py-2">

@@ -93,6 +93,7 @@ export async function generateTopSongsImage(
     fontSize: format === 'story' ? 64 : 56,
     fontWeight: 'bold',
     fill: t.text,
+    fontFamily: 'Inter, system-ui',
   })
   canvas.add(title)
 
@@ -104,6 +105,7 @@ export async function generateTopSongsImage(
       width: width - 128,
       fontSize: 28,
       fill: t.subtext,
+      fontFamily: 'Inter, system-ui',
     }
   )
   canvas.add(subtitle)
@@ -123,6 +125,9 @@ export async function generateTopSongsImage(
       logo.scaleY = scale
       logo.left = width - 64 - logo.width! * scale
       logo.top = 32
+      // Slightly round corners via clipPath circle for modern feel
+      const clip = new Rect({ left: 0, top: 0, rx: 8, ry: 8, width: logo.width!, height: logo.height! })
+      logo.clipPath = clip as any
       canvas.add(logo)
     } catch (e) {
       // ignore logo load failures
@@ -141,6 +146,7 @@ export async function generateTopSongsImage(
   const badge = format === 'story' ? 36 : 30
   const lineGap = includeSpins ? 10 : 4
   const rowHeight = includeSpins ? fontSize + spinSize + 16 : fontSize + 10
+  const rowBgColor = (themeKey === 'light' || themeKey === 'airbnb') ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.06)'
 
   const toDraw = items.slice(0, 20)
   const perCol = columns === 2 ? Math.ceil(toDraw.length / 2) : toDraw.length
@@ -152,6 +158,24 @@ export async function generateTopSongsImage(
 
     const baseX = paddingX + colIndex * (colWidth + (columns === 2 ? gutter : 0))
     const baseY = topY + rowIndex * (rowHeight + lineGap)
+
+    // Row background card
+    const rowBg = new Rect({
+      left: baseX - 12,
+      top: baseY - 8,
+      width: colWidth + 24,
+      height: rowHeight + 16,
+      rx: 16,
+      ry: 16,
+      fill: rowBgColor,
+      shadow: {
+        color: 'rgba(0,0,0,0.08)',
+        blur: 12,
+        offsetX: 0,
+        offsetY: 4,
+      } as any,
+    })
+    canvas.add(rowBg)
 
     // Rank badge
     const rankBg = new Rect({
@@ -175,7 +199,7 @@ export async function generateTopSongsImage(
       fontWeight: 'bold',
       fill: '#ffffff',
       textAlign: 'center' as any,
-      fontFamily: 'system-ui',
+      fontFamily: 'Inter, system-ui',
     })
     canvas.add(rankText)
 
@@ -189,7 +213,7 @@ export async function generateTopSongsImage(
       width: textWidth,
       fontSize,
       fill: t.text,
-      fontFamily: 'system-ui',
+      fontFamily: 'Inter, system-ui',
       splitByGrapheme: true,
     })
     canvas.add(line)
@@ -201,6 +225,7 @@ export async function generateTopSongsImage(
         width: textWidth,
         fontSize: spinSize,
         fill: t.subtext,
+        fontFamily: 'Inter, system-ui',
       })
       canvas.add(spins)
     }
@@ -231,6 +256,7 @@ export async function generateTopSongsImage(
     width: width - paddingX * 2,
     fontSize: 20,
     fill: t.subtext,
+    fontFamily: 'Inter, system-ui',
   })
   canvas.add(footer)
 
@@ -253,7 +279,40 @@ export async function downloadDataUrl(dataUrl: string, filename: string) {
   try {
     const res = await fetch(dataUrl)
     const blob = await res.blob()
+
+    const anyWindow: any = window as any
+    if (anyWindow.showSaveFilePicker) {
+      try {
+        const handle = await anyWindow.showSaveFilePicker({
+          suggestedName: `${sanitizeFilename(filename)}.png`,
+          types: [
+            {
+              description: 'PNG Image',
+              accept: { 'image/png': ['.png'] },
+            },
+          ],
+        })
+        const writable = await handle.createWritable()
+        await writable.write(blob)
+        await writable.close()
+        return
+      } catch {
+        // if user cancels or it fails, fall through to anchor method
+      }
+    }
+
     const url = URL.createObjectURL(blob)
+    const inIframe = window.self !== window.top
+    const ua = navigator.userAgent
+    const isIOS = /iP(ad|hone|od)/.test(ua)
+    const isSafari = /^((?!chrome|android).)*safari/i.test(ua)
+    if (inIframe || isIOS || isSafari) {
+      // More reliable in iframes/iOS/Safari: open in new tab for manual save
+      window.open(url, '_blank')
+      // Revoke later
+      setTimeout(() => URL.revokeObjectURL(url), 5000)
+      return
+    }
 
     const a = document.createElement('a')
     a.href = url
