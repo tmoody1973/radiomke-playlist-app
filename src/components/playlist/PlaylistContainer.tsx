@@ -88,7 +88,7 @@ export const PlaylistContainer = ({
           <TabsTrigger value="recent">Recent</TabsTrigger>
           <TabsTrigger value="top">Top 20 Songs</TabsTrigger>
           <TabsTrigger value="top30">Top 20 (30 days)</TabsTrigger>
-          <TabsTrigger value="events">Events (60 days)</TabsTrigger>
+          <TabsTrigger value="events">Concerts</TabsTrigger>
         </TabsList>
 
         <TabsContent value="recent" className="space-y-4">
@@ -112,21 +112,7 @@ export const PlaylistContainer = ({
         </TabsContent>
 
         <TabsContent value="events" className="space-y-4">
-          <PlaylistHeader
-            title={`${stationId.toUpperCase()} Events from artists we play (next 60 days)`}
-            compact={compact}
-            isLoading={false}
-            showSearch={false}
-            searchTerm={playlistState.searchTerm}
-            setSearchTerm={playlistState.setSearchTerm}
-            dateSearchEnabled={playlistState.dateSearchEnabled}
-            setDateSearchEnabled={onDateSearchToggle}
-            startDate={playlistState.startDate}
-            endDate={playlistState.endDate}
-            onDateChange={onDateChange}
-            onDateClear={onDateClear}
-            formatDate={formatDate}
-          />
+          <PlaylistHeader title={`${stationId.toUpperCase()} Events from artists we play (next 60 days)`} compact={compact} isLoading={false} showSearch={false} searchTerm={playlistState.searchTerm} setSearchTerm={playlistState.setSearchTerm} dateSearchEnabled={playlistState.dateSearchEnabled} setDateSearchEnabled={onDateSearchToggle} startDate={playlistState.startDate} endDate={playlistState.endDate} onDateChange={onDateChange} onDateClear={onDateClear} formatDate={formatDate} />
 
           <StationEventsTab stationId={stationId} />
         </TabsContent>
