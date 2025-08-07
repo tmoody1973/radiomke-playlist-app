@@ -26,7 +26,7 @@ export const TopSongsList: React.FC<TopSongsListProps> = ({ stationId, days = 7,
     );
   }
 
-  if (!data || data.length === 0) {
+  if (!data || data.items.length === 0) {
     return (
       <div className="px-4 py-8 text-center text-muted-foreground">
         No spins in the last {days} days.
@@ -38,7 +38,7 @@ export const TopSongsList: React.FC<TopSongsListProps> = ({ stationId, days = 7,
     <Card>
       <CardContent className="p-0">
         <ol className="divide-y">
-          {data.map((item, idx) => (
+          {data.items.map((item, idx) => (
             <li key={`${item.artist}-${item.song}-${idx}`} className="flex items-center gap-3 p-3">
               <div className="w-6 text-center font-semibold text-muted-foreground">{idx + 1}</div>
               <Avatar className="h-10 w-10 rounded-md">
@@ -56,6 +56,9 @@ export const TopSongsList: React.FC<TopSongsListProps> = ({ stationId, days = 7,
             </li>
           ))}
         </ol>
+        <div className="px-3 py-2 text-xs text-muted-foreground border-t">
+          Analyzed {data.analyzedCount.toLocaleString()} spins
+        </div>
       </CardContent>
     </Card>
   );
