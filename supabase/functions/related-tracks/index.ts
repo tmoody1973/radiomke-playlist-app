@@ -162,6 +162,7 @@ serve(async (req) => {
 
     if (token && (seedTrackId || seedArtistId)) {
       // If still no artist id but we have a track id, fetch track details from Spotify
+      let seedArtistName: string | null = null;
       if (!seedArtistId && seedTrackId) {
         try {
           const trackResp = await fetch(`https://api.spotify.com/v1/tracks/${encodeURIComponent(seedTrackId)}?market=US`, {
@@ -170,6 +171,9 @@ serve(async (req) => {
           if (trackResp.ok) {
             const trackData = await trackResp.json();
             seedArtistId = trackData?.artists?.[0]?.id || null;
+            seedArtistName = trackData?.artists?.[0]?.name || null;
+          } else {
+            console.error("Spotify track fetch failed:", trackResp.status, await trackResp.text());
           }
         } catch (e) {
           console.error("Spotify track fetch failed:", e);
@@ -185,20 +189,75 @@ serve(async (req) => {
       const recUrl = `https://api.spotify.com/v1/recommendations?${params.toString()}`;
       const recResp = await fetch(recUrl, { headers: { Authorization: `Bearer ${token}` } });
 
+      const extractArtistId = (artistUrl?: string) => {
+        if (!artistUrl) return null;
+        const m = artistUrl.match(/\/artist\/([a-zA-Z0-9]+)(?:[?#].*)?$/);
+        return m?.[1] || null;
+      };
+
       if (recResp.ok) {
         const recData = await recResp.json();
-        items = normalizeSpotifyItems(recData?.tracks || []);
-        // Filter out the seed track and dedupe by trackId
+        let firstBatch = normalizeSpotifyItems(recData?.tracks || []);
+        // Filter: remove seed track, remove same-artist as seed artist, and dedupe by trackId
         const seen = new Set<string>();
-        items = (items || []).filter((i) => {
+        firstBatch = (firstBatch || []).filter((i) => {
           if (!i.trackId || i.trackId === seedTrackId) return false;
+          const itemArtistId = extractArtistId(i.links?.artist);
+          if (seedArtistId && itemArtistId && itemArtistId === seedArtistId) return false;
+          if (seedArtistName && i.artist && i.artist.toLowerCase() === seedArtistName.toLowerCase()) return false;
           if (seen.has(i.trackId)) return false;
           seen.add(i.trackId);
           return true;
         });
+
+        items = firstBatch;
         source = "spotify";
+
+        // If too few items, enrich via related artists recommendations
+        if ((items?.length || 0) < 6 && seedArtistId) {
+          try {
+            const relResp = await fetch(`https://api.spotify.com/v1/artists/${encodeURIComponent(seedArtistId)}/related-artists`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (relResp.ok) {
+              const relData = await relResp.json();
+              const relatedIds: string[] = (relData?.artists || [])
+                .map((a: any) => a?.id)
+                .filter((id: string | null) => !!id && id !== seedArtistId)
+                .slice(0, 5);
+
+              if (relatedIds.length) {
+                const rp = new URLSearchParams();
+                rp.set("limit", "12");
+                rp.set("market", "US");
+                rp.set("seed_artists", relatedIds.join(","));
+                const moreUrl = `https://api.spotify.com/v1/recommendations?${rp.toString()}`;
+                const moreResp = await fetch(moreUrl, { headers: { Authorization: `Bearer ${token}` } });
+                if (moreResp.ok) {
+                  const moreData = await moreResp.json();
+                  const moreItems = normalizeSpotifyItems(moreData?.tracks || []);
+                  for (const i of moreItems) {
+                    if (!i.trackId) continue;
+                    const itemArtistId = extractArtistId(i.links?.artist);
+                    if (seedArtistId && itemArtistId && itemArtistId === seedArtistId) continue;
+                    if (seedArtistName && i.artist && i.artist.toLowerCase() === seedArtistName.toLowerCase()) continue;
+                    if (seen.has(i.trackId)) continue;
+                    seen.add(i.trackId);
+                    items!.push(i);
+                  }
+                } else {
+                  console.error("Related-artist recommendations failed:", moreResp.status, await moreResp.text());
+                }
+              }
+            } else {
+              console.error("Fetch related artists failed:", relResp.status, await relResp.text());
+            }
+          } catch (e) {
+            console.error("Related artists enrichment failed:", e);
+          }
+        }
       } else {
-        console.error("Spotify recommendations failed:", await recResp.text());
+        console.error("Spotify recommendations failed:", recResp.status, await recResp.text());
       }
     }
 

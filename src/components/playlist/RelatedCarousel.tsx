@@ -17,12 +17,12 @@ interface Props {
   className?: string;
 }
 
-const RelatedCarousel: React.FC<Props> = ({ trackId, isrc, artist, song, stationId, spinitronId, title = "You might also like", className }) => {
+const RelatedCarousel: React.FC<Props> = ({ trackId, isrc, artist, song, stationId, spinitronId, title, className }) => {
   const { data } = useRelatedTracks({ trackId, isrc, artist, song, stationId, spinitronId }, !!trackId || !!isrc || (!!artist && !!song));
   const [expanded, setExpanded] = useState(false);
 
   const items = data?.items ?? [];
-
+  const heading = title ?? (data?.source === "fallback" ? `More by ${artist || "this artist"}` : "Similar songs");
   const filteredItems = useMemo(() => {
     const norm = (s?: string) => (s || "").toLowerCase().replace(/\s+/g, " ").trim();
     const currentTitle = norm(song);
@@ -45,7 +45,7 @@ const RelatedCarousel: React.FC<Props> = ({ trackId, isrc, artist, song, station
   return (
     <div className={className}>
       <div className="flex items-center justify-between">
-        <div className="text-sm font-medium text-muted-foreground">{title}</div>
+        <div className="text-sm font-medium text-muted-foreground">{heading}</div>
         <Button
           variant="ghost"
           size="sm"
