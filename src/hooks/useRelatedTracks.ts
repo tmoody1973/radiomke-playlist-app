@@ -9,13 +9,15 @@ type Params = {
   isrc?: string;
   artist?: string;
   song?: string;
+  stationId?: string;     // for DB write-back
+  spinitronId?: number;   // for DB write-back
 };
 
 export function useRelatedTracks(params: Params, enabled: boolean = true) {
-  const { trackId, isrc, artist, song } = params;
+  const { trackId, isrc, artist, song, stationId, spinitronId } = params;
 
   return useQuery({
-    queryKey: ["related-tracks", trackId, isrc, artist, song],
+    queryKey: ["related-tracks", trackId, isrc, artist, song, stationId, spinitronId],
     queryFn: async (): Promise<RelatedTracksResponse> => {
       console.log("🔎 Fetching related tracks", { trackId, isrc, artist, song });
       let resolvedTrackId = trackId;
@@ -31,6 +33,34 @@ export function useRelatedTracks(params: Params, enabled: boolean = true) {
           } else if (enhanceData?.found && enhanceData?.data?.spotify_track_id) {
             resolvedTrackId = enhanceData.data.spotify_track_id as string;
             console.log("✅ Resolved Spotify track id from enhance:", resolvedTrackId);
+
+            // Write back to DB if we have identifiers and original input lacked trackId
+            if (!trackId && stationId && typeof spinitronId === 'number') {
+              try {
+                const payload: any = {
+                  spotify_track_id: resolvedTrackId,
+                };
+                const ed = enhanceData.data;
+                if (ed.spotify_album_id) payload.spotify_album_id = ed.spotify_album_id;
+                if (ed.spotify_artist_id) payload.spotify_artist_id = ed.spotify_artist_id;
+                if (ed.image) payload.image = ed.image;
+                if (ed.release) payload.release = ed.release;
+                if (ed.enhanced_metadata) payload.enhanced_metadata = ed.enhanced_metadata;
+
+                const { error: updateError } = await supabase
+                  .from('songs')
+                  .update(payload)
+                  .eq('station_id', stationId)
+                  .eq('spinitron_id', spinitronId);
+                if (updateError) {
+                  console.error('❌ Failed to write back spotify_track_id:', updateError);
+                } else {
+                  console.log('📝 Wrote spotify_track_id to DB', { stationId, spinitronId, resolvedTrackId });
+                }
+              } catch (wbErr) {
+                console.error('DB write-back error:', wbErr);
+              }
+            }
           } else {
             console.warn("spotify-enhance did not return a track id", enhanceData);
           }

@@ -9,12 +9,14 @@ interface Props {
   isrc?: string;    // Alternate input
   artist?: string;  // Fallback input when no trackId/ISRC
   song?: string;    // Fallback input when no trackId/ISRC
+  stationId?: string;   // For DB write-back
+  spinitronId?: number; // For DB write-back
   title?: string;   // Optional heading override
   className?: string;
 }
 
-const RelatedCarousel: React.FC<Props> = ({ trackId, isrc, artist, song, title = "You might also like", className }) => {
-  const { data } = useRelatedTracks({ trackId, isrc, artist, song }, !!trackId || !!isrc || (!!artist && !!song));
+const RelatedCarousel: React.FC<Props> = ({ trackId, isrc, artist, song, stationId, spinitronId, title = "You might also like", className }) => {
+  const { data } = useRelatedTracks({ trackId, isrc, artist, song, stationId, spinitronId }, !!trackId || !!isrc || (!!artist && !!song));
 
   if (!data?.items?.length) return null;
 

@@ -146,9 +146,11 @@ export const ListItem = ({
         stationId={stationId || spin.station_id}
       />
 <RelatedCarousel 
-  trackId={spin.spotify_track_id} 
+  trackId={spin.spotify_track_id}
   artist={spin.artist}
   song={spin.song}
+  stationId={stationId || spin.station_id}
+  spinitronId={spin.id}
   className="mt-2" 
 />
     </div>
