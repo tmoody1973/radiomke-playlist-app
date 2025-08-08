@@ -33,6 +33,28 @@ async function fetchSonglinkBySpotifyId(spotifyId: string) {
   return { status, json };
 }
 
+async function fetchSonglinkByQuery(artist: string, title: string) {
+  const q = `${artist} - ${title}`;
+  const url = `https://api.song.link/v1-alpha.1/links?q=${encodeURIComponent(q)}&userCountry=US`;
+  const res = await fetch(url, { headers: { "accept": "application/json" } });
+  const status = res.status;
+  let json: any = null;
+  try { json = await res.json(); } catch (_) { /* ignore */ }
+  return { status, json };
+}
+
+function extractSpotifyTrackIdFromLinks(json: any): string | null {
+  try {
+    const url: string | undefined = json?.linksByPlatform?.spotify?.url;
+    if (!url) return null;
+    // Expect formats like https://open.spotify.com/track/{id} or with query params
+    const m = /spotify\.com\/track\/([a-zA-Z0-9]+)(?:\?|$|\/)/.exec(url);
+    return m?.[1] || null;
+  } catch (_) {
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -63,21 +85,25 @@ serve(async (req) => {
       });
     }
 
-    // Only attempt live fetch when we have a spotify id (most reliable)
-    if (!spotify_track_id) {
-      // No reliable identifier to fetch; serve stale if exists, else 422
-      if (cached) {
-        return new Response(JSON.stringify({ source: 'stale-cache', cacheKey, data: cached.data }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      return new Response(JSON.stringify({ error: 'Insufficient identifiers to fetch from Songlink' }), {
-        status: 422,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+let status: number | undefined;
+let json: any = null;
 
-    const { status, json } = await fetchSonglinkBySpotifyId(spotify_track_id);
+if (spotify_track_id) {
+  ({ status, json } = await fetchSonglinkBySpotifyId(spotify_track_id));
+} else if (artist && title) {
+  ({ status, json } = await fetchSonglinkByQuery(artist, title));
+} else {
+  // No reliable identifier to fetch; serve stale if exists, else 422
+  if (cached) {
+    return new Response(JSON.stringify({ source: 'stale-cache', cacheKey, data: cached.data }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  return new Response(JSON.stringify({ error: 'Insufficient identifiers to fetch from Songlink' }), {
+    status: 422,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
 
     if (status === 429) {
       // Rate limited: if we have stale cache, return it
@@ -105,22 +131,27 @@ serve(async (req) => {
         last_error: null,
       }, { onConflict: 'cache_key' });
 
-      // Also upsert alias keys so subsequent lookups by artist/title or ISRC hit cache
-      const aliasKeys: string[] = [];
-      try {
-        if (artist && title) {
-          const qKey = buildCacheKey({ artist, title });
-          if (qKey !== cacheKey) aliasKeys.push(qKey);
-        }
-        if (isrc) {
-          const isrcKey = buildCacheKey({ isrc });
-          if (isrcKey !== cacheKey) aliasKeys.push(isrcKey);
-        }
-        if (spotify_track_id) {
-          const spKey = buildCacheKey({ spotify_track_id });
-          if (spKey !== cacheKey) aliasKeys.push(spKey);
-        }
-      } catch (_) { /* noop */ }
+// Also upsert alias keys so subsequent lookups by artist/title or ISRC hit cache
+const aliasKeys: string[] = [];
+try {
+  if (artist && title) {
+    const qKey = buildCacheKey({ artist, title });
+    if (qKey !== cacheKey) aliasKeys.push(qKey);
+  }
+  if (isrc) {
+    const isrcKey = buildCacheKey({ isrc });
+    if (isrcKey !== cacheKey) aliasKeys.push(isrcKey);
+  }
+  if (spotify_track_id) {
+    const spKey = buildCacheKey({ spotify_track_id });
+    if (spKey !== cacheKey) aliasKeys.push(spKey);
+  }
+  const spFromJson = extractSpotifyTrackIdFromLinks(json);
+  if (spFromJson) {
+    const spKey2 = buildCacheKey({ spotify_track_id: spFromJson });
+    if (spKey2 !== cacheKey) aliasKeys.push(spKey2);
+  }
+} catch (_) { /* noop */ }
 
       if (aliasKeys.length) {
         const rows = aliasKeys.map((k) => ({
