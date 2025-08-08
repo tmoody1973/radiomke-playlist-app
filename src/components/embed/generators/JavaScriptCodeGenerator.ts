@@ -23,7 +23,7 @@ interface EmbedConfig {
 
 export const generateJavaScriptCode = (config: EmbedConfig): string => {
   // Use the actual Supabase URL for external embeds
-  const supabaseUrl = 'https://ftrivovjultfayttemce.supabase.co';
+  const supabaseUrl = typeof window !== 'undefined' && window.location ? window.location.origin : '';
   const embedConfig = {
     station: config.selectedStation,
     autoUpdate: config.autoUpdate,
