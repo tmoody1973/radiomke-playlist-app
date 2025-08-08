@@ -8,6 +8,7 @@ export interface Spin {
   label?: string;
   release?: string;
   image?: string;
+  spotify_track_id?: string;
 }
 
 export interface UseSpinDataProps {
@@ -38,6 +39,7 @@ export interface SpinDatabaseRecord {
   label: string | null;
   release: string | null;
   image: string | null;
+  spotify_track_id: string | null;
 }
 
 export interface SpinApiResponse {

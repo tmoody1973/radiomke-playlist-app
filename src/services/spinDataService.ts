@@ -183,7 +183,8 @@ export class SpinDataService {
       composer: '',
       label: song.label || '',
       release: song.release || '',
-      image: song.image || ''
+      image: song.image || '',
+      spotify_track_id: song.spotify_track_id || undefined,
     };
   }
 

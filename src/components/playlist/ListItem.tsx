@@ -6,6 +6,7 @@ import { EnhancedAlbumArtwork } from './EnhancedAlbumArtwork';
 import { EnhancedSongInfo } from './EnhancedSongInfo';
 import { LazyYouTubePreviewButton } from './LazyYouTubePreviewButton';
 import { ArtistEvents } from './ArtistEvents';
+import RelatedCarousel from './RelatedCarousel';
 
 interface Spin {
   id: number;
@@ -17,6 +18,7 @@ interface Spin {
   label?: string;
   release?: string;
   image?: string;
+  spotify_track_id?: string;
   station_id?: string;
   is_manual?: boolean;
 }
@@ -143,6 +145,9 @@ export const ListItem = ({
         compact={compact} 
         stationId={stationId || spin.station_id}
       />
+      {spin.spotify_track_id && (
+        <RelatedCarousel trackId={spin.spotify_track_id} className="mt-2" />
+      )}
     </div>
   );
 };
