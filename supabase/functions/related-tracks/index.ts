@@ -96,7 +96,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { trackId, isrc } = await req.json().catch(() => ({}));
+    const { trackId, isrc, artistId } = await req.json().catch(() => ({}));
     if (!trackId && !isrc) {
       return new Response(
         JSON.stringify({ error: "Missing trackId or isrc" }),
@@ -104,10 +104,9 @@ serve(async (req) => {
       );
     }
 
-    // Build cache key
-    const cacheKey = trackId
-      ? `related:spotify:${trackId}`
-      : `related:isrc:${isrc}`;
+    // Build cache key (include artist when present)
+    const seedPart = trackId ? `track:${trackId}` : `isrc:${isrc}`;
+    const cacheKey = `related:${seedPart}${artistId ? `:artist:${artistId}` : ""}`;
 
     // 1) Check cache (valid TTL)
     const { data: cached, error: cacheErr } = await supabase
@@ -146,15 +145,57 @@ serve(async (req) => {
       seedTrackId = await searchTrackIdByISRC(isrc, token);
     }
 
-    if (token && seedTrackId) {
-      const recUrl = `https://api.spotify.com/v1/recommendations?seed_tracks=${encodeURIComponent(seedTrackId)}&limit=12`;
-      const recResp = await fetch(recUrl, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    // Attempt to resolve a seed artist id
+    let seedArtistId: string | null = (artistId as string) || null;
+
+    if (!seedArtistId && seedTrackId) {
+      // Try DB first for enhanced_metadata
+      const { data: seedSongRow, error: seedSongErr } = await supabase
+        .from("songs")
+        .select("enhanced_metadata")
+        .eq("spotify_track_id", seedTrackId)
+        .limit(1)
+        .maybeSingle();
+      if (seedSongErr) console.error("songs enhanced_metadata lookup error:", seedSongErr);
+      seedArtistId = seedSongRow?.enhanced_metadata?.all_artists?.[0]?.id || null;
+    }
+
+    if (token && (seedTrackId || seedArtistId)) {
+      // If still no artist id but we have a track id, fetch track details from Spotify
+      if (!seedArtistId && seedTrackId) {
+        try {
+          const trackResp = await fetch(`https://api.spotify.com/v1/tracks/${encodeURIComponent(seedTrackId)}?market=US`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (trackResp.ok) {
+            const trackData = await trackResp.json();
+            seedArtistId = trackData?.artists?.[0]?.id || null;
+          }
+        } catch (e) {
+          console.error("Spotify track fetch failed:", e);
+        }
+      }
+
+      const params = new URLSearchParams();
+      params.set("limit", "12");
+      params.set("market", "US");
+      if (seedTrackId) params.set("seed_tracks", seedTrackId);
+      if (seedArtistId) params.set("seed_artists", seedArtistId);
+
+      const recUrl = `https://api.spotify.com/v1/recommendations?${params.toString()}`;
+      const recResp = await fetch(recUrl, { headers: { Authorization: `Bearer ${token}` } });
 
       if (recResp.ok) {
         const recData = await recResp.json();
         items = normalizeSpotifyItems(recData?.tracks || []);
+        // Filter out the seed track and dedupe by trackId
+        const seen = new Set<string>();
+        items = (items || []).filter((i) => {
+          if (!i.trackId || i.trackId === seedTrackId) return false;
+          if (seen.has(i.trackId)) return false;
+          seen.add(i.trackId);
+          return true;
+        });
         source = "spotify";
       } else {
         console.error("Spotify recommendations failed:", await recResp.text());

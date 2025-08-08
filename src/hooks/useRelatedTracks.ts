@@ -21,6 +21,7 @@ export function useRelatedTracks(params: Params, enabled: boolean = true) {
     queryFn: async (): Promise<RelatedTracksResponse> => {
       console.log("🔎 Fetching related tracks", { trackId, isrc, artist, song });
       let resolvedTrackId = trackId;
+      let resolvedArtistId: string | undefined;
 
       // If we don't have a trackId or ISRC but have artist/song, try to enhance via Spotify
       if (!resolvedTrackId && !isrc && artist && song) {
@@ -41,6 +42,7 @@ export function useRelatedTracks(params: Params, enabled: boolean = true) {
                   spotify_track_id: resolvedTrackId,
                 };
                 const ed = enhanceData.data;
+                if (ed.spotify_artist_id) resolvedArtistId = ed.spotify_artist_id as string;
                 if (ed.spotify_album_id) payload.spotify_album_id = ed.spotify_album_id;
                 if (ed.spotify_artist_id) payload.spotify_artist_id = ed.spotify_artist_id;
                 if (ed.image) payload.image = ed.image;
@@ -75,7 +77,7 @@ export function useRelatedTracks(params: Params, enabled: boolean = true) {
       }
 
       const { data, error } = await supabase.functions.invoke("related-tracks", {
-        body: { trackId: resolvedTrackId, isrc },
+        body: { trackId: resolvedTrackId, isrc, artistId: resolvedArtistId },
       });
       if (error) {
         console.error("related-tracks function error:", error);
