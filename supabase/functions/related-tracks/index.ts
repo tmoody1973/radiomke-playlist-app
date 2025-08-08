@@ -1,0 +1,247 @@
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.0";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Vary": "Origin",
+};
+
+type RelatedItem = {
+  trackId: string;
+  title: string;
+  artist: string;
+  artwork: string | null;
+  previewUrl: string | null;
+  links: {
+    spotify?: string;
+    album?: string;
+    artist?: string;
+  };
+};
+
+type RelatedResponse = {
+  items: RelatedItem[];
+  source: "spotify" | "fallback" | "cache";
+  cacheKey: string;
+};
+
+async function getSpotifyToken() {
+  const clientId = Deno.env.get("SPOTIFY_CLIENT_ID");
+  const clientSecret = Deno.env.get("SPOTIFY_CLIENT_SECRET");
+
+  if (!clientId || !clientSecret) return null;
+
+  const tokenResp = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Authorization": `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+    },
+    body: "grant_type=client_credentials",
+  });
+
+  if (!tokenResp.ok) {
+    console.error("Failed to get Spotify token:", await tokenResp.text());
+    return null;
+  }
+
+  const { access_token } = await tokenResp.json();
+  return access_token as string;
+}
+
+async function searchTrackIdByISRC(isrc: string, token: string): Promise<string | null> {
+  const url = `https://api.spotify.com/v1/search?q=isrc:${encodeURIComponent(isrc)}&type=track&limit=1`;
+  const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!resp.ok) {
+    console.error("Spotify ISRC search failed:", await resp.text());
+    return null;
+  }
+  const data = await resp.json();
+  const id = data?.tracks?.items?.[0]?.id || null;
+  return id;
+}
+
+function normalizeSpotifyItems(tracks: any[]): RelatedItem[] {
+  return (tracks || []).map((t: any) => {
+    const artwork =
+      t?.album?.images?.[0]?.url ||
+      t?.album?.images?.[1]?.url ||
+      t?.album?.images?.[2]?.url ||
+      null;
+    const primaryArtist = t?.artists?.[0];
+    return {
+      trackId: t?.id,
+      title: t?.name,
+      artist: primaryArtist?.name || "",
+      artwork,
+      previewUrl: t?.preview_url || null,
+      links: {
+        spotify: t?.external_urls?.spotify,
+        album: t?.album?.external_urls?.spotify,
+        artist: primaryArtist?.external_urls?.spotify,
+      },
+    } as RelatedItem;
+  });
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { trackId, isrc } = await req.json().catch(() => ({}));
+    if (!trackId && !isrc) {
+      return new Response(
+        JSON.stringify({ error: "Missing trackId or isrc" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Build cache key
+    const cacheKey = trackId
+      ? `related:spotify:${trackId}`
+      : `related:isrc:${isrc}`;
+
+    // 1) Check cache (valid TTL)
+    const { data: cached, error: cacheErr } = await supabase
+      .from("api_cache")
+      .select("*")
+      .eq("cache_key", cacheKey)
+      .gt("expires_at", new Date().toISOString())
+      .maybeSingle();
+
+    if (cacheErr) {
+      console.error("api_cache lookup error:", cacheErr);
+    }
+
+    if (cached?.payload) {
+      const payload: RelatedResponse = { ...cached.payload, source: "cache", cacheKey };
+      return new Response(
+        JSON.stringify(payload),
+        {
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "Cache-Control": "s-maxage=86400, stale-while-revalidate=86400",
+          },
+        }
+      );
+    }
+
+    // 2) Try Spotify Recommendations
+    let items: RelatedItem[] | null = null;
+    let source: "spotify" | "fallback" = "fallback";
+
+    const token = await getSpotifyToken();
+    let seedTrackId = trackId as string | null;
+
+    if (!seedTrackId && isrc && token) {
+      seedTrackId = await searchTrackIdByISRC(isrc, token);
+    }
+
+    if (token && seedTrackId) {
+      const recUrl = `https://api.spotify.com/v1/recommendations?seed_tracks=${encodeURIComponent(seedTrackId)}&limit=12`;
+      const recResp = await fetch(recUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (recResp.ok) {
+        const recData = await recResp.json();
+        items = normalizeSpotifyItems(recData?.tracks || []);
+        source = "spotify";
+      } else {
+        console.error("Spotify recommendations failed:", await recResp.text());
+      }
+    }
+
+    // 3) Fallback via our DB: "more by this artist"
+    if (!items || items.length === 0) {
+      let artistName: string | null = null;
+
+      if (seedTrackId) {
+        // Try to derive artist from songs table (where spotify_track_id = seedTrackId)
+        const { data: songRow, error: songErr } = await supabase
+          .from("songs")
+          .select("artist, song, image, spotify_track_id, spotify_album_id, enhanced_metadata")
+          .eq("spotify_track_id", seedTrackId)
+          .limit(1)
+          .maybeSingle();
+
+        if (songErr) console.error("songs lookup error:", songErr);
+        artistName = songRow?.artist || null;
+
+        if (artistName) {
+          const { data: moreSongs, error: moreErr } = await supabase
+            .from("songs")
+            .select("artist, song, image, spotify_track_id, enhanced_metadata")
+            .ilike("artist", artistName)
+            .order("created_at", { ascending: false })
+            .limit(12);
+
+          if (moreErr) {
+            console.error("fallback songs query error:", moreErr);
+          } else {
+            const normalized = (moreSongs || []).map((s: any) => ({
+              trackId: s.spotify_track_id || `${s.artist}-${s.song}`.toLowerCase().replace(/[^a-z0-9]/g, ""),
+              title: s.song,
+              artist: s.artist,
+              artwork: s.image || null,
+              previewUrl: null,
+              links: {},
+            })) as RelatedItem[];
+
+            items = normalized;
+            source = "fallback";
+          }
+        }
+      }
+    }
+
+    const payload: RelatedResponse = {
+      items: items || [],
+      source,
+      cacheKey,
+    };
+
+    // 4) Cache the result for 24 hours
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+    const { error: upsertErr } = await supabase
+      .from("api_cache")
+      .upsert(
+        { cache_key: cacheKey, payload, expires_at: expiresAt },
+        { onConflict: "cache_key" }
+      );
+
+    if (upsertErr) {
+      console.error("api_cache upsert error:", upsertErr);
+    }
+
+    return new Response(
+      JSON.stringify(payload),
+      {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+          "Cache-Control": "s-maxage=86400, stale-while-revalidate=86400",
+        },
+      }
+    );
+  } catch (e: any) {
+    console.error("related-tracks error:", e?.message || e);
+    return new Response(
+      JSON.stringify({ error: "Internal server error" }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  }
+});
