@@ -7,6 +7,8 @@ import { EnhancedSongInfo } from './EnhancedSongInfo';
 import { LazyYouTubePreviewButton } from './LazyYouTubePreviewButton';
 import { ArtistEvents } from './ArtistEvents';
 import RelatedCarousel from './RelatedCarousel';
+import StreamingLinks from './StreamingLinks';
+
 
 interface Spin {
   id: number;
@@ -106,29 +108,32 @@ export const ListItem = ({
           <div className="flex-1 min-w-0">
             <div className="flex justify-between items-start">
               <EnhancedSongInfo spin={spin} compact={compact} />
-                 <div className="flex flex-col items-end ml-2">
-                 <div className="flex flex-col gap-1">
-                   {isCurrentlyPlaying && (
-                     <Badge variant="secondary" className={compact ? "text-xs px-2 py-0" : ""}>
-                       Now Playing
-                     </Badge>
-                   )}
-                   {spin.is_manual && (
-                     <Badge variant="outline" className={compact ? "text-xs px-2 py-0" : "text-xs"}>
-                       Manual
-                     </Badge>
-                   )}
-                 </div>
-                <div className={`text-right mt-1 ${compact ? "text-xs" : "text-sm"}`}>
+              <div className="flex flex-col items-end ml-2">
+                <div className="flex flex-col gap-1">
+                  {isCurrentlyPlaying && (
+                    <Badge variant="secondary" className={compact ? "text-xs px-2 py-0" : ""}>
+                      Now Playing
+                    </Badge>
+                  )}
+                  {spin.is_manual && (
+                    <Badge variant="outline" className={compact ? "text-xs px-2 py-0" : "text-xs"}>
+                      Manual
+                    </Badge>
+                  )}
+                </div>
+                <div className="mt-2">
+                  <StreamingLinks artist={spin.artist} song={spin.song} spotifyTrackId={spin.spotify_track_id} size={compact ? 'sm' : 'md'} />
+                </div>
+                <div className={`text-right mt-2 ${compact ? "text-xs" : "text-sm"}`}>
                   <div className="flex items-center text-muted-foreground">
                     <Clock className="h-3 w-3 mr-1" />
                     {formatTime(spin.start)}
                   </div>
-                  <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
+                  <div className={`${compact ? "text-xs" : "text-sm"} text-muted-foreground`}>
                     {formatDate(spin.start)}
                   </div>
                   {spin.duration && (
-                    <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
+                    <div className={`${compact ? "text-xs" : "text-sm"} text-muted-foreground`}>
                       {Math.floor(spin.duration / 60)}:{(spin.duration % 60).toString().padStart(2, '0')}
                     </div>
                   )}
