@@ -52,10 +52,7 @@ export const useSongLinks = () => {
           }
         }
 
-        // If still no reliable id and no ISRC, treat as no-op (like 422) without error UI
-        if (!idToUse && !params.isrc) {
-          return null as any;
-        }
+        // Proceed to fetch using artist/title even without a Spotify ID or ISRC
 
         const invoke = async () => {
           const { data, error } = await supabase.functions.invoke('songlink-lookup', {
