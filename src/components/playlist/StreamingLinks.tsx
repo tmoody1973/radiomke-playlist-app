@@ -25,16 +25,16 @@ const providersOrder = [
 ];
 
 export const StreamingLinks: React.FC<StreamingLinksProps> = ({ artist, song, spotifyTrackId, isrc, size = 'md' }) => {
-  const { loading, error, data, source, statusCode, fetchLinks } = useSongLinks();
+  const { loading, resolving, error, data, source, statusCode, fetchLinks } = useSongLinks();
   const [open, setOpen] = useState(false);
   const [loadedOnce, setLoadedOnce] = useState(false);
 
-useEffect(() => {
-  if (open && !loadedOnce && spotifyTrackId) {
-    fetchLinks({ spotifyTrackId, artist, title: song, isrc: isrc || null });
-    setLoadedOnce(true);
-  }
-}, [open, loadedOnce, fetchLinks, spotifyTrackId, artist, song, isrc]);
+  useEffect(() => {
+    if (open && !loadedOnce && (spotifyTrackId || isrc || (artist && song))) {
+      fetchLinks({ spotifyTrackId: spotifyTrackId || null, artist, title: song, isrc: isrc || null });
+      setLoadedOnce(true);
+    }
+  }, [open, loadedOnce, fetchLinks, spotifyTrackId, artist, song, isrc]);
 
   const btnSize = size === 'sm' ? 'h-7 px-2 text-xs' : 'h-8 px-3 text-sm';
 
@@ -49,6 +49,9 @@ useEffect(() => {
       <PopoverContent className="w-80" align="end">
         <div className="space-y-2">
           <div className="text-sm font-medium">Streaming links</div>
+          {resolving && (
+            <div className="text-sm text-muted-foreground">Matching song… links will appear shortly.</div>
+          )}
           {loading && (
             <div className="space-y-2">
               <Skeleton className="h-8 w-full" />
@@ -76,22 +79,20 @@ useEffect(() => {
               })}
             </div>
           )}
-{!loading && !data && (
-            <div className="text-sm text-muted-foreground">
-              {spotifyTrackId ? 'No links found.' : 'Streaming links unavailable: missing Spotify ID for this track.'}
-            </div>
+          {!loading && !data && !resolving && (
+            <div className="text-sm text-muted-foreground">No links found.</div>
           )}
           {!loading && data && (!data.linksByPlatform || providersOrder.every(p => !(data.linksByPlatform as any)[p.key])) && (
             <div className="text-sm text-muted-foreground">No links available for this track.</div>
           )}
-{error && (
-  <div className="text-sm text-destructive">
-    {statusCode === 429 ? 'Rate limit hit—please try again in a few seconds.' : error}
-  </div>
-)}
-{source && (
-  <div className="text-[10px] text-muted-foreground">Source: {source}</div>
-)}
+          {error && (
+            <div className="text-sm text-destructive">
+              {statusCode === 429 ? 'Rate limit hit—please try again in a few seconds.' : error}
+            </div>
+          )}
+          {source && (
+            <div className="text-[10px] text-muted-foreground">Source: {source}</div>
+          )}
         </div>
       </PopoverContent>
     </Popover>

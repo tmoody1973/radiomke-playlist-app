@@ -7,3 +7,5 @@ verify_jwt = false
 [functions.songlink-lookup]
 verify_jwt = false
 
+[functions.spotify-enhance]
+verify_jwt = false

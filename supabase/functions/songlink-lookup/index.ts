@@ -93,14 +93,46 @@ serve(async (req) => {
     }
 
     if (status >= 200 && status < 300 && json) {
+      const expireAt = thirtyDaysFromNow();
+
+      // Upsert primary cache entry
       await supabase.from('song_links').upsert({
         cache_key: cacheKey,
         source: 'songlink',
         data: json,
-        expire_at: thirtyDaysFromNow(),
+        expire_at: expireAt,
         last_status: status,
         last_error: null,
       }, { onConflict: 'cache_key' });
+
+      // Also upsert alias keys so subsequent lookups by artist/title or ISRC hit cache
+      const aliasKeys: string[] = [];
+      try {
+        if (artist && title) {
+          const qKey = buildCacheKey({ artist, title });
+          if (qKey !== cacheKey) aliasKeys.push(qKey);
+        }
+        if (isrc) {
+          const isrcKey = buildCacheKey({ isrc });
+          if (isrcKey !== cacheKey) aliasKeys.push(isrcKey);
+        }
+        if (spotify_track_id) {
+          const spKey = buildCacheKey({ spotify_track_id });
+          if (spKey !== cacheKey) aliasKeys.push(spKey);
+        }
+      } catch (_) { /* noop */ }
+
+      if (aliasKeys.length) {
+        const rows = aliasKeys.map((k) => ({
+          cache_key: k,
+          source: 'songlink',
+          data: json,
+          expire_at: expireAt,
+          last_status: status,
+          last_error: null,
+        }));
+        await supabase.from('song_links').upsert(rows, { onConflict: 'cache_key' });
+      }
 
       return new Response(JSON.stringify({ source: 'fresh', cacheKey, data: json }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
