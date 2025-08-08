@@ -23,7 +23,9 @@
   const SCRIPT_TAG = document.querySelector('script[src*="embed-optimized.js"]') || 
                      document.querySelector('script[src*="embed.js"]');
   const SCRIPT_SRC = SCRIPT_TAG ? SCRIPT_TAG.src : '';
-  const BASE_URL = SCRIPT_SRC ? new URL(SCRIPT_SRC).origin : 'https://ftrivovjultfayttemce.supabase.co';
+  const BASE_URL = SCRIPT_SRC ? new URL(SCRIPT_SRC).origin : 'https://playlist.radiomilwaukee.org';
+  // Supabase Edge Functions base (fixed project domain)
+  const API_BASE = 'https://ftrivovjultfayttemce.supabase.co';
 
   // ============= UTILITIES =============
   const isInIframe = window !== window.parent;
@@ -122,7 +124,7 @@ function createSongElement(song, config) {
       if (config.startDate) requestBody.start = config.startDate;
       if (config.endDate) requestBody.end = config.endDate;
 
-      const response = await fetch(`${BASE_URL}/functions/v1/spinitron-proxy`, {
+      const response = await fetch(`${API_BASE}/functions/v1/spinitron-proxy`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

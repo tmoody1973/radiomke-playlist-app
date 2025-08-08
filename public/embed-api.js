@@ -18,7 +18,9 @@
       if (config.startDate) requestBody.start = config.startDate;
       if (config.endDate) requestBody.end = config.endDate;
 
-      const response = await fetch(`${baseUrl}/functions/v1/spinitron-proxy`, {
+      // Always call the Supabase Edge Function domain, not the site origin
+      const SUPABASE_BASE = 'https://ftrivovjultfayttemce.supabase.co';
+      const response = await fetch(`${SUPABASE_BASE}/functions/v1/spinitron-proxy`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
