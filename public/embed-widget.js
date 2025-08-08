@@ -2,6 +2,39 @@
 (function() {
   'use strict';
   
+// Main widget class
+  function updateJsonLdForContainer(containerId, songs, config) {
+    try {
+      const scriptId = `spinitron-jsonld-${containerId}`;
+      const prev = document.getElementById(scriptId);
+      if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
+
+      const items = (songs || []).slice(0, 25).map((s, idx) => ({
+        "@type": "MusicRecording",
+        position: idx + 1,
+        name: s.song || 'Unknown Song',
+        byArtist: { "@type": "MusicGroup", name: s.artist || 'Unknown Artist' },
+        ...(s.image ? { image: s.image } : {}),
+        ...(s.release ? { inAlbum: { "@type": "MusicAlbum", name: s.release } } : {}),
+        ...(s.start_time ? { datePublished: new Date(s.start_time).toISOString() } : {})
+      }));
+
+      const jsonld = {
+        "@context": "https://schema.org",
+        "@type": "MusicPlaylist",
+        name: `${(config.station || 'Station').toUpperCase()} Playlist`,
+        numTracks: items.length,
+        track: items
+      };
+
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.id = scriptId;
+      script.text = JSON.stringify(jsonld);
+      document.head.appendChild(script);
+    } catch (e) { /* no-op */ }
+  }
+
   // Main widget class
   class SpinitinonWidget {
     constructor(containerId, config, baseUrl) {
@@ -134,6 +167,7 @@
       }
       
       // Send height update after display changes
+      updateJsonLdForContainer(this.container.id, songsToShow, this.config);
       setTimeout(window.EmbedUtils.sendHeightUpdate, 100);
     }
 
