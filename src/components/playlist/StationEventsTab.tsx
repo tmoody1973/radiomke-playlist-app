@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTopSongs } from '@/hooks/useTopSongs';
+import { useSpinData } from '@/hooks/useSpinData';
 
 interface StationEventsTabProps {
   stationId: string;
@@ -65,14 +66,26 @@ const formatDateTime = (dateStr: string, timeStr?: string | null) => {
 };
 
 export const StationEventsTab: React.FC<StationEventsTabProps> = ({ stationId }) => {
-  // Use top songs over last 30 days to derive artists this station plays
+  // Use recent spins and top songs to derive artists this station plays
+  const { data: recentSpins, isLoading: loadingSpins } = useSpinData({
+    stationId,
+    maxItems: 100,
+    debouncedSearchTerm: '',
+    startDate: '',
+    endDate: '',
+    dateSearchEnabled: false,
+    autoUpdate: false,
+    hasActiveFilters: false,
+  });
+
   const { data: top, isLoading: loadingTop } = useTopSongs({ stationId, days: 30, limit: 100 });
 
   const artists = React.useMemo(() => {
     const set = new Set<string>();
-    (top?.items || []).forEach((i) => set.add(i.artist));
+    (recentSpins || []).forEach((s: any) => s?.artist && set.add(String(s.artist).trim()));
+    (top?.items || []).forEach((i: any) => i?.artist && set.add(String(i.artist).trim()));
     return Array.from(set);
-  }, [top]);
+  }, [recentSpins, top]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['station-events', stationId, artists.join('|')],
@@ -162,7 +175,7 @@ export const StationEventsTab: React.FC<StationEventsTabProps> = ({ stationId })
     },
   });
 
-  if (loadingTop || isLoading) {
+  if (loadingSpins || loadingTop || isLoading) {
     return <div className="px-4 py-8 text-center text-muted-foreground">Loading events…</div>;
   }
   if (error) {
