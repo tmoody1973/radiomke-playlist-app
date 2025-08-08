@@ -145,9 +145,12 @@ export const ListItem = ({
         compact={compact} 
         stationId={stationId || spin.station_id}
       />
-      {spin.spotify_track_id && (
-        <RelatedCarousel trackId={spin.spotify_track_id} className="mt-2" />
-      )}
+<RelatedCarousel 
+  trackId={spin.spotify_track_id} 
+  artist={spin.artist}
+  song={spin.song}
+  className="mt-2" 
+/>
     </div>
   );
 };

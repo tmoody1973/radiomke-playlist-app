@@ -7,12 +7,14 @@ import { Card } from "@/components/ui/card";
 interface Props {
   trackId?: string; // Spotify track id preferred
   isrc?: string;    // Alternate input
+  artist?: string;  // Fallback input when no trackId/ISRC
+  song?: string;    // Fallback input when no trackId/ISRC
   title?: string;   // Optional heading override
   className?: string;
 }
 
-const RelatedCarousel: React.FC<Props> = ({ trackId, isrc, title = "You might also like", className }) => {
-  const { data } = useRelatedTracks({ trackId, isrc }, !!trackId || !!isrc);
+const RelatedCarousel: React.FC<Props> = ({ trackId, isrc, artist, song, title = "You might also like", className }) => {
+  const { data } = useRelatedTracks({ trackId, isrc, artist, song }, !!trackId || !!isrc || (!!artist && !!song));
 
   if (!data?.items?.length) return null;
 
