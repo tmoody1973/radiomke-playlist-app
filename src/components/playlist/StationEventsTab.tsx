@@ -87,9 +87,23 @@ export const StationEventsTab: React.FC<StationEventsTabProps> = ({ stationId })
     return Array.from(set);
   }, [recentSpins, top]);
 
+  // Include common artist name variants (strip leading articles) to improve matches
+  const queryArtists = React.useMemo(() => {
+    const stripArticle = (name: string) => name.replace(/^(the|an|a)\s+/i, '').trim();
+    const set = new Set<string>();
+    artists.forEach((name) => {
+      const n = String(name).trim();
+      if (!n) return;
+      set.add(n);
+      const stripped = stripArticle(n);
+      if (stripped && stripped !== n) set.add(stripped);
+    });
+    return Array.from(set);
+  }, [artists]);
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ['station-events', stationId, artists.join('|')],
-    enabled: artists.length > 0,
+    queryKey: ['station-events', stationId, queryArtists.join('|')],
+    enabled: queryArtists.length > 0,
     queryFn: async () => {
       const today = new Date();
       const to = new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000);
@@ -101,7 +115,7 @@ export const StationEventsTab: React.FC<StationEventsTabProps> = ({ stationId })
       const { data: tm, error: tmErr } = await supabase
         .from('ticketmaster_events_cache')
         .select('*')
-        .in('artist_name', artists)
+        .in('artist_name', queryArtists)
         .eq('is_active', true)
         .gte('event_date', fromStr)
         .lte('event_date', toStr)
@@ -112,7 +126,7 @@ export const StationEventsTab: React.FC<StationEventsTabProps> = ({ stationId })
       const { data: ce, error: ceErr } = await supabase
         .from('custom_events')
         .select('*')
-        .in('artist_name', artists)
+        .in('artist_name', queryArtists)
         .eq('is_active', true)
         .gte('event_date', fromStr)
         .lte('event_date', toStr)
