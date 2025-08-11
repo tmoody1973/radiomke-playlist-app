@@ -3,9 +3,3 @@ project_id = "ftrivovjultfayttemce"
 
 [functions.related-tracks]
 verify_jwt = false
-
-[functions.songlink-lookup]
-verify_jwt = false
-
-[functions.spotify-enhance]
-verify_jwt = false

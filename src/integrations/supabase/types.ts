@@ -98,42 +98,6 @@ export type Database = {
         }
         Relationships: []
       }
-      song_links: {
-        Row: {
-          cache_key: string
-          created_at: string
-          data: Json
-          expire_at: string
-          id: string
-          last_error: string | null
-          last_status: number | null
-          source: string
-          updated_at: string
-        }
-        Insert: {
-          cache_key: string
-          created_at?: string
-          data: Json
-          expire_at?: string
-          id?: string
-          last_error?: string | null
-          last_status?: number | null
-          source?: string
-          updated_at?: string
-        }
-        Update: {
-          cache_key?: string
-          created_at?: string
-          data?: Json
-          expire_at?: string
-          id?: string
-          last_error?: string | null
-          last_status?: number | null
-          source?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       songs: {
         Row: {
           added_by_user_id: string | null
