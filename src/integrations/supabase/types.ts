@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -95,6 +95,42 @@ export type Database = {
           venue_city?: string | null
           venue_name?: string | null
           venue_state?: string | null
+        }
+        Relationships: []
+      }
+      song_links: {
+        Row: {
+          cache_key: string
+          created_at: string
+          data: Json
+          expire_at: string
+          id: string
+          last_error: string | null
+          last_status: number | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          data: Json
+          expire_at?: string
+          id?: string
+          last_error?: string | null
+          last_status?: number | null
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          data?: Json
+          expire_at?: string
+          id?: string
+          last_error?: string | null
+          last_status?: number | null
+          source?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -256,6 +292,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       youtube_cache: {
         Row: {
           artist: string
@@ -308,16 +365,23 @@ export type Database = {
     Functions: {
       check_song_time_conflict: {
         Args: {
-          p_start_time: string
           p_duration: number
-          p_station_id: string
           p_exclude_id?: string
+          p_start_time: string
+          p_station_id: string
+        }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -444,6 +508,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const

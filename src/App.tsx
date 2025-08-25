@@ -9,6 +9,7 @@ import EmbedDemo from "./pages/EmbedDemo";
 import Embed from "./pages/Embed";
 import TechnicalArticle from "./pages/TechnicalArticle";
 import Admin from "./pages/Admin";
+import Auth from "./pages/Auth";
 import Guide from "./pages/Guide";
 import NotFound from "./pages/NotFound";
 
@@ -26,6 +27,7 @@ const App = () => (
         <Route path="/embed" element={<Embed />} />
         <Route path="/article" element={<TechnicalArticle />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/auth" element={<Auth />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
