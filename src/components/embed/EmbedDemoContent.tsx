@@ -22,6 +22,7 @@ interface EmbedConfig {
   layout: string;
   enableDateSearch: boolean;
   enableYouTube: boolean;
+  showHeader: boolean;
   startDate?: Date;
   endDate?: Date;
 }

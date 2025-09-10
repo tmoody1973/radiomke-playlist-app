@@ -32,8 +32,9 @@ const Navigation = () => {
           <NavigationMenu className="max-w-full justify-start">
             <NavigationMenuList className="flex-wrap gap-2">
             <NavigationMenuItem>
-              <Link to="/">
-                <NavigationMenuLink
+              <NavigationMenuLink asChild>
+                <Link 
+                  to="/"
                   className={cn(
                     "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
                     isActive('/') && "bg-accent text-accent-foreground"
@@ -41,13 +42,14 @@ const Navigation = () => {
                 >
                   <Home className="h-4 w-4 mr-2" />
                   Home
-                </NavigationMenuLink>
-              </Link>
+                </Link>
+              </NavigationMenuLink>
             </NavigationMenuItem>
 
             <NavigationMenuItem>
-              <Link to="/guide">
-                <NavigationMenuLink
+              <NavigationMenuLink asChild>
+                <Link 
+                  to="/guide"
                   className={cn(
                     "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
                     isActive('/guide') && "bg-accent text-accent-foreground"
@@ -55,13 +57,14 @@ const Navigation = () => {
                 >
                   <BookOpen className="h-4 w-4 mr-2" />
                   Team Guide
-                </NavigationMenuLink>
-              </Link>
+                </Link>
+              </NavigationMenuLink>
             </NavigationMenuItem>
 
             <NavigationMenuItem>
-              <Link to="/demo">
-                <NavigationMenuLink
+              <NavigationMenuLink asChild>
+                <Link 
+                  to="/demo"
                   className={cn(
                     "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
                     isActive('/demo') && "bg-accent text-accent-foreground"
@@ -69,22 +72,27 @@ const Navigation = () => {
                 >
                   <Code className="h-4 w-4 mr-2" />
                   Get Embed Code
-                </NavigationMenuLink>
-              </Link>
+                </Link>
+              </NavigationMenuLink>
             </NavigationMenuItem>
 
             <NavigationMenuItem>
-              <Link to="/embed" target="_blank">
-                <NavigationMenuLink className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+              <NavigationMenuLink asChild>
+                <Link 
+                  to="/embed" 
+                  target="_blank"
+                  className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+                >
                   <ExternalLink className="h-4 w-4 mr-2" />
                   View Embed Demo
-                </NavigationMenuLink>
-              </Link>
+                </Link>
+              </NavigationMenuLink>
             </NavigationMenuItem>
 
             <NavigationMenuItem>
-              <Link to="/article">
-                <NavigationMenuLink
+              <NavigationMenuLink asChild>
+                <Link 
+                  to="/article"
                   className={cn(
                     "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
                     isActive('/article') && "bg-accent text-accent-foreground"
@@ -92,13 +100,14 @@ const Navigation = () => {
                 >
                   <FileText className="h-4 w-4 mr-2" />
                   Technical Article
-                </NavigationMenuLink>
-              </Link>
+                </Link>
+              </NavigationMenuLink>
             </NavigationMenuItem>
 
             <NavigationMenuItem>
-              <Link to="/admin">
-                <NavigationMenuLink
+              <NavigationMenuLink asChild>
+                <Link 
+                  to="/admin"
                   className={cn(
                     "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
                     isActive('/admin') && "bg-accent text-accent-foreground"
@@ -106,8 +115,8 @@ const Navigation = () => {
                 >
                   <Settings className="h-4 w-4 mr-2" />
                   Admin
-                </NavigationMenuLink>
-              </Link>
+                </Link>
+              </NavigationMenuLink>
             </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>

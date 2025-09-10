@@ -46,6 +46,7 @@ interface PlaylistContainerProps {
   compact: boolean;
   stationId: string;
   showSearch: boolean;
+  showHeader: boolean;
   isCurrentlyPlaying: (spin: any, index: number) => boolean;
   formatTime: (dateString: string) => string;
   formatDate: (dateString: string) => string;
@@ -67,6 +68,7 @@ export const PlaylistContainer = ({
   compact,
   stationId,
   showSearch,
+  showHeader,
   isCurrentlyPlaying,
   formatTime,
   formatDate,
@@ -94,7 +96,23 @@ export const PlaylistContainer = ({
         </TabsList>
 
         <TabsContent value="recent" className="space-y-4">
-          <PlaylistHeader title={`${stationId.toUpperCase()} Recent Spins`} compact={compact} isLoading={false} showSearch={effectiveShowSearch} searchTerm={playlistState.searchTerm} setSearchTerm={playlistState.setSearchTerm} dateSearchEnabled={playlistState.dateSearchEnabled} setDateSearchEnabled={onDateSearchToggle} startDate={playlistState.startDate} endDate={playlistState.endDate} onDateChange={onDateChange} onDateClear={onDateClear} formatDate={formatDate} />
+          {showHeader && (
+            <PlaylistHeader 
+              title={`${stationId.toUpperCase()} Recent Spins`} 
+              compact={compact} 
+              isLoading={false} 
+              showSearch={effectiveShowSearch} 
+              searchTerm={playlistState.searchTerm} 
+              setSearchTerm={playlistState.setSearchTerm} 
+              dateSearchEnabled={playlistState.dateSearchEnabled} 
+              setDateSearchEnabled={onDateSearchToggle} 
+              startDate={playlistState.startDate} 
+              endDate={playlistState.endDate} 
+              onDateChange={onDateChange} 
+              onDateClear={onDateClear} 
+              formatDate={formatDate} 
+            />
+          )}
 
           <PlaylistContent displayedSpins={displayedSpins} layout={layout} compact={compact} stationId={stationId} isCurrentlyPlaying={isCurrentlyPlaying} formatTime={formatTime} formatDate={formatDate} youtubePlayer={youtubePlayer} enableYouTube={enableYouTube} />
 

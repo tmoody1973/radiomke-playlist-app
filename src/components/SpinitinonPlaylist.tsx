@@ -15,6 +15,7 @@ interface SpinitinonPlaylistProps {
   endDate?: string;
   layout?: 'list' | 'grid';
   enableYouTube?: boolean;
+  showHeader?: boolean;
 }
 
 const SpinitinonPlaylist = ({ 
@@ -25,7 +26,9 @@ const SpinitinonPlaylist = ({
   compact = false,
   startDate = '',
   endDate = '',
-  layout = 'list'
+  layout = 'list',
+  enableYouTube = true,
+  showHeader = true,
 }: SpinitinonPlaylistProps) => {
   console.log(`🎵 SpinitinonPlaylist rendering for station: ${stationId}, showSearch: ${showSearch}`);
 
@@ -102,9 +105,10 @@ const SpinitinonPlaylist = ({
       formatTime={formatTime}
       formatDate={formatDate}
       youtubePlayer={youtubePlayer}
-        hasMoreSpins={hasMoreSpins}
-        loadingMore={isLoadingMore}
-        onLoadMore={handlers.handleLoadMore}
+      showHeader={showHeader}
+      hasMoreSpins={hasMoreSpins}
+      loadingMore={isLoadingMore}
+      onLoadMore={handlers.handleLoadMore}
       playlistState={extendedPlaylistState}
       onDateChange={handlers.handleDateChange}
       onDateClear={handlers.handleDateClear}

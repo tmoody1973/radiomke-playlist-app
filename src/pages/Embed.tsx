@@ -9,6 +9,7 @@ const Embed = () => {
   const stationId = searchParams.get('station') || 'hyfin';
   const autoUpdate = searchParams.get('autoUpdate') !== 'false';
   const showSearch = searchParams.get('showSearch') !== 'false';
+  const showHeader = searchParams.get('showHeader') !== 'false';
   const maxItemsParam = searchParams.get('maxItems') || '20';
   const maxItems = maxItemsParam === 'unlimited' ? 1000 : parseInt(maxItemsParam);
   const compact = searchParams.get('compact') === 'true';
@@ -186,6 +187,7 @@ const Embed = () => {
           stationId={stationId}
           autoUpdate={autoUpdate}
           showSearch={showSearch}
+          showHeader={showHeader}
           maxItems={maxItems}
           compact={compact}
           startDate={startDate}
