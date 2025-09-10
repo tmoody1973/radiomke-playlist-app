@@ -12,6 +12,7 @@ interface EmbedConfig {
   enableDateSearch: boolean;
   enableYouTube: boolean;
   showHeader: boolean;
+  showLoadMore: boolean;
   startDate?: Date;
   endDate?: Date;
   customColors?: {
@@ -42,6 +43,7 @@ export const generateEmbedUrl = (config: EmbedConfig): string => {
   if (config.layout !== 'list') params.append('layout', config.layout);
   if (!config.enableYouTube) params.append('enableYouTube', 'false');
   if (!config.showHeader) params.append('showHeader', 'false');
+  if (!config.showLoadMore) params.append('showLoadMore', 'false');
   if (config.enableDateSearch && config.startDate) params.append('startDate', config.startDate.toISOString());
   if (config.enableDateSearch && config.endDate) params.append('endDate', config.endDate.toISOString());
   

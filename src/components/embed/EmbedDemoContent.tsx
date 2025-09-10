@@ -23,6 +23,7 @@ interface EmbedConfig {
   enableDateSearch: boolean;
   enableYouTube: boolean;
   showHeader: boolean;
+  showLoadMore: boolean;
   startDate?: Date;
   endDate?: Date;
 }
@@ -53,6 +54,8 @@ interface EmbedDemoContentProps {
   setEnableYouTube: (value: boolean) => void;
   showHeader: boolean;
   setShowHeader: (value: boolean) => void;
+  showLoadMore: boolean;
+  setShowLoadMore: (value: boolean) => void;
   startDate?: Date;
   setStartDate: (value: Date | undefined) => void;
   endDate?: Date;
@@ -86,6 +89,8 @@ const EmbedDemoContent = ({
   setEnableYouTube,
   showHeader,
   setShowHeader,
+  showLoadMore,
+  setShowLoadMore,
   startDate,
   setStartDate,
   endDate,
@@ -136,6 +141,8 @@ const EmbedDemoContent = ({
             setEnableYouTube={setEnableYouTube}
             showHeader={showHeader}
             setShowHeader={setShowHeader}
+            showLoadMore={showLoadMore}
+            setShowLoadMore={setShowLoadMore}
             startDate={startDate}
             setStartDate={setStartDate}
             endDate={endDate}

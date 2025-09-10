@@ -10,6 +10,9 @@ interface EmbedConfig {
   theme: string;
   layout: string;
   enableDateSearch: boolean;
+  enableYouTube: boolean;
+  showHeader: boolean;
+  showLoadMore: boolean;
   startDate?: Date;
   endDate?: Date;
   customColors?: {

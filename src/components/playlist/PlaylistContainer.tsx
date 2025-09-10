@@ -47,6 +47,7 @@ interface PlaylistContainerProps {
   stationId: string;
   showSearch: boolean;
   showHeader: boolean;
+  showLoadMore: boolean;
   isCurrentlyPlaying: (spin: any, index: number) => boolean;
   formatTime: (dateString: string) => string;
   formatDate: (dateString: string) => string;
@@ -69,6 +70,7 @@ export const PlaylistContainer = ({
   stationId,
   showSearch,
   showHeader,
+  showLoadMore,
   isCurrentlyPlaying,
   formatTime,
   formatDate,
@@ -116,7 +118,9 @@ export const PlaylistContainer = ({
 
           <PlaylistContent displayedSpins={displayedSpins} layout={layout} compact={compact} stationId={stationId} isCurrentlyPlaying={isCurrentlyPlaying} formatTime={formatTime} formatDate={formatDate} youtubePlayer={youtubePlayer} enableYouTube={enableYouTube} />
 
-          <LoadMoreButton hasMoreSpins={hasMoreSpins} onLoadMore={onLoadMore} loadingMore={loadingMore} />
+          {showLoadMore && (
+            <LoadMoreButton hasMoreSpins={hasMoreSpins} onLoadMore={onLoadMore} loadingMore={loadingMore} />
+          )}
         </TabsContent>
 
         <TabsContent value="top" className="space-y-4">

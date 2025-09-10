@@ -13,6 +13,8 @@ interface DisplayConfigurationProps {
   setLayout: (value: string) => void;
   showHeader: boolean;
   setShowHeader: (value: boolean) => void;
+  showLoadMore: boolean;
+  setShowLoadMore: (value: boolean) => void;
 }
 
 const DisplayConfiguration = ({
@@ -24,6 +26,8 @@ const DisplayConfiguration = ({
   setLayout,
   showHeader,
   setShowHeader,
+  showLoadMore,
+  setShowLoadMore,
 }: DisplayConfigurationProps) => {
   return (
     <div className="space-y-4">
@@ -67,6 +71,15 @@ const DisplayConfiguration = ({
           id="showHeader"
           checked={showHeader}
           onCheckedChange={setShowHeader}
+        />
+      </div>
+
+      <div className="flex items-center justify-between">
+        <Label htmlFor="showLoadMore">Show Load More Button</Label>
+        <Switch
+          id="showLoadMore"
+          checked={showLoadMore}
+          onCheckedChange={setShowLoadMore}
         />
       </div>
     </div>

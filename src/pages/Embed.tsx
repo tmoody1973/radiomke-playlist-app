@@ -17,6 +17,8 @@ const Embed = () => {
   const theme = searchParams.get('theme') || 'light';
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
+  const enableYouTube = searchParams.get('enableYouTube') !== 'false';
+  const showLoadMore = searchParams.get('showLoadMore') !== 'false';
   
   const layoutParam = searchParams.get('layout');
   const layout: 'list' | 'grid' = layoutParam === 'grid' ? 'grid' : 'list';
@@ -188,11 +190,13 @@ const Embed = () => {
           autoUpdate={autoUpdate}
           showSearch={showSearch}
           showHeader={showHeader}
+          showLoadMore={showLoadMore}
           maxItems={maxItems}
           compact={compact}
           startDate={startDate}
           endDate={endDate}
           layout={layout}
+          enableYouTube={enableYouTube}
         />
       </div>
     </div>

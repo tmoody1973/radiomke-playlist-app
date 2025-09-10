@@ -53,6 +53,8 @@ const EmbedDemo = () => {
             setEnableYouTube={embedState.setEnableYouTube}
             showHeader={embedState.showHeader}
             setShowHeader={embedState.setShowHeader}
+            showLoadMore={embedState.showLoadMore}
+            setShowLoadMore={embedState.setShowLoadMore}
             startDate={embedState.startDate}
             setStartDate={embedState.setStartDate}
             endDate={embedState.endDate}
