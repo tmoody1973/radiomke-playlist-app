@@ -33,9 +33,7 @@ export const useEmbedDemoState = () => {
         setError(null);
         
         const { data, error } = await supabase
-          .from('stations')
-          .select('id, name')
-          .order('name');
+          .rpc('public_list_stations');
         
         if (error) {
           console.error('Error fetching stations:', error);
