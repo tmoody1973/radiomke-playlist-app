@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+
 
 interface Station {
   id: string;
@@ -27,33 +27,15 @@ export const useEmbedDemoState = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch available stations
+  // Initialize available stations from a safe, static list (no DB call)
   useEffect(() => {
-    const fetchStations = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const { data, error } = await supabase
-          .rpc('public_list_stations');
-        
-        if (error) {
-          console.error('Error fetching stations:', error);
-          setError('Failed to load stations. Please try refreshing the page.');
-        } else if (data && data.length > 0) {
-          setStations(data);
-        } else {
-          setError('No stations found. Please check your configuration.');
-        }
-      } catch (err) {
-        console.error('Unexpected error:', err);
-        setError('An unexpected error occurred. Please try refreshing the page.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStations();
+    const DEFAULT_STATIONS: Station[] = [
+      { id: 'hyfin', name: 'HYFIN' },
+      { id: '88nine', name: '88Nine Radio Milwaukee' },
+    ];
+    setStations(DEFAULT_STATIONS);
+    setError(null);
+    setLoading(false);
   }, []);
 
   const embedConfig = {
