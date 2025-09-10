@@ -51,6 +51,8 @@ const EmbedDemo = () => {
             setEnableDateSearch={embedState.setEnableDateSearch}
             enableYouTube={embedState.enableYouTube}
             setEnableYouTube={embedState.setEnableYouTube}
+            showHeader={embedState.showHeader}
+            setShowHeader={embedState.setShowHeader}
             startDate={embedState.startDate}
             setStartDate={embedState.setStartDate}
             endDate={embedState.endDate}

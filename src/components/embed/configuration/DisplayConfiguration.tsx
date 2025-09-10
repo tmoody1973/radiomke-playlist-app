@@ -11,6 +11,8 @@ interface DisplayConfigurationProps {
   setTheme: (value: string) => void;
   layout: string;
   setLayout: (value: string) => void;
+  showHeader: boolean;
+  setShowHeader: (value: boolean) => void;
 }
 
 const DisplayConfiguration = ({
@@ -20,6 +22,8 @@ const DisplayConfiguration = ({
   setTheme,
   layout,
   setLayout,
+  showHeader,
+  setShowHeader,
 }: DisplayConfigurationProps) => {
   return (
     <div className="space-y-4">
@@ -54,6 +58,15 @@ const DisplayConfiguration = ({
           id="theme"
           checked={theme === 'dark'}
           onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+        />
+      </div>
+
+      <div className="flex items-center justify-between">
+        <Label htmlFor="showHeader">Show Header</Label>
+        <Switch
+          id="showHeader"
+          checked={showHeader}
+          onCheckedChange={setShowHeader}
         />
       </div>
     </div>

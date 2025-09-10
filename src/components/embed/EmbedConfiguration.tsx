@@ -32,6 +32,8 @@ interface EmbedConfigurationProps {
   setEnableDateSearch: (value: boolean) => void;
   enableYouTube: boolean;
   setEnableYouTube: (value: boolean) => void;
+  showHeader: boolean;
+  setShowHeader: (value: boolean) => void;
   startDate?: Date;
   setStartDate: (value: Date | undefined) => void;
   endDate?: Date;
@@ -62,6 +64,8 @@ const EmbedConfiguration = ({
   setEnableDateSearch,
   enableYouTube,
   setEnableYouTube,
+  showHeader,
+  setShowHeader,
   startDate,
   setStartDate,
   endDate,
@@ -94,6 +98,8 @@ const EmbedConfiguration = ({
         setTheme={setTheme}
         layout={layout}
         setLayout={setLayout}
+        showHeader={showHeader}
+        setShowHeader={setShowHeader}
       />
 
       <DateSearchConfiguration
