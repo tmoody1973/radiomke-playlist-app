@@ -26,10 +26,20 @@ export default function Auth() {
     }
   }, [user, loading, navigate]);
 
+  const isAllowedDomain = (email: string) => {
+    return email.toLowerCase().endsWith('@radiomilwaukee.org');
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+
+    if (!isAllowedDomain(email)) {
+      setError('Access is restricted to @radiomilwaukee.org email addresses.');
+      setIsLoading(false);
+      return;
+    }
 
     const { error } = await signIn(email, password);
     
