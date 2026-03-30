@@ -380,7 +380,7 @@ export type Database = {
         Returns: boolean
       }
       public_list_stations: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           id: string
           name: string
