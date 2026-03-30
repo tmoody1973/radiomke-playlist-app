@@ -18,6 +18,7 @@ export default function Auth() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('signin');
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
   // Redirect if already authenticated
   useEffect(() => {
