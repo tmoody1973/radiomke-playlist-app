@@ -67,10 +67,10 @@ export default function Auth() {
       setError(error.message);
     } else {
       setError('');
-      // Show success message for signup
       setActiveTab('signin');
       setEmail('');
       setPassword('');
+      setSignupSuccess(true);
     }
     
     setIsLoading(false);
