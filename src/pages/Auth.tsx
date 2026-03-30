@@ -55,6 +55,12 @@ export default function Auth() {
     setIsLoading(true);
     setError('');
 
+    if (!isAllowedDomain(email)) {
+      setError('Access is restricted to @radiomilwaukee.org email addresses.');
+      setIsLoading(false);
+      return;
+    }
+
     const { error } = await signUp(email, password);
     
     if (error) {
