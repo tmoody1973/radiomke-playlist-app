@@ -105,6 +105,14 @@ export default function Auth() {
             </TabsList>
             
             <TabsContent value="signin">
+              {signupSuccess && (
+                <Alert className="mb-4 border-green-200 bg-green-50 text-green-800">
+                  <Mail className="h-4 w-4" />
+                  <AlertDescription>
+                    Account created! Please check your email and click the confirmation link before signing in.
+                  </AlertDescription>
+                </Alert>
+              )}
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div>
                   <Label htmlFor="signin-email">Email</Label>
