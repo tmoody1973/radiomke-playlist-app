@@ -75,8 +75,14 @@ serve(async (req) => {
     const sanitize = (s: string) =>
       s.replace(/["']/g, '').replace(/\s+/g, ' ').trim()
 
+    // Strip parenthetical/bracketed qualifiers that confuse Spotify's matcher
+    // (e.g. "Song (cover)", "Song [live]", "Song (acoustic version)").
+    const stripQualifiers = (s: string) =>
+      s.replace(/\s*[\(\[][^)\]]*[\)\]]\s*/g, ' ').replace(/\s+/g, ' ').trim()
+
     const safeArtist = sanitize(artist)
     const safeSong = sanitize(song)
+    const cleanSong = stripQualifiers(safeSong)
 
     const runSearch = async (q: string) => {
       const res = await fetch(
@@ -95,9 +101,10 @@ serve(async (req) => {
       }
     }
 
-    // Try field-filtered first, then a plain fallback query.
+    // Try field-filtered first (with cleaned title), then plain fallbacks.
     let searchData =
-      (await runSearch(`artist:"${safeArtist}" track:"${safeSong}"`)) ??
+      (await runSearch(`artist:"${safeArtist}" track:"${cleanSong}"`)) ??
+      (await runSearch(`${safeArtist} ${cleanSong}`)) ??
       (await runSearch(`${safeArtist} ${safeSong}`))
 
     if (!searchData) {
