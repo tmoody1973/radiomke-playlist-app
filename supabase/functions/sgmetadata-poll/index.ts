@@ -256,7 +256,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ inserted: true, enriched, artist, song, start_time: startTime }),
+      JSON.stringify({ inserted: true, enriched, source: enrichSource, artist, song, start_time: startTime }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
