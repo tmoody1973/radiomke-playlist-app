@@ -101,9 +101,10 @@ serve(async (req) => {
       }
     }
 
-    // Try field-filtered first, then a plain fallback query.
+    // Try field-filtered first (with cleaned title), then plain fallbacks.
     let searchData =
-      (await runSearch(`artist:"${safeArtist}" track:"${safeSong}"`)) ??
+      (await runSearch(`artist:"${safeArtist}" track:"${cleanSong}"`)) ??
+      (await runSearch(`${safeArtist} ${cleanSong}`)) ??
       (await runSearch(`${safeArtist} ${safeSong}`))
 
     if (!searchData) {
