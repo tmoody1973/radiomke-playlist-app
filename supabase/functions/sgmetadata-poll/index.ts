@@ -113,6 +113,16 @@ serve(async (req) => {
     }
 
     const { artist, song } = parsed;
+
+    // Skip station promos / imaging — never insert these as songs.
+    if (isPromo(artist, song)) {
+      console.log("Skipping promo/imaging", { artist, song });
+      return new Response(
+        JSON.stringify({ skipped: true, reason: "promo", artist, song }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const startTime = new Date(sg.timestamp).toISOString();
 
     // 2. Look for an existing Spinitron (or prior SG) song within the window.
