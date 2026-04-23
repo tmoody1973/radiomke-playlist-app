@@ -111,18 +111,41 @@ serve(async (req) => {
        song.toLowerCase().includes(track.name.toLowerCase()))
     ) || tracks[0]
 
+    // Fetch full album to get the label (search results don't include it).
+    let albumLabel: string | undefined
+    let albumCopyrights: unknown
+    try {
+      const albumRes = await fetch(
+        `https://api.spotify.com/v1/albums/${bestMatch.album.id}`,
+        { headers: { Authorization: `Bearer ${access_token}` } }
+      )
+      if (albumRes.ok) {
+        const albumJson = await albumRes.json()
+        albumLabel = albumJson.label
+        albumCopyrights = albumJson.copyrights
+      } else {
+        console.error(`Album fetch ${albumRes.status} for ${bestMatch.album.id}`)
+        await albumRes.text()
+      }
+    } catch (e) {
+      console.error('Album fetch error:', e)
+    }
+
     const enhancedData = {
       spotify_track_id: bestMatch.id,
       spotify_artist_id: bestMatch.artists[0]?.id,
       spotify_album_id: bestMatch.album.id,
       image: bestMatch.album.images[0]?.url,
       release: bestMatch.album.name,
+      label: albumLabel,
       enhanced_metadata: {
         spotify_url: bestMatch.external_urls.spotify,
         album_images: bestMatch.album.images,
         release_date: bestMatch.album.release_date,
         duration_ms: bestMatch.duration_ms,
-        all_artists: bestMatch.artists.map(a => ({ id: a.id, name: a.name }))
+        all_artists: bestMatch.artists.map(a => ({ id: a.id, name: a.name })),
+        label: albumLabel,
+        copyrights: albumCopyrights,
       }
     }
 
