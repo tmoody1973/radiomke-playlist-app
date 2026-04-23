@@ -190,6 +190,7 @@ serve(async (req) => {
               spotify_album_id: d.spotify_album_id,
               image: d.image,
               release: d.release,
+              label: d.label ?? null,
               enhanced_metadata: d.enhanced_metadata,
             })
             .eq("id", inserted.id);
