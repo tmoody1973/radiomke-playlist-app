@@ -105,7 +105,22 @@ serve(async (req) => {
 
     const release = best.releases?.[0];
     const artistCredit = best["artist-credit"]?.[0];
-    const label = release?.["label-info"]?.[0]?.label?.name;
+    let label = release?.["label-info"]?.[0]?.label?.name;
+
+    // 1b. Search results don't include label-info. Fetch the release with inc=labels.
+    if (!label && release?.id) {
+      try {
+        const relRes = await mbFetch(
+          `https://musicbrainz.org/ws/2/release/${release.id}?inc=labels&fmt=json`,
+        );
+        if (relRes.ok) {
+          const relJson = await relRes.json();
+          label = relJson?.["label-info"]?.[0]?.label?.name;
+        }
+      } catch (e) {
+        console.error("MB release-label fetch error", e);
+      }
+    }
 
     // 2. Try Cover Art Archive for the release (front cover, 500px).
     let image: string | undefined;
