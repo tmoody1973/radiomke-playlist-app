@@ -192,51 +192,71 @@ serve(async (req) => {
 
     console.log("Inserted SG-only song", { id: inserted.id, artist, song });
 
-    // 4. Fire-and-await Spotify enrichment to backfill artwork/label/release.
+    // 4. Try MusicBrainz first (free, handles covers well), fall back to Spotify.
     let enriched = false;
-    try {
-      const enhanceRes = await fetch(`${supabaseUrl}/functions/v1/spotify-enhance`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${serviceKey}`,
-        },
-        body: JSON.stringify({ artist, song }),
-      });
+    let enrichSource: string | null = null;
 
-      if (enhanceRes.ok) {
-        const enhanceJson = await enhanceRes.json();
-        if (enhanceJson.found && enhanceJson.data) {
-          const d = enhanceJson.data;
-          const { error: updateError } = await supabase
-            .from("songs")
-            .update({
-              spotify_track_id: d.spotify_track_id,
-              spotify_artist_id: d.spotify_artist_id,
-              spotify_album_id: d.spotify_album_id,
-              image: d.image,
-              release: d.release,
-              label: d.label ?? null,
-              enhanced_metadata: d.enhanced_metadata,
-            })
-            .eq("id", inserted.id);
-
-          if (updateError) {
-            console.error("Spotify update failed", updateError);
-          } else {
-            enriched = true;
-          }
+    const callEnhance = async (fnName: string) => {
+      try {
+        const res = await fetch(`${supabaseUrl}/functions/v1/${fnName}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${serviceKey}`,
+          },
+          body: JSON.stringify({ artist, song }),
+        });
+        if (!res.ok) {
+          const t = await res.text();
+          console.error(`${fnName} non-ok`, res.status, t.slice(0, 200));
+          return null;
         }
-      } else {
-        const t = await enhanceRes.text();
-        console.error("spotify-enhance non-ok", enhanceRes.status, t);
+        const json = await res.json();
+        return json?.found && json?.data ? json.data : null;
+      } catch (e) {
+        console.error(`${fnName} call error`, e);
+        return null;
       }
-    } catch (e) {
-      console.error("Enrichment error", e);
+    };
+
+    // MusicBrainz first.
+    let data = await callEnhance("musicbrainz-enhance");
+    if (data) {
+      enrichSource = "musicbrainz";
+    } else {
+      // Fallback to Spotify.
+      data = await callEnhance("spotify-enhance");
+      if (data) enrichSource = "spotify";
+    }
+
+    if (data) {
+      const update: Record<string, unknown> = {
+        image: data.image,
+        release: data.release,
+        label: data.label ?? null,
+        enhanced_metadata: data.enhanced_metadata,
+      };
+      // Only set Spotify IDs if Spotify was the source.
+      if (enrichSource === "spotify") {
+        update.spotify_track_id = data.spotify_track_id;
+        update.spotify_artist_id = data.spotify_artist_id;
+        update.spotify_album_id = data.spotify_album_id;
+      }
+
+      const { error: updateError } = await supabase
+        .from("songs")
+        .update(update)
+        .eq("id", inserted.id);
+
+      if (updateError) {
+        console.error("Enrichment update failed", updateError);
+      } else {
+        enriched = true;
+      }
     }
 
     return new Response(
-      JSON.stringify({ inserted: true, enriched, artist, song, start_time: startTime }),
+      JSON.stringify({ inserted: true, enriched, source: enrichSource, artist, song, start_time: startTime }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
