@@ -22,6 +22,22 @@ interface SgMetadataResponse {
   timestamp?: number;
 }
 
+// Station imaging / promos that should never be treated as songs.
+const PROMO_PATTERNS: RegExp[] = [
+  /radio\s*milwaukee/i,
+  /^88nine/i,
+  /\b889\b/,
+  /discover\s+new\s+music/i,
+  /station\s+id/i,
+  /underwriting/i,
+  /promo/i,
+];
+
+function isPromo(artist: string, song: string): boolean {
+  const combined = `${artist} ${song}`;
+  return PROMO_PATTERNS.some((re) => re.test(combined));
+}
+
 function parseStreamTitle(title: string): { artist: string; song: string } | null {
   if (!title) return null;
   // Common formats: "Artist - Title", sometimes "Artist - Title (something)".
