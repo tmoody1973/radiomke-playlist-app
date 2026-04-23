@@ -112,7 +112,9 @@ export const PlaylistContainer = ({
               endDate={playlistState.endDate} 
               onDateChange={onDateChange} 
               onDateClear={onDateClear} 
-              formatDate={formatDate} 
+              formatDate={formatDate}
+              lastUpdate={playlistState.lastUpdate}
+              onManualRefresh={onManualRefresh}
             />
           )}
 
