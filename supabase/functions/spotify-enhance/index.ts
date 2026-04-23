@@ -71,23 +71,43 @@ serve(async (req) => {
 
     const { access_token } = await tokenResponse.json()
 
-    // Search for the track
-    const searchQuery = encodeURIComponent(`artist:"${artist}" track:"${song}"`)
-    const searchResponse = await fetch(
-      `https://api.spotify.com/v1/search?q=${searchQuery}&type=track&limit=5`,
-      {
-        headers: {
-          'Authorization': `Bearer ${access_token}`
-        }
-      }
-    )
+    // Strip characters that break Spotify's field-filter syntax.
+    const sanitize = (s: string) =>
+      s.replace(/["']/g, '').replace(/\s+/g, ' ').trim()
 
-    if (!searchResponse.ok) {
-      throw new Error('Spotify search failed')
+    const safeArtist = sanitize(artist)
+    const safeSong = sanitize(song)
+
+    const runSearch = async (q: string) => {
+      const res = await fetch(
+        `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=5`,
+        { headers: { Authorization: `Bearer ${access_token}` } }
+      )
+      const text = await res.text()
+      if (!res.ok) {
+        console.error(`Spotify search ${res.status} for "${q}":`, text.slice(0, 300))
+        return null
+      }
+      try {
+        return JSON.parse(text) as SpotifySearchResponse
+      } catch {
+        return null
+      }
     }
 
-    const searchData: SpotifySearchResponse = await searchResponse.json()
-    const tracks = searchData.tracks.items
+    // Try field-filtered first, then a plain fallback query.
+    let searchData =
+      (await runSearch(`artist:"${safeArtist}" track:"${safeSong}"`)) ??
+      (await runSearch(`${safeArtist} ${safeSong}`))
+
+    if (!searchData) {
+      return new Response(
+        JSON.stringify({ found: false, error: 'Spotify search failed' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const tracks = searchData.tracks?.items ?? []
 
     console.log(`Found ${tracks.length} tracks`)
 
