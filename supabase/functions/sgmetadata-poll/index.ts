@@ -52,9 +52,17 @@ function parseStreamTitle(title: string): { artist: string; song: string } | nul
 function normalize(s: string): string {
   return s
     .toLowerCase()
-    .replace(/\s*\(.*?\)\s*/g, " ")
+    // Remove parenthetical/bracketed qualifiers like "(feat. X)", "(live)".
+    .replace(/\s*[\(\[][^)\]]*[\)\]]\s*/g, " ")
+    // Treat "&" as "and", then collapse non-alphanumerics to spaces.
+    .replace(/&/g, " and ")
     .replace(/[^a-z0-9]+/g, " ")
-    .trim();
+    .trim()
+    .split(" ")
+    // Drop common stop-words / connectors so "Belle & Sebastian" == "Belle And Sebastian"
+    // and "The Beatles" == "Beatles".
+    .filter((w) => w && !["the", "a", "an", "and", "of"].includes(w))
+    .join(" ");
 }
 
 serve(async (req) => {
