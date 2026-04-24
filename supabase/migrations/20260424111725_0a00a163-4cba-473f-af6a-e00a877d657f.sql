@@ -1,0 +1,1 @@
+DELETE FROM public.songs WHERE id = 'cab0a073-2769-4236-a070-4f5030299658';
