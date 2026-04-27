@@ -311,15 +311,6 @@ serve(async (req) => {
         })
         .select();
 
-      console.log('Songs to store:', songsToStore.length, 'songs for station:', stationId);
-
-      const { data: insertedData, error: insertError } = await supabase
-        .from('songs')
-        .upsert(songsToStore, { 
-          onConflict: 'spinitron_id',
-          ignoreDuplicates: false 
-        })
-        .select();
 
       if (insertError) {
         console.error('Error storing songs in database:', insertError);
