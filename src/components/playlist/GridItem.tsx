@@ -80,12 +80,24 @@ export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, youtubeP
           </div>
         </div>
         
-        {/* Now playing badge */}
-        {isCurrentlyPlaying && (
-          <div className="absolute top-2 left-2">
-            <Badge variant="secondary" className="text-xs bg-primary text-primary-foreground">
-              Live
-            </Badge>
+        {/* Top-left badges (Live + Cover) */}
+        {(isCurrentlyPlaying || isCover) && (
+          <div className="absolute top-2 left-2 flex flex-col gap-1">
+            {isCurrentlyPlaying && (
+              <Badge variant="secondary" className="text-xs bg-primary text-primary-foreground">
+                Live
+              </Badge>
+            )}
+            {isCover && (
+              <Badge
+                variant="outline"
+                className="gap-1 text-xs bg-background/90 border-primary/40 text-primary"
+                title="Multiple artists have played this song title"
+              >
+                <Repeat className="h-3 w-3" />
+                Cover
+              </Badge>
+            )}
           </div>
         )}
       </AspectRatio>
