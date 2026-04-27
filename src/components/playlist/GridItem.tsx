@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Play } from 'lucide-react';
+import { Play, Repeat } from 'lucide-react';
 import { EnhancedAlbumArtwork } from './EnhancedAlbumArtwork';
 import { LazyYouTubePreviewButton } from './LazyYouTubePreviewButton';
 
