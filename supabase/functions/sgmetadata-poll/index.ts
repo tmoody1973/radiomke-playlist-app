@@ -166,8 +166,12 @@ serve(async (req) => {
     const match = (nearby || []).find((row) => {
       const a = normalize(row.artist || "");
       const s = normalize(row.song || "");
-      return (a === normArtist || a.includes(normArtist) || normArtist.includes(a)) &&
-        (s === normSong || s.includes(normSong) || normSong.includes(s));
+      // Artist must match EXACTLY (after normalization) so we don't collapse
+      // covers by different artists (e.g. Gary Numan vs Cookin' On 3 Burners "Cars").
+      // Song title can be a fuzzy match because of "(feat. X)", "(Live)", etc.
+      const artistMatch = a === normArtist;
+      const songMatch = s === normSong || s.includes(normSong) || normSong.includes(s);
+      return artistMatch && songMatch;
     });
 
     if (match) {
