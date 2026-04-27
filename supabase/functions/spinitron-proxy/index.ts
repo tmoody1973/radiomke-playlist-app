@@ -7,6 +7,22 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Per-station blocklist of (artist, song) pairs that are actually promos / imaging,
+// not real spins. Matching is case-insensitive and trimmed.
+const PROMO_TRACKS: Record<string, Array<{ artist: string; song: string }>> = {
+  '88nine': [
+    { artist: 'Jimmy Eat World', song: 'The Middle' },
+  ],
+};
+
+function isPromoTrack(stationId: string, artist: string, song: string): boolean {
+  const list = PROMO_TRACKS[stationId];
+  if (!list) return false;
+  const a = (artist || '').trim().toLowerCase();
+  const s = (song || '').trim().toLowerCase();
+  return list.some((p) => p.artist.toLowerCase() === a && p.song.toLowerCase() === s);
+}
+
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -255,6 +271,21 @@ serve(async (req) => {
 
     // Always store new songs in database (upsert to avoid duplicates)
     if (data.items && data.items.length > 0) {
+      // Filter out promo tracks before storing AND before returning to the client.
+      const originalCount = data.items.length;
+      data.items = data.items.filter((item: any) => {
+        const blocked = isPromoTrack(stationId, item.artist || '', item.song || '');
+        if (blocked) {
+          console.log('Skipping promo track', { stationId, artist: item.artist, song: item.song, id: item.id });
+        }
+        return !blocked;
+      });
+      if (data.items.length !== originalCount) {
+        console.log(`Filtered ${originalCount - data.items.length} promo track(s) for station:`, stationId);
+      }
+    }
+
+    if (data.items && data.items.length > 0) {
       console.log('Storing songs in database for station:', stationId);
       
       const songsToStore = data.items.map((item: any) => ({
@@ -279,6 +310,7 @@ serve(async (req) => {
           ignoreDuplicates: false 
         })
         .select();
+
 
       if (insertError) {
         console.error('Error storing songs in database:', insertError);
