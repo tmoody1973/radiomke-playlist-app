@@ -30,9 +30,10 @@ interface GridItemProps {
   formatTime: (dateString: string) => string;
   youtubePlayer: YouTubePlayer;
   enableYouTube?: boolean;
+  isCover?: boolean;
 }
 
-export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, youtubePlayer, enableYouTube = true }: GridItemProps) => {
+export const GridItem = ({ spin, index, isCurrentlyPlaying, formatTime, youtubePlayer, enableYouTube = true, isCover = false }: GridItemProps) => {
   const trackId = `${spin.artist}-${spin.song}-${spin.id}`;
 
   return (
