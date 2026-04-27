@@ -335,7 +335,51 @@ serve(async (req) => {
         console.error('Error storing songs in database:', insertError);
       } else {
         console.log('Successfully stored', insertedData?.length || songsToStore.length, 'songs in database for station:', stationId);
-        
+
+        // Remove SG-only duplicates (negative spinitron_id) that match any of the
+        // newly-stored Spinitron rows within ±60s. Spinitron has richer metadata,
+        // so when both sources logged the same spin we keep Spinitron and drop SG.
+        try {
+          for (const item of songsToStore) {
+            const startMs = new Date(item.start_time as string).getTime();
+            if (!Number.isFinite(startMs)) continue;
+            const winStart = new Date(startMs - SG_MATCH_WINDOW_MS).toISOString();
+            const winEnd = new Date(startMs + SG_MATCH_WINDOW_MS).toISOString();
+
+            const { data: nearby, error: nearbyErr } = await supabase
+              .from('songs')
+              .select('id, artist, song, spinitron_id')
+              .eq('station_id', stationId)
+              .lt('spinitron_id', 0) // SG-only inserts use negative ids
+              .gte('start_time', winStart)
+              .lte('start_time', winEnd);
+
+            if (nearbyErr || !nearby || nearby.length === 0) continue;
+
+            const normA = normalizeStr(item.artist as string);
+            const normS = normalizeStr(item.song as string);
+
+            const dupes = nearby.filter((row: any) => {
+              const a = normalizeStr(row.artist || '');
+              const s = normalizeStr(row.song || '');
+              const artistMatch = a === normA || a.includes(normA) || normA.includes(a);
+              const songMatch = s === normS || s.includes(normS) || normS.includes(s);
+              return artistMatch && songMatch;
+            });
+
+            if (dupes.length > 0) {
+              const ids = dupes.map((d: any) => d.id);
+              const { error: delErr } = await supabase.from('songs').delete().in('id', ids);
+              if (delErr) {
+                console.error('Failed to delete SG duplicate(s)', delErr);
+              } else {
+                console.log(`Removed ${ids.length} SG-only duplicate(s) for`, item.artist, '-', item.song);
+              }
+            }
+          }
+        } catch (dedupErr) {
+          console.error('SG dedup pass error', dedupErr);
+        }
       }
     } else {
       console.log('No songs received from API to store for station:', stationId);
