@@ -33,9 +33,17 @@ const PROMO_PATTERNS: RegExp[] = [
   /promo/i,
 ];
 
+// Specific (artist, song) pairs that are actually promos / imaging beds, not real spins.
+const PROMO_TRACKS: Array<{ artist: string; song: string }> = [
+  { artist: "Jimmy Eat World", song: "The Middle" },
+];
+
 function isPromo(artist: string, song: string): boolean {
   const combined = `${artist} ${song}`;
-  return PROMO_PATTERNS.some((re) => re.test(combined));
+  if (PROMO_PATTERNS.some((re) => re.test(combined))) return true;
+  const a = artist.trim().toLowerCase();
+  const s = song.trim().toLowerCase();
+  return PROMO_TRACKS.some((p) => p.artist.toLowerCase() === a && p.song.toLowerCase() === s);
 }
 
 function parseStreamTitle(title: string): { artist: string; song: string } | null {
