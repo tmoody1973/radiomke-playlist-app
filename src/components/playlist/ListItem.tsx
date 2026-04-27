@@ -121,6 +121,24 @@ export const ListItem = ({
                        Manual
                      </Badge>
                    )}
+                   {isCover && (
+                     <TooltipProvider delayDuration={200}>
+                       <Tooltip>
+                         <TooltipTrigger asChild>
+                           <Badge
+                             variant="outline"
+                             className={`gap-1 border-primary/40 text-primary ${compact ? "text-xs px-2 py-0" : "text-xs"}`}
+                           >
+                             <Repeat className="h-3 w-3" />
+                             Cover
+                           </Badge>
+                         </TooltipTrigger>
+                         <TooltipContent side="left">
+                           Multiple artists have played this song title
+                         </TooltipContent>
+                       </Tooltip>
+                     </TooltipProvider>
+                   )}
                  </div>
                 <div className={`text-right mt-1 ${compact ? "text-xs" : "text-sm"}`}>
                   <div className="flex items-center text-muted-foreground">
