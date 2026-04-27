@@ -63,29 +63,40 @@ export const PlaylistContent = ({
   youtubePlayer,
   enableYouTube = true,
 }: PlaylistContentProps) => {
-  // Build a set of normalized song titles that have been played by 2+
-  // distinct (normalized) artists in the currently-displayed list. These
-  // are flagged as "Cover" so users can spot multiple versions at a glance.
-  const coverSongTitles = useMemo(() => {
+  // For each normalized song title played by 2+ distinct artists in the
+  // current list, treat the earliest-played artist as the "original" and
+  // flag every other artist's version as a cover. Spins are displayed
+  // newest-first, so the original is the LAST occurrence in the list.
+  const originalArtistBySong = useMemo(() => {
     const songToArtists = new Map<string, Set<string>>();
-    for (const spin of displayedSpins) {
+    const songToOriginalArtist = new Map<string, string>();
+    // Walk oldest → newest so the original (earliest) wins the slot.
+    for (let i = displayedSpins.length - 1; i >= 0; i--) {
+      const spin = displayedSpins[i];
       const songKey = normalizeTitle(spin.song);
       const artistKey = normalizeTitle(spin.artist);
       if (!songKey || !artistKey) continue;
-      if (!songToArtists.has(songKey)) {
-        songToArtists.set(songKey, new Set());
-      }
+      if (!songToArtists.has(songKey)) songToArtists.set(songKey, new Set());
       songToArtists.get(songKey)!.add(artistKey);
+      if (!songToOriginalArtist.has(songKey)) {
+        songToOriginalArtist.set(songKey, artistKey);
+      }
     }
-    const covers = new Set<string>();
+    const result = new Map<string, string>();
     songToArtists.forEach((artists, song) => {
-      if (artists.size > 1) covers.add(song);
+      if (artists.size > 1) {
+        result.set(song, songToOriginalArtist.get(song)!);
+      }
     });
-    return covers;
+    return result;
   }, [displayedSpins]);
 
-  const isCoverSpin = (spin: Spin) =>
-    coverSongTitles.has(normalizeTitle(spin.song));
+  const isCoverSpin = (spin: Spin) => {
+    const songKey = normalizeTitle(spin.song);
+    const originalArtist = originalArtistBySong.get(songKey);
+    if (!originalArtist) return false;
+    return normalizeTitle(spin.artist) !== originalArtist;
+  };
 
   if (layout === 'grid') {
     return (
