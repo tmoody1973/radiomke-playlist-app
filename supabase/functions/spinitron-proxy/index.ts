@@ -23,6 +23,25 @@ function isPromoTrack(stationId: string, artist: string, song: string): boolean 
   return list.some((p) => p.artist.toLowerCase() === a && p.song.toLowerCase() === s);
 }
 
+// Normalize an artist/song string for fuzzy matching against SG-only inserts.
+// Mirrors the logic in sgmetadata-poll so the two stay in sync.
+function normalizeStr(s: string): string {
+  return (s || '')
+    .toLowerCase()
+    // Remove parenthetical / bracketed qualifiers like "(Who Loves Me)" / "(live)".
+    .replace(/\s*[\(\[][^)\]]*[\)\]]\s*/g, ' ')
+    // Treat "&" as "and", then collapse non-alphanumerics to spaces.
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter((w) => w && !['the', 'a', 'an', 'and', 'of'].includes(w))
+    .join(' ');
+}
+
+// ±60s window — must match sgmetadata-poll.
+const SG_MATCH_WINDOW_MS = 60_000;
+
 
 serve(async (req) => {
   // Handle CORS preflight requests
