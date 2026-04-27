@@ -60,6 +60,9 @@ function parseStreamTitle(title: string): { artist: string; song: string } | nul
 function normalize(s: string): string {
   return s
     .toLowerCase()
+    // Strip diacritics so "Motörhead" == "Motorhead", "Beyoncé" == "Beyonce".
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     // Remove parenthetical/bracketed qualifiers like "(feat. X)", "(live)".
     .replace(/\s*[\(\[][^)\]]*[\)\]]\s*/g, " ")
     // Treat "&" as "and", then collapse non-alphanumerics to spaces.
