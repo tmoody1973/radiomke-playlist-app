@@ -28,6 +28,9 @@ function isPromoTrack(stationId: string, artist: string, song: string): boolean 
 function normalizeStr(s: string): string {
   return (s || '')
     .toLowerCase()
+    // Strip diacritics so "Motörhead" == "Motorhead", "Beyoncé" == "Beyonce".
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     // Remove parenthetical / bracketed qualifiers like "(Who Loves Me)" / "(live)".
     .replace(/\s*[\(\[][^)\]]*[\)\]]\s*/g, ' ')
     // Treat "&" as "and", then collapse non-alphanumerics to spaces.
