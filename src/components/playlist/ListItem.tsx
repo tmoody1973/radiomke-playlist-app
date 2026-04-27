@@ -1,7 +1,8 @@
 
 import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Clock } from 'lucide-react';
+import { Clock, Repeat } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { EnhancedAlbumArtwork } from './EnhancedAlbumArtwork';
 import { EnhancedSongInfo } from './EnhancedSongInfo';
 import { LazyYouTubePreviewButton } from './LazyYouTubePreviewButton';
@@ -40,6 +41,7 @@ interface ListItemProps {
   youtubePlayer: YouTubePlayer;
   stationId?: string;
   enableYouTube?: boolean;
+  isCover?: boolean;
 }
 
 export const ListItem = ({ 
@@ -52,6 +54,7 @@ export const ListItem = ({
   youtubePlayer,
   stationId,
   enableYouTube = true,
+  isCover = false,
 }: ListItemProps) => {
   const trackId = `${spin.artist}-${spin.song}-${spin.id}`;
 
@@ -117,6 +120,24 @@ export const ListItem = ({
                      <Badge variant="outline" className={compact ? "text-xs px-2 py-0" : "text-xs"}>
                        Manual
                      </Badge>
+                   )}
+                   {isCover && (
+                     <TooltipProvider delayDuration={200}>
+                       <Tooltip>
+                         <TooltipTrigger asChild>
+                           <Badge
+                             variant="outline"
+                             className={`gap-1 border-primary/40 text-primary ${compact ? "text-xs px-2 py-0" : "text-xs"}`}
+                           >
+                             <Repeat className="h-3 w-3" />
+                             Cover
+                           </Badge>
+                         </TooltipTrigger>
+                         <TooltipContent side="left">
+                           Multiple artists have played this song title
+                         </TooltipContent>
+                       </Tooltip>
+                     </TooltipProvider>
                    )}
                  </div>
                 <div className={`text-right mt-1 ${compact ? "text-xs" : "text-sm"}`}>
