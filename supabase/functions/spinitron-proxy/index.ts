@@ -271,6 +271,21 @@ serve(async (req) => {
 
     // Always store new songs in database (upsert to avoid duplicates)
     if (data.items && data.items.length > 0) {
+      // Filter out promo tracks before storing AND before returning to the client.
+      const originalCount = data.items.length;
+      data.items = data.items.filter((item: any) => {
+        const blocked = isPromoTrack(stationId, item.artist || '', item.song || '');
+        if (blocked) {
+          console.log('Skipping promo track', { stationId, artist: item.artist, song: item.song, id: item.id });
+        }
+        return !blocked;
+      });
+      if (data.items.length !== originalCount) {
+        console.log(`Filtered ${originalCount - data.items.length} promo track(s) for station:`, stationId);
+      }
+    }
+
+    if (data.items && data.items.length > 0) {
       console.log('Storing songs in database for station:', stationId);
       
       const songsToStore = data.items.map((item: any) => ({
@@ -285,6 +300,16 @@ serve(async (req) => {
         episode_title: item.episode?.title || null,
         station_id: stationId // Ensure this is always set
       }));
+
+      console.log('Songs to store:', songsToStore.length, 'songs for station:', stationId);
+
+      const { data: insertedData, error: insertError } = await supabase
+        .from('songs')
+        .upsert(songsToStore, { 
+          onConflict: 'spinitron_id',
+          ignoreDuplicates: false 
+        })
+        .select();
 
       console.log('Songs to store:', songsToStore.length, 'songs for station:', stationId);
 
