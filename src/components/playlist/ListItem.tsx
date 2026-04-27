@@ -41,6 +41,7 @@ interface ListItemProps {
   youtubePlayer: YouTubePlayer;
   stationId?: string;
   enableYouTube?: boolean;
+  isCover?: boolean;
 }
 
 export const ListItem = ({ 
@@ -53,6 +54,7 @@ export const ListItem = ({
   youtubePlayer,
   stationId,
   enableYouTube = true,
+  isCover = false,
 }: ListItemProps) => {
   const trackId = `${spin.artist}-${spin.song}-${spin.id}`;
 
