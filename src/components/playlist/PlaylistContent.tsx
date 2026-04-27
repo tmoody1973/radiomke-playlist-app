@@ -40,6 +40,9 @@ interface PlaylistContentProps {
 function normalizeTitle(s: string): string {
   return (s || '')
     .toLowerCase()
+    // Strip diacritics so "Motörhead" == "Motorhead", "Beyoncé" == "Beyonce".
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/\s*[\(\[][^)\]]*[\)\]]\s*/g, ' ')
     .replace(/&/g, ' and ')
     .replace(/[^a-z0-9]+/g, ' ')
