@@ -362,7 +362,9 @@ serve(async (req) => {
             const dupes = nearby.filter((row: any) => {
               const a = normalizeStr(row.artist || '');
               const s = normalizeStr(row.song || '');
-              const artistMatch = a === normA || a.includes(normA) || normA.includes(a);
+              // Artist must match EXACTLY so we don't delete legitimate covers
+              // by a different artist (e.g. Gary Numan "Cars" vs Cookin' On 3 Burners "Cars").
+              const artistMatch = a === normA;
               const songMatch = s === normS || s.includes(normS) || normS.includes(s);
               return artistMatch && songMatch;
             });
