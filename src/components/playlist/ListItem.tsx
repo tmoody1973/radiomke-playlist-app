@@ -1,7 +1,8 @@
 
 import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Clock } from 'lucide-react';
+import { Clock, Repeat } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { EnhancedAlbumArtwork } from './EnhancedAlbumArtwork';
 import { EnhancedSongInfo } from './EnhancedSongInfo';
 import { LazyYouTubePreviewButton } from './LazyYouTubePreviewButton';
