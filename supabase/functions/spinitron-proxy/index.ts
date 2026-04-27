@@ -7,6 +7,22 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Per-station blocklist of (artist, song) pairs that are actually promos / imaging,
+// not real spins. Matching is case-insensitive and trimmed.
+const PROMO_TRACKS: Record<string, Array<{ artist: string; song: string }>> = {
+  '88nine': [
+    { artist: 'Jimmy Eat World', song: 'The Middle' },
+  ],
+};
+
+function isPromoTrack(stationId: string, artist: string, song: string): boolean {
+  const list = PROMO_TRACKS[stationId];
+  if (!list) return false;
+  const a = (artist || '').trim().toLowerCase();
+  const s = (song || '').trim().toLowerCase();
+  return list.some((p) => p.artist.toLowerCase() === a && p.song.toLowerCase() === s);
+}
+
 
 serve(async (req) => {
   // Handle CORS preflight requests
